@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
+import os
+os.system("pip install plotly")
 from plotly import express as px
 
 # Function to display tasks in a calendar format
