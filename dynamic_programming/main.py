@@ -9,8 +9,8 @@ def create_calendar(tasks_df):
         st.write("No tasks to display in the calendar.")
         return
     
-    tasks_df["End DateTime"] = tasks_df["Start DateTime"] + tasks_df["Duration"]
-    tasks_df["Start"] = tasks_df["Start DateTime"].dt.strftime("%Y-%m-%d %H:%M:%S")
+    tasks_df["End DateTime"] = tasks_df["Start Date"] + tasks_df["Start Time"] + tasks_df["Duration"]
+    tasks_df["Start"] = (tasks_df["Start Date"] + tasks_df["Start Time"]).dt.strftime("%Y-%m-%d %H:%M:%S")
     tasks_df["End"] = tasks_df["End DateTime"].dt.strftime("%Y-%m-%d %H:%M:%S")
     
     chart = alt.Chart(tasks_df).mark_bar().encode(
@@ -37,24 +37,18 @@ start_time = st.sidebar.time_input("Start Time", value=datetime.now().time())
 duration_hours = st.sidebar.number_input("Duration Hours", min_value=0, max_value=23, value=1)
 duration_minutes = st.sidebar.number_input("Duration Minutes", min_value=0, max_value=59, value=0)
 
-# Debugging collected inputs
-st.write("Selected time:", start_time)
-start_datetime = datetime.combine(start_date, start_time)
-st.write("Selected datetime:", start_datetime)
-st.write("Duration Hours:", duration_hours, "Duration Minutes:", duration_minutes)
-
 # Button to add task
 if "tasks" not in st.session_state:
     st.session_state["tasks"] = []
 
 if st.sidebar.button("Add Task"):
     if task_name:
-        start_datetime = datetime.combine(start_date, start_time)
         duration = timedelta(hours=duration_hours, minutes=duration_minutes)
         st.session_state["tasks"].append(
             {
                 "Task Name": task_name,
-                "Start DateTime": start_datetime,
+                "Start Date": pd.Timestamp(start_date),
+                "Start Time": pd.to_timedelta(start_time.hour * 3600 + start_time.minute * 60, unit="s"),
                 "Duration": duration,
             }
         )
@@ -66,8 +60,6 @@ if st.sidebar.button("Add Task"):
 st.header("Tasks List")
 if st.session_state["tasks"]:
     tasks_df = pd.DataFrame(st.session_state["tasks"])
-    tasks_df["Start DateTime"] = pd.to_datetime(tasks_df["Start DateTime"])
-    tasks_df["Duration"] = tasks_df["Duration"].apply(lambda x: str(x))
     st.dataframe(tasks_df)
 else:
     st.write("No tasks added yet.")
@@ -76,6 +68,5 @@ else:
 st.header("Task Calendar")
 if st.session_state["tasks"]:
     tasks_df = pd.DataFrame(st.session_state["tasks"])
-    tasks_df["Start DateTime"] = pd.to_datetime(tasks_df["Start DateTime"])
-    tasks_df["Duration"] = tasks_df["Duration"].apply(lambda x: pd.Timedelta(x))
+    tasks_df["End DateTime"] = tasks_df["Start Date"] + tasks_df["Start Time"] + tasks_df["Duration"]
     create_calendar(tasks_df)
