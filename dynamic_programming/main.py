@@ -1,26 +1,30 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
-import os
-os.system("pip install plotly")
-from plotly import express as px
+import altair as alt
 
-# Function to display tasks in a calendar format
+# Function to display tasks in a calendar format using Altair
 def create_calendar(tasks_df):
     if tasks_df.empty:
         st.write("No tasks to display in the calendar.")
         return
+    
     tasks_df["End DateTime"] = tasks_df["Start DateTime"] + tasks_df["Duration"]
-    fig = px.timeline(
-        tasks_df,
-        x_start="Start DateTime",
-        x_end="End DateTime",
-        y="Task Name",
+    tasks_df["Start"] = tasks_df["Start DateTime"].dt.strftime("%Y-%m-%d %H:%M:%S")
+    tasks_df["End"] = tasks_df["End DateTime"].dt.strftime("%Y-%m-%d %H:%M:%S")
+    
+    chart = alt.Chart(tasks_df).mark_bar().encode(
+        x=alt.X('Start:T', title="Start Time"),
+        x2='End:T',
+        y=alt.Y('Task Name:N', title="Task Name", sort='-x'),
+        color=alt.Color('Task Name:N', legend=None)
+    ).properties(
         title="Task Calendar",
-        labels={"Task Name": "Task"},
+        width=700,
+        height=400
     )
-    fig.update_yaxes(categoryorder="total ascending")
-    st.plotly_chart(fig, use_container_width=True)
+    
+    st.altair_chart(chart, use_container_width=True)
 
 # Streamlit app
 st.title("Task Scheduler")
