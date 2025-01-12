@@ -26,8 +26,8 @@ st.title("Task Scheduler")
 # Sidebar for form input
 st.sidebar.header("Add Task")
 task_name = st.sidebar.text_input("Task Name", "")
-start_date = st.sidebar.date_input("Start Date")
-start_time = st.sidebar.time_input("Start Time")
+start_date = st.sidebar.date_input("Start Date", value=datetime.now().date())
+start_time = st.sidebar.time_input("Start Time", value=datetime.now().time())
 duration_hours = st.sidebar.number_input("Duration Hours", min_value=0, max_value=23, value=1)
 duration_minutes = st.sidebar.number_input("Duration Minutes", min_value=0, max_value=59, value=0)
 
@@ -54,6 +54,8 @@ if st.sidebar.button("Add Task"):
 st.header("Tasks List")
 if st.session_state["tasks"]:
     tasks_df = pd.DataFrame(st.session_state["tasks"])
+    tasks_df["Start DateTime"] = pd.to_datetime(tasks_df["Start DateTime"])
+    tasks_df["Duration"] = tasks_df["Duration"].apply(lambda x: str(x))
     st.dataframe(tasks_df)
 else:
     st.write("No tasks added yet.")
@@ -62,4 +64,6 @@ else:
 st.header("Task Calendar")
 if st.session_state["tasks"]:
     tasks_df = pd.DataFrame(st.session_state["tasks"])
+    tasks_df["Start DateTime"] = pd.to_datetime(tasks_df["Start DateTime"])
+    tasks_df["Duration"] = tasks_df["Duration"].apply(lambda x: pd.Timedelta(x))
     create_calendar(tasks_df)
