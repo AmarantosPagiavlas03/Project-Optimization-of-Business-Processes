@@ -31,9 +31,24 @@ st.title("Task Scheduler")
 
 # Sidebar for form input
 st.sidebar.header("Add Task")
+
+# Initialize session state for start_time if not already set
+if "start_time" not in st.session_state:
+    st.session_state["start_time"] = datetime.now().time()
+
 task_name = st.sidebar.text_input("Task Name", "")
 start_date = st.sidebar.date_input("Start Date", value=datetime.now().date())
-start_time = st.sidebar.time_input("Start Time", value=datetime.now().time())
+
+# Use session state to store start_time
+start_time = st.sidebar.time_input(
+    "Start Time",
+    value=st.session_state["start_time"],
+    key="start_time_widget",
+)
+
+# Update session state when the time is changed
+st.session_state["start_time"] = start_time
+
 duration_hours = st.sidebar.number_input("Duration Hours", min_value=0, max_value=23, value=1)
 duration_minutes = st.sidebar.number_input("Duration Minutes", min_value=0, max_value=59, value=0)
 
