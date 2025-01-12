@@ -3,25 +3,29 @@ import pandas as pd
 from datetime import datetime, timedelta
 import altair as alt
 
-# Function to display tasks in a calendar format using Altair
+# Function to display tasks in a calendar format with days of the week
 def create_calendar(tasks_df):
     if tasks_df.empty:
         st.write("No tasks to display in the calendar.")
         return
     
+    # Calculate necessary columns for visualization
     tasks_df["End DateTime"] = tasks_df["Start Date"] + tasks_df["Start Time"] + tasks_df["Duration"]
     tasks_df["Start"] = (tasks_df["Start Date"] + tasks_df["Start Time"]).dt.strftime("%Y-%m-%d %H:%M:%S")
     tasks_df["End"] = tasks_df["End DateTime"].dt.strftime("%Y-%m-%d %H:%M:%S")
+    tasks_df["Day of Week"] = (tasks_df["Start Date"]).dt.strftime("%A")  # Get day name
     
+    # Create Altair chart
     chart = alt.Chart(tasks_df).mark_bar().encode(
         x=alt.X('Start:T', title="Start Time"),
         x2='End:T',
-        y=alt.Y('Task Name:N', title="Task Name", sort='-x'),
-        color=alt.Color('Task Name:N', legend=None)
+        y=alt.Y('Day of Week:N', title="Day of the Week", sort=['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']),
+        color=alt.Color('Task Name:N', title="Task Name"),
+        tooltip=['Task Name', 'Start', 'End', 'Day of Week']
     ).properties(
-        title="Task Calendar",
-        width=700,
-        height=400
+        title="Task Calendar with Days of the Week",
+        width=800,
+        height=500
     )
     
     st.altair_chart(chart, use_container_width=True)
@@ -32,9 +36,11 @@ st.title("Task Scheduler")
 # Sidebar for form input
 st.sidebar.header("Add Task")
 
-# Initialize session state for start_time if not already set
+# Initialize session state for start_time and tasks if not already set
 if "start_time" not in st.session_state:
     st.session_state["start_time"] = datetime.now().time()
+if "tasks" not in st.session_state:
+    st.session_state["tasks"] = []
 
 task_name = st.sidebar.text_input("Task Name", "")
 start_date = st.sidebar.date_input("Start Date", value=datetime.now().date())
@@ -58,9 +64,6 @@ st.write("Selected datetime:", start_date)
 st.write("Duration Hours:", duration_hours, "Duration Minutes:", duration_minutes)
 
 # Button to add task
-if "tasks" not in st.session_state:
-    st.session_state["tasks"] = []
-
 if st.sidebar.button("Add Task"):
     if task_name:
         duration = timedelta(hours=duration_hours, minutes=duration_minutes)
@@ -78,6 +81,12 @@ if st.sidebar.button("Add Task"):
 
 # Main section for displaying tasks
 st.header("Tasks List")
+
+# Button to clear the DataFrame
+if st.button("Clear All Tasks"):
+    st.session_state["tasks"] = []
+    st.success("All tasks have been cleared!")
+
 if st.session_state["tasks"]:
     tasks_df = pd.DataFrame(st.session_state["tasks"])
     st.dataframe(tasks_df)
@@ -88,5 +97,4 @@ else:
 st.header("Task Calendar")
 if st.session_state["tasks"]:
     tasks_df = pd.DataFrame(st.session_state["tasks"])
-    tasks_df["End DateTime"] = tasks_df["Start Date"] + tasks_df["Start Time"] + tasks_df["Duration"]
     create_calendar(tasks_df)
