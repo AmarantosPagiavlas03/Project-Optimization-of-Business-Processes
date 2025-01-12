@@ -37,6 +37,11 @@ start_time = st.sidebar.time_input("Start Time", value=datetime.now().time())
 duration_hours = st.sidebar.number_input("Duration Hours", min_value=0, max_value=23, value=1)
 duration_minutes = st.sidebar.number_input("Duration Minutes", min_value=0, max_value=59, value=0)
 
+# Debugging collected inputs
+st.write("Selected time:", start_time)
+st.write("Selected datetime:", start_date)
+st.write("Duration Hours:", duration_hours, "Duration Minutes:", duration_minutes)
+
 # Button to add task
 if "tasks" not in st.session_state:
     st.session_state["tasks"] = []
@@ -48,7 +53,7 @@ if st.sidebar.button("Add Task"):
             {
                 "Task Name": task_name,
                 "Start Date": pd.Timestamp(start_date),
-                "Start Time": pd.to_timedelta(start_time.hour * 3600 + start_time.minute * 60, unit="s"),
+                "Start Time": timedelta(hours=start_time.hour, minutes=start_time.minute),
                 "Duration": duration,
             }
         )
