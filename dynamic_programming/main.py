@@ -1,134 +1,21 @@
 import streamlit as st
 import pandas as pd
-import sqlite3
 from datetime import datetime, timedelta
 import altair as alt
 
-# Database connection and initialization
-DB_FILE = "tasks.db"
-
-def init_db():
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    c.execute('''
-    CREATE TABLE IF NOT EXISTS tasks (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        task_name TEXT NOT NULL,
-        start_date TEXT NOT NULL,
-        start_time TEXT NOT NULL,
-        duration TEXT NOT NULL
-    )
-    ''')
-    conn.commit()
-    conn.close()
-
-def add_task_to_db(task_name, start_date, start_time, duration):
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    c.execute("INSERT INTO tasks (task_name, start_date, start_time, duration) VALUES (?, ?, ?, ?)",
-              (task_name, start_date, start_time, duration))
-    conn.commit()
-    conn.close()
-
-def get_all_tasks():
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    c.execute("SELECT task_name, start_date, start_time, duration FROM tasks")
-    rows = c.fetchall()
-    conn.close()
-    tasks = []
-    for row in rows:
-        tasks.append({
-            "Task Name": row[0],
-            "Start Date": pd.Timestamp(row[1]),
-            "Start Time": pd.to_timedelta(row[2]),
-            "Duration": pd.to_timedelta(row[3])
-        })
-    return tasks
-
-def clear_all_tasks():
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    c.execute("DELETE FROM tasks")
-    conn.commit()
-    conn.close()
-
-# Initialize the database
-init_db()
-
-# Streamlit app
-st.title("Task Scheduler with SQLite Persistence")
-
-# Sidebar for adding tasks
-st.sidebar.header("Add Task")
-
-task_name = st.sidebar.text_input("Task Name", "")
-start_date = st.sidebar.date_input("Start Date", value=datetime.now().date())
-start_time = st.sidebar.time_input("Start Time", value=datetime.now().time())
-duration_hours = st.sidebar.number_input("Duration Hours", min_value=0, max_value=23, value=1)
-duration_minutes = st.sidebar.number_input("Duration Minutes", min_value=0, max_value=59, value=0)
-
-# Add task button
-if st.sidebar.button("Add Task"):
-    if task_name:
-        duration = timedelta(hours=duration_hours, minutes=duration_minutes)
-        add_task_to_db(
-            task_name,
-            start_date.isoformat(),
-            f"{start_time.hour}:{start_time.minute}:00",
-            f"{duration}"
-        )
-        st.sidebar.success(f"Task '{task_name}' added!")
-    else:
-        st.sidebar.error("Task name cannot be empty!")
-
-# File uploader to import tasks
-uploaded_file = st.sidebar.file_uploader("Upload Excel File", type=["xlsx", "xls"])
-if uploaded_file:
-    try:
-        uploaded_tasks = pd.read_excel(uploaded_file)
-        required_columns = {"Task Name", "Start Date", "Start Time", "Duration"}
-        if required_columns.issubset(uploaded_tasks.columns):
-            for _, row in uploaded_tasks.iterrows():
-                add_task_to_db(
-                    row["Task Name"],
-                    pd.Timestamp(row["Start Date"]).date().isoformat(),
-                    str(row["Start Time"]),
-                    str(row["Duration"])
-                )
-            st.sidebar.success("Tasks from the uploaded file have been added!")
-        else:
-            st.sidebar.error(f"File must contain the columns: {', '.join(required_columns)}")
-    except Exception as e:
-        st.sidebar.error(f"Error reading file: {e}")
-
-# Display tasks
-st.header("Tasks List")
-tasks = get_all_tasks()
-if tasks:
-    tasks_df = pd.DataFrame(tasks)
-    st.dataframe(tasks_df)
-else:
-    st.write("No tasks added yet.")
-
-# Button to clear all tasks
-if st.button("Clear All Tasks"):
-    clear_all_tasks()
-    st.success("All tasks have been cleared!")
-
-# Calendar view
-st.header("Task Calendar")
-
+# Function to display tasks in a calendar format with days of the week
 def create_calendar(tasks_df):
     if tasks_df.empty:
         st.write("No tasks to display in the calendar.")
         return
     
+    # Calculate necessary columns for visualization
     tasks_df["End DateTime"] = tasks_df["Start Date"] + tasks_df["Start Time"] + tasks_df["Duration"]
     tasks_df["Start"] = (tasks_df["Start Date"] + tasks_df["Start Time"]).dt.strftime("%Y-%m-%d %H:%M:%S")
     tasks_df["End"] = tasks_df["End DateTime"].dt.strftime("%Y-%m-%d %H:%M:%S")
     tasks_df["Day of Week"] = (tasks_df["Start Date"]).dt.strftime("%A")  # Get day name
     
+    # Create Altair chart
     chart = alt.Chart(tasks_df).mark_bar().encode(
         x=alt.X('Start:T', title="Start Time"),
         x2='End:T',
@@ -143,7 +30,95 @@ def create_calendar(tasks_df):
     
     st.altair_chart(chart, use_container_width=True)
 
-if tasks:
-    create_calendar(pd.DataFrame(tasks))
+# Streamlit app
+st.title("Task Scheduler")
+
+# Sidebar for form input
+st.sidebar.header("Add Task")
+
+# Initialize session state for start_time and tasks if not already set
+if "start_time" not in st.session_state:
+    st.session_state["start_time"] = datetime.now().time()
+if "tasks" not in st.session_state:
+    st.session_state["tasks"] = []
+
+task_name = st.sidebar.text_input("Task Name", "")
+start_date = st.sidebar.date_input("Start Date", value=datetime.now().date())
+
+# Use session state to store start_time
+start_time = st.sidebar.time_input(
+    "Start Time",
+    value=st.session_state["start_time"],
+    key="start_time_widget",
+)
+
+# Update session state when the time is changed
+st.session_state["start_time"] = start_time
+
+duration_hours = st.sidebar.number_input("Duration Hours", min_value=0, max_value=23, value=1)
+duration_minutes = st.sidebar.number_input("Duration Minutes", min_value=0, max_value=59, value=0)
+
+# Debugging collected inputs
+st.write("Selected time:", start_time)
+st.write("Selected datetime:", start_date)
+st.write("Duration Hours:", duration_hours, "Duration Minutes:", duration_minutes)
+
+# Button to add task
+if st.sidebar.button("Add Task"):
+    if task_name:
+        duration = timedelta(hours=duration_hours, minutes=duration_minutes)
+        st.session_state["tasks"].append(
+            {
+                "Task Name": task_name,
+                "Start Date": pd.Timestamp(start_date),
+                "Start Time": timedelta(hours=start_time.hour, minutes=start_time.minute),
+                "Duration": duration,
+            }
+        )
+        st.sidebar.success(f"Task '{task_name}' added!")
+    else:
+        st.sidebar.error("Task name cannot be empty!")
+
+# File uploader for Excel input
+uploaded_file = st.sidebar.file_uploader("Upload Excel File", type=["xlsx", "xls"])
+if uploaded_file:
+    try:
+        # Read the uploaded file
+        uploaded_tasks = pd.read_excel(uploaded_file)
+        # Ensure necessary columns are present
+        required_columns = {"Task Name", "Start Date", "Start Time", "Duration"}
+        if required_columns.issubset(uploaded_tasks.columns):
+            for _, row in uploaded_tasks.iterrows():
+                st.session_state["tasks"].append(
+                    {
+                        "Task Name": row["Task Name"],
+                        "Start Date": pd.Timestamp(row["Start Date"]),
+                        "Start Time": pd.to_timedelta(row["Start Time"]),
+                        "Duration": pd.to_timedelta(row["Duration"]),
+                    }
+                )
+            st.sidebar.success("Tasks from the uploaded file have been added!")
+        else:
+            st.sidebar.error(f"File must contain the columns: {', '.join(required_columns)}")
+    except Exception as e:
+        st.sidebar.error(f"Error reading file: {e}")
+
+# Main section for displaying tasks
+st.header("Tasks List")
+
+# Button to clear the DataFrame
+if st.button("Clear All Tasks"):
+    st.session_state["tasks"] = []
+    st.success("All tasks have been cleared!")
+
+if st.session_state["tasks"]:
+    tasks_df = pd.DataFrame(st.session_state["tasks"])
+    st.dataframe(tasks_df)
 else:
-    st.write("No tasks available to display in the calendar.")
+    st.write("No tasks added yet.")
+
+# Calendar view
+st.header("Task Calendar")
+if st.session_state["tasks"]:
+    tasks_df = pd.DataFrame(st.session_state["tasks"])
+    create_calendar(tasks_df)
