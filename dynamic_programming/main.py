@@ -147,3 +147,11 @@ if tasks:
     create_calendar(pd.DataFrame(tasks))
 else:
     st.write("No tasks available to display in the calendar.")
+
+if tasks:
+    st.download_button(
+        label="Download Tasks as CSV",
+        data=tasks_df.to_csv(index=False).encode("utf-8"),
+        file_name="tasks.csv",
+        mime="text/csv"
+    )
