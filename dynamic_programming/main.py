@@ -79,6 +79,30 @@ if st.sidebar.button("Add Task"):
     else:
         st.sidebar.error("Task name cannot be empty!")
 
+# File uploader for Excel input
+uploaded_file = st.sidebar.file_uploader("Upload Excel File", type=["xlsx", "xls"])
+if uploaded_file:
+    try:
+        # Read the uploaded file
+        uploaded_tasks = pd.read_excel(uploaded_file)
+        # Ensure necessary columns are present
+        required_columns = {"Task Name", "Start Date", "Start Time", "Duration"}
+        if required_columns.issubset(uploaded_tasks.columns):
+            for _, row in uploaded_tasks.iterrows():
+                st.session_state["tasks"].append(
+                    {
+                        "Task Name": row["Task Name"],
+                        "Start Date": pd.Timestamp(row["Start Date"]),
+                        "Start Time": pd.to_timedelta(row["Start Time"]),
+                        "Duration": pd.to_timedelta(row["Duration"]),
+                    }
+                )
+            st.sidebar.success("Tasks from the uploaded file have been added!")
+        else:
+            st.sidebar.error(f"File must contain the columns: {', '.join(required_columns)}")
+    except Exception as e:
+        st.sidebar.error(f"Error reading file: {e}")
+
 # Main section for displaying tasks
 st.header("Tasks List")
 
