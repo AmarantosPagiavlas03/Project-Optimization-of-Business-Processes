@@ -13,7 +13,7 @@ def init_db():
         c = conn.cursor()
         # Create the tasks table
         c.execute('''
-        CREATE TABLE tasks (
+        CREATE TABLE if not exists tasks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             task_name TEXT NOT NULL,
             day TEXT NOT NULL,
@@ -26,7 +26,7 @@ def init_db():
         conn.commit()
         # Create the shifts table
         c.execute('''
-        CREATE TABLE shifts (
+        CREATE TABLE if not exists shifts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             shift_name TEXT NOT NULL,
             start_date TEXT NOT NULL,
