@@ -53,7 +53,7 @@ def get_all_tasks():
     conn = sqlite3.connect(DB_FILE)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    c.execute("SELECT task_name, day, start_time, end_time, duration, nurses_required FROM tasks")
+    c.execute("SELECT * FROM tasks")
     rows = c.fetchall()
     conn.close()
     tasks = []
@@ -144,32 +144,32 @@ if st.button("Clear All Tasks"):
 # Calendar view
 st.header("Task Calendar")
 
-def create_calendar(tasks_df):
-    if tasks_df.empty:
-        st.write("No tasks to display in the calendar.")
-        return
+# def create_calendar(tasks_df):
+#     if tasks_df.empty:
+#         st.write("No tasks to display in the calendar.")
+#         return
     
-    tasks_df["Start"] = pd.to_datetime(tasks_df["day"] + " " + tasks_df["start_time"])
-    tasks_df["End"] = tasks_df["Start"] + pd.to_timedelta(tasks_df["duration"])
+#     tasks_df["Start"] = pd.to_datetime(tasks_df["day"] + " " + tasks_df["start_time"])
+#     tasks_df["End"] = tasks_df["Start"] + pd.to_timedelta(tasks_df["duration"])
     
-    chart = alt.Chart(tasks_df).mark_bar().encode(
-        x=alt.X('Start:T', title="Start Time"),
-        x2='End:T',
-        y=alt.Y('day:N', title="Day of the Week", sort=['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']),
-        color=alt.Color('task_name:N', title="Task Name"),
-        tooltip=['task_name', 'Start', 'End', 'day']
-    ).properties(
-        title="Task Calendar with Days of the Week",
-        width=800,
-        height=500
-    )
+#     chart = alt.Chart(tasks_df).mark_bar().encode(
+#         x=alt.X('Start:T', title="Start Time"),
+#         x2='End:T',
+#         y=alt.Y('day:N', title="Day of the Week", sort=['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']),
+#         color=alt.Color('task_name:N', title="Task Name"),
+#         tooltip=['task_name', 'Start', 'End', 'day']
+#     ).properties(
+#         title="Task Calendar with Days of the Week",
+#         width=800,
+#         height=500
+#     )
     
-    st.altair_chart(chart, use_container_width=True)
+#     st.altair_chart(chart, use_container_width=True)
 
-if tasks:
-    create_calendar(pd.DataFrame(tasks))
-else:
-    st.write("No tasks available to display in the calendar.")
+# if tasks:
+#     create_calendar(pd.DataFrame(tasks))
+# else:
+#     st.write("No tasks available to display in the calendar.")
 
 if tasks:
     st.download_button(
