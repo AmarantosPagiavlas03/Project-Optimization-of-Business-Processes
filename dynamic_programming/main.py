@@ -121,9 +121,8 @@ if uploaded_file:
 
 # Display tasks
 st.header("Tasks List")
-tasks = get_all_tasks()
-if tasks:
-    tasks_df = get_all_tasks()
+tasks_df = get_all_tasks()
+if not tasks_df.empty:
     st.dataframe(tasks_df)
 else:
     st.write("No tasks added yet.")
@@ -163,7 +162,7 @@ st.header("Task Calendar")
 # else:
 #     st.write("No tasks available to display in the calendar.")
 
-if tasks:
+if not tasks_df.empty:
     st.download_button(
         label="Download Tasks as CSV",
         data=tasks_df.to_csv(index=False).encode("utf-8"),
