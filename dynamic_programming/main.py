@@ -16,9 +16,21 @@ def init_db():
         CREATE TABLE tasks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             task_name TEXT NOT NULL,
+            day TEXT NOT NULL,
+            start_time TEXT NOT NULL,
+            end_time TEXT,
+            duration TEXT NOT NULL
+            nurses_required INTEGER NOT NULL,
+        )
+        ''')
+        conn.commit()
+        # Create the shifts table
+        c.execute('''
+        CREATE TABLE shifts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            shift_name TEXT NOT NULL,
             start_date TEXT NOT NULL,
             start_time TEXT NOT NULL,
-            end_date TEXT,
             end_time TEXT,
             nurses_required INTEGER NOT NULL,
             duration TEXT NOT NULL
@@ -31,11 +43,11 @@ def init_db():
         if conn:
             conn.close()
 
-def add_task_to_db(task_name, start_date, start_time, duration,nurses_required):
+def add_task_to_db(task_name,day, start_time, duration,nurses_required):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute("INSERT INTO tasks (task_name, start_date, start_time, duration, nurses_required) VALUES (?, ?, ?, ? , ? )",
-              (task_name, start_date, start_time, duration,nurses_required))
+    c.execute("INSERT INTO tasks (task_name, day, start_time, duration, nurses_required) VALUES (?, ?, ?, ? , ?)",
+              (task_name,day, start_time, duration,nurses_required))
     conn.commit()
     conn.close()
 
@@ -43,14 +55,14 @@ def get_all_tasks():
     conn = sqlite3.connect(DB_FILE)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    c.execute("SELECT task_name, start_date, start_time, end_date, end_time, duration, nurses_required FROM tasks")
+    c.execute("SELECT task_name, day, start_time, end_time, duration, nurses_required FROM tasks")
     rows = c.fetchall()
     conn.close()
     tasks = []
     for row in rows:
         tasks.append({
             "Task Name": row['task_name'],
-            "Start Date": pd.Timestamp(row['start_date']),
+            "Start Date": pd.Timestamp(row['day']),
             "Start Time": pd.to_timedelta(row['start_time']),
             "Duration": pd.to_timedelta(row['duration']),
             "End Date": pd.Timestamp(row['end_date']),
@@ -76,8 +88,9 @@ st.title("Task Scheduler with SQLite Persistence")
 st.sidebar.header("Add Task")
 
 task_name = st.sidebar.text_input("Task Name", "")
-start_date = st.sidebar.date_input("Start Date", value=datetime.now().date())
+day = st.sidebar.text_input("Day of the Week", "")
 start_time = st.sidebar.time_input("Start Time", value=datetime.now().time())
+end_time = st.sidebar.time_input("End Time", value=datetime.now().time())
 duration_hours = st.sidebar.number_input("Duration Hours", min_value=0, max_value=23, value=1)
 duration_minutes = st.sidebar.number_input("Duration Minutes", min_value=0, max_value=59, value=0)
 nurses_required = st.sidebar.number_input("Nurses Required", min_value=1, value=1)
@@ -88,8 +101,9 @@ if st.sidebar.button("Add Task"):
         duration = timedelta(hours=duration_hours, minutes=duration_minutes)
         add_task_to_db(
             task_name,
-            start_date.isoformat(),
+            day,
             f"{start_time.hour}:{start_time.minute}:00",
+            f"{end_time.hour}:{end_time.minute}:00",
             f"{duration}",
             f"{nurses_required}"
         )
