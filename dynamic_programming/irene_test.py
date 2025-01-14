@@ -2,8 +2,7 @@ import pandas as pd
 import random
 from datetime import timedelta, datetime
 
-print(1)
-
+print(12)
 # Sample data for task names, durations, and nurses required
 task_names = ["Admin Check", "Patient Round", "Blood Test", "Medication Dispense"]
 nurses_required = [1, 2, 3, 4]
