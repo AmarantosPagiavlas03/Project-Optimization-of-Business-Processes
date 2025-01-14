@@ -8,26 +8,33 @@ import altair as alt
 DB_FILE = "tasks.db"
 
 def init_db():
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    c.execute('''
-    DROP TABLE IF EXISTS tasks
-    ''')
-    conn.commit()
-    c.execute('''
-    CREATE TABLE IF NOT EXISTS tasks (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        task_name TEXT NOT NULL,
-        start_date TEXT NOT NULL,
-        start_time TEXT NOT NULL,
-        end_date TEXT NULL,
-        end_time TEXT NULL,
-        nurses_required INTEGER NOT NULL,
-        duration TEXT NOT NULL
-    )
-    ''')
-    conn.commit()
-    conn.close()
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        c = conn.cursor()
+        
+        # Drop the table if it exists
+        c.execute('DROP TABLE IF EXISTS tasks')
+        conn.commit()
+        
+        # Create the tasks table
+        c.execute('''
+        CREATE TABLE tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            task_name TEXT NOT NULL,
+            start_date TEXT NOT NULL,
+            start_time TEXT NOT NULL,
+            end_date TEXT,
+            end_time TEXT,
+            nurses_required INTEGER NOT NULL,
+            duration TEXT NOT NULL
+        )
+        ''')
+        conn.commit()
+    except sqlite3.Error as e:
+        print(f"An error occurred: {e}")
+    finally:
+        if conn:
+            conn.close()
 
 def add_task_to_db(task_name, start_date, start_time, duration,nurses_required):
     conn = sqlite3.connect(DB_FILE)
@@ -40,7 +47,7 @@ def add_task_to_db(task_name, start_date, start_time, duration,nurses_required):
 def get_all_tasks():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute("SELECT task_name, start_date, start_time, duration FROM tasks")
+    c.execute("SELECT task_name, start_date, start_time, duration, nurses_required FROM tasks")
     rows = c.fetchall()
     conn.close()
     tasks = []
