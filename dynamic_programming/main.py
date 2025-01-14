@@ -16,8 +16,8 @@ def init_db():
         task_name TEXT NOT NULL,
         start_date TEXT NOT NULL,
         start_time TEXT NOT NULL,
-        end_date TEXT NOT NULL,
-        end_time TEXT NOT NULL,
+        end_date TEXT NULL,
+        end_time TEXT NULL,
         nurses_required INTEGER NOT NULL,
         duration TEXT NOT NULL
     )
@@ -25,11 +25,11 @@ def init_db():
     conn.commit()
     conn.close()
 
-def add_task_to_db(task_name, start_date, start_time, duration):
+def add_task_to_db(task_name, start_date, start_time, duration,nurses_required):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute("INSERT INTO tasks (task_name, start_date, start_time, duration) VALUES (?, ?, ?, ?)",
-              (task_name, start_date, start_time, duration))
+    c.execute("INSERT INTO tasks (task_name, start_date, start_time, duration, nurses_required) VALUES (?, ?, ?, ?)",
+              (task_name, start_date, start_time, duration,nurses_required))
     conn.commit()
     conn.close()
 
@@ -70,6 +70,7 @@ start_date = st.sidebar.date_input("Start Date", value=datetime.now().date())
 start_time = st.sidebar.time_input("Start Time", value=datetime.now().time())
 duration_hours = st.sidebar.number_input("Duration Hours", min_value=0, max_value=23, value=1)
 duration_minutes = st.sidebar.number_input("Duration Minutes", min_value=0, max_value=59, value=0)
+nurses_required = st.sidebar.number_input("Nurses Required", min_value=1, value=1)
 
 # Add task button
 if st.sidebar.button("Add Task"):
@@ -79,7 +80,8 @@ if st.sidebar.button("Add Task"):
             task_name,
             start_date.isoformat(),
             f"{start_time.hour}:{start_time.minute}:00",
-            f"{duration}"
+            f"{duration}",
+            f"{nurses_required}"
         )
         st.sidebar.success(f"Task '{task_name}' added!")
     else:
