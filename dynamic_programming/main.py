@@ -62,10 +62,8 @@ def get_all_tasks():
     for row in rows:
         tasks.append({
             "Task Name": row['task_name'],
-            "Start Date": pd.Timestamp(row['day']),
             "Start Time": pd.to_timedelta(row['start_time']),
             "Duration": pd.to_timedelta(row['duration']),
-            "End Date": pd.Timestamp(row['end_date']),
             "End Time": pd.to_timedelta(row['end_time']),
             "Nurses Required": row['nurses_required'],
         })
