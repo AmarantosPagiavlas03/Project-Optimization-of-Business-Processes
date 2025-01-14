@@ -37,8 +37,6 @@ def init_db():
         )
         ''')
         conn.commit()
-    except sqlite3.Error as e:
-        print(f"An error occurred: {e}")
     finally:
         if conn:
             conn.close()
