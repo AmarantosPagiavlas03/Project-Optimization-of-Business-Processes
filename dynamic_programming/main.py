@@ -15,12 +15,12 @@ def init_db():
         c.execute('''
         CREATE TABLE if not exists tasks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            task_name TEXT NOT NULL,
-            day TEXT NOT NULL,
-            start_time TEXT NOT NULL,
-            end_time TEXT,
-            duration TEXT NOT NULL,
-            nurses_required INTEGER NOT NULL
+            TaskName TEXT NOT NULL,
+            Day TEXT NOT NULL,
+            StartTime TEXT NOT NULL,
+            EndTime TEXT,
+            Duration TEXT NOT NULL,
+            NursesRequired INTEGER NOT NULL
         )
         ''')
         conn.commit()
@@ -30,10 +30,10 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             shift_name TEXT NOT NULL,
             start_date TEXT NOT NULL,
-            start_time TEXT NOT NULL,
-            end_time TEXT,
-            nurses_required INTEGER NOT NULL,
-            duration TEXT NOT NULL
+            StartTime TEXT NOT NULL,
+            EndTime TEXT,
+            NursesRequired INTEGER NOT NULL,
+            Duration TEXT NOT NULL
         )
         ''')
         conn.commit()
@@ -41,11 +41,11 @@ def init_db():
         if conn:
             conn.close()
 
-def add_task_to_db(task_name,day, start_time,end_time, duration,nurses_required):
+def add_task_to_db(TaskName,Day, StartTime,EndTime, Duration,NursesRequired):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute("INSERT INTO tasks (task_name, day, start_time,end_time, duration, nurses_required) VALUES (?, ?, ?, ? , ?,?)",
-              (task_name,day, start_time,end_time, duration,nurses_required))
+    c.execute("INSERT INTO tasks (TaskName, Day, StartTime,EndTime, Duration, NursesRequired) VALUES (?, ?, ?, ? , ?,?)",
+              (TaskName,Day, StartTime,EndTime, Duration,NursesRequired))
     conn.commit()
     conn.close()
 
@@ -75,28 +75,28 @@ st.title("Task Scheduler with SQLite Persistence")
 # Sidebar for adding tasks
 st.sidebar.header("Add Task")
 
-task_name = st.sidebar.text_input("Task Name", "")
-day = st.sidebar.selectbox("Day of the Week", 
+TaskName = st.sidebar.text_input("Task Name", "")
+Day = st.sidebar.selectbox("Day of the Week", 
                            [ "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
-start_time = st.sidebar.time_input("Start Time", value=datetime.now().time())
-end_time = st.sidebar.time_input("End Time", value=datetime.now().time())
+StartTime = st.sidebar.time_input("Start Time", value=datetime.now().time())
+EndTime = st.sidebar.time_input("End Time", value=datetime.now().time())
 duration_hours = st.sidebar.number_input("Duration Hours", min_value=0, max_value=23, value=1)
 duration_minutes = st.sidebar.number_input("Duration Minutes", min_value=0, max_value=59, value=0)
-nurses_required = st.sidebar.number_input("Nurses Required", min_value=1, value=1)
+NursesRequired = st.sidebar.number_input("Nurses Required", min_value=1, value=1)
 
 # Add task button
 if st.sidebar.button("Add Task"):
-    if task_name:
-        duration = timedelta(hours=duration_hours, minutes=duration_minutes)
+    if TaskName:
+        Duration = timedelta(hours=duration_hours, minutes=duration_minutes)
         add_task_to_db(
-            task_name,
-            day,
-            f"{start_time.hour}:{start_time.minute}:00",
-            f"{end_time.hour}:{end_time.minute}:00",
-            f"{duration}",
-            f"{nurses_required}"
+            TaskName,
+            Day,
+            f"{StartTime.hour}:{StartTime.minute}:00",
+            f"{EndTime.hour}:{EndTime.minute}:00",
+            f"{Duration}",
+            f"{NursesRequired}"
         )
-        st.sidebar.success(f"Task '{task_name}' added!")
+        st.sidebar.success(f"Task '{TaskName}' added!")
     else:
         st.sidebar.error("Task name cannot be empty!")
 
@@ -141,15 +141,15 @@ st.header("Task Calendar")
 #         st.write("No tasks to display in the calendar.")
 #         return
     
-#     tasks_df["Start"] = pd.to_datetime(tasks_df["day"] + " " + tasks_df["start_time"])
-#     tasks_df["End"] = tasks_df["Start"] + pd.to_timedelta(tasks_df["duration"])
+#     tasks_df["Start"] = pd.to_datetime(tasks_df["Day"] + " " + tasks_df["StartTime"])
+#     tasks_df["End"] = tasks_df["Start"] + pd.to_timedelta(tasks_df["Duration"])
     
 #     chart = alt.Chart(tasks_df).mark_bar().encode(
 #         x=alt.X('Start:T', title="Start Time"),
 #         x2='End:T',
-#         y=alt.Y('day:N', title="Day of the Week", sort=['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']),
-#         color=alt.Color('task_name:N', title="Task Name"),
-#         tooltip=['task_name', 'Start', 'End', 'day']
+#         y=alt.Y('Day:N', title="Day of the Week", sort=['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']),
+#         color=alt.Color('TaskName:N', title="Task Name"),
+#         tooltip=['TaskName', 'Start', 'End', 'Day']
 #     ).properties(
 #         title="Task Calendar with Days of the Week",
 #         width=800,
