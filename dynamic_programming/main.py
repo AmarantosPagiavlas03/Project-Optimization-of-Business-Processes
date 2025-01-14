@@ -76,7 +76,8 @@ st.title("Task Scheduler with SQLite Persistence")
 st.sidebar.header("Add Task")
 
 task_name = st.sidebar.text_input("Task Name", "")
-day = st.sidebar.text_input("Day of the Week", "")
+day = st.sidebar.selectbox("Day of the Week", 
+                           ["", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
 start_time = st.sidebar.time_input("Start Time", value=datetime.now().time())
 end_time = st.sidebar.time_input("End Time", value=datetime.now().time())
 duration_hours = st.sidebar.number_input("Duration Hours", min_value=0, max_value=23, value=1)
