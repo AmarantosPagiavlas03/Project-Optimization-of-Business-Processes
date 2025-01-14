@@ -11,8 +11,6 @@ def init_db():
     try:
         conn = sqlite3.connect(DB_FILE)
         c = conn.cursor()
-        
- 
         # Create the tasks table
         c.execute('''
         CREATE TABLE tasks (
@@ -44,16 +42,19 @@ def add_task_to_db(task_name, start_date, start_time, duration,nurses_required):
 def get_all_tasks():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute("SELECT task_name, start_date, start_time, duration, nurses_required FROM tasks")
+    c.execute("SELECT task_name, start_date, start_time, end_date, end_time, duration, nurses_required FROM tasks")
     rows = c.fetchall()
     conn.close()
     tasks = []
     for row in rows:
         tasks.append({
-            "Task Name": row[0],
-            "Start Date": pd.Timestamp(row[1]),
-            "Start Time": pd.to_timedelta(row[2]),
-            "Duration": pd.to_timedelta(row[3])
+            "Task Name": row['task_name'],
+            "Start Date": pd.Timestamp(row['start_date']),
+            "Start Time": pd.to_timedelta(row['start_time']),
+            "Duration": pd.to_timedelta(row['duration']),
+            "End Date": pd.Timestamp(row['end_date']),
+            "End Time": pd.to_timedelta(row['end_time']),
+            "Nurses Required": pd.to_timedelta(row['nurses_required']),
         })
     return tasks
 
