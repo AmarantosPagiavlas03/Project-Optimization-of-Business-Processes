@@ -12,10 +12,7 @@ def init_db():
         conn = sqlite3.connect(DB_FILE)
         c = conn.cursor()
         
-        # Drop the table if it exists
-        c.execute('DROP TABLE IF EXISTS tasks')
-        conn.commit()
-        
+ 
         # Create the tasks table
         c.execute('''
         CREATE TABLE tasks (
