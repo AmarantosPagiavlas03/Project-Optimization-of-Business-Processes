@@ -11,7 +11,7 @@ def init_db():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''
-    CREATE TABLE IF NOT EXISTS tasks (
+    CREATE TABLE tasks (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         task_name TEXT NOT NULL,
         start_date TEXT NOT NULL,
