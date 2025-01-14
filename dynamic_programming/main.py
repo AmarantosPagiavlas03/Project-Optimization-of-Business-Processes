@@ -41,6 +41,7 @@ def add_task_to_db(task_name, start_date, start_time, duration,nurses_required):
 
 def get_all_tasks():
     conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
     c = conn.cursor()
     c.execute("SELECT task_name, start_date, start_time, end_date, end_time, duration, nurses_required FROM tasks")
     rows = c.fetchall()
