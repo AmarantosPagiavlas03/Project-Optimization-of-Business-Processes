@@ -56,16 +56,8 @@ def get_all_tasks():
     c.execute("SELECT * FROM tasks")
     rows = c.fetchall()
     conn.close()
-    tasks = []
-    for row in rows:
-        tasks.append({
-            "Task Name": row['task_name'],
-            "Start Time": pd.to_timedelta(row['start_time']),
-            "Duration": pd.to_timedelta(row['duration']),
-            "End Time": pd.to_timedelta(row['end_time']),
-            "Nurses Required": row['nurses_required'],
-        })
-    return tasks
+    df = pd.DataFrame(rows, columns=[desc[0] for desc in c.description])
+    return df
 
 def clear_all_tasks():
     conn = sqlite3.connect(DB_FILE)
@@ -131,7 +123,7 @@ if uploaded_file:
 st.header("Tasks List")
 tasks = get_all_tasks()
 if tasks:
-    tasks_df = pd.DataFrame(tasks)
+    tasks_df = get_all_tasks()
     st.dataframe(tasks_df)
 else:
     st.write("No tasks added yet.")
