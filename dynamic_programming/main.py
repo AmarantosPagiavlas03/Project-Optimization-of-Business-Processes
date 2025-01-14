@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 from datetime import datetime, timedelta
-import altair as alt
+from io import BytesIO
 
 # Database connection and initialization
 DB_FILE = "tasks.db"
@@ -61,17 +61,19 @@ def generate_template():
         "Cost": [100.0, 120.0]
     })
     
-    # Save to Excel file
-    with pd.ExcelWriter("template.xlsx") as writer:
+    # Save to an in-memory BytesIO buffer
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
         tasks_template.to_excel(writer, index=False, sheet_name="Tasks")
         shifts_template.to_excel(writer, index=False, sheet_name="Shifts")
-
-    return "template.xlsx"
+    
+    output.seek(0)
+    return output
 
 def add_task_to_db(TaskName,Day, StartTime,EndTime, Duration,NursesRequired):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute("INSERT INTO Tasks (TaskName, Day, StartTime,EndTime, Duration, NursesRequired) VALUES (?, ?, ?, ? , ?,?)",
+    c.execute("INSERT INTO Tasks (TaskName, Day, StartTime,EndTime, Duration, NursesRequired) VALUES (?, ?, ?, ? , ?, ?)",
               (TaskName,Day, StartTime,EndTime, Duration,NursesRequired))
     conn.commit()
     conn.close()
@@ -130,13 +132,12 @@ if st.sidebar.button("Add Task"):
 # Provide a download link for the template
 st.header("Download Template")
 template_file = generate_template()
-with open(template_file, "rb") as file:
-    st.download_button(
-        label="Download Task and Shift Template",
-        data=file,
-        file_name="template.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+st.download_button(
+    label="Download Task and Shift Template",
+    data=template_file,
+    file_name="template.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
 
 # File uploader to import tasks
 uploaded_file = st.sidebar.file_uploader("Upload Excel File", type=["xlsx", "xls"])
