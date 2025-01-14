@@ -16,54 +16,33 @@ def init_db():
         task_name TEXT NOT NULL,
         start_date TEXT NOT NULL,
         start_time TEXT NOT NULL,
-        end_time TEXT NOT NULL,
-        duration TEXT NOT NULL,
-        nurses_required INTEGER NOT NULL
+        duration TEXT NOT NULL
     )
     ''')
     conn.commit()
     conn.close()
 
-
-def add_task_to_db(task_name, start_date, start_time, duration, nurses_required):
+def add_task_to_db(task_name, start_date, start_time, duration):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    
-    # Calculate the end time
-    start_datetime = datetime.strptime(f"{start_date} {start_time}", "%Y-%m-%d %H:%M:%S")
-    duration_timedelta = pd.to_timedelta(duration)
-    end_datetime = start_datetime + duration_timedelta
-
-    # Store in the database
-    c.execute('''
-        INSERT INTO tasks (task_name, start_date, start_time,end_time, duration, nurses_required)
-        VALUES (?, ?, ?, ?, ?)
-    ''', (task_name, start_date, start_time, str(duration_timedelta), nurses_required))
-    
+    c.execute("INSERT INTO tasks (task_name, start_date, start_time, duration) VALUES (?, ?, ?, ?)",
+              (task_name, start_date, start_time, duration))
     conn.commit()
     conn.close()
-
 
 def get_all_tasks():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute("SELECT task_name, start_date, start_time, duration, nurses_required FROM tasks")
+    c.execute("SELECT task_name, start_date, start_time, duration FROM tasks")
     rows = c.fetchall()
     conn.close()
-    
     tasks = []
     for row in rows:
-        start_datetime = pd.Timestamp(f"{row[1]} {row[2]}")
-        duration_timedelta = pd.to_timedelta(row[3])
-        end_datetime = start_datetime + duration_timedelta
-        
         tasks.append({
             "Task Name": row[0],
-            "Start Date": start_datetime.date(),
-            "Start Time": start_datetime.time(),
-            "Duration": duration_timedelta,
-            "End Time": end_datetime,
-            "Nurses Required": row[4]
+            "Start Date": pd.Timestamp(row[1]),
+            "Start Time": pd.to_timedelta(row[2]),
+            "Duration": pd.to_timedelta(row[3])
         })
     return tasks
 
@@ -88,7 +67,6 @@ start_date = st.sidebar.date_input("Start Date", value=datetime.now().date())
 start_time = st.sidebar.time_input("Start Time", value=datetime.now().time())
 duration_hours = st.sidebar.number_input("Duration Hours", min_value=0, max_value=23, value=1)
 duration_minutes = st.sidebar.number_input("Duration Minutes", min_value=0, max_value=59, value=0)
-nurses_required = st.sidebar.number_input("Nurses Required", min_value=1, value=1)
 
 # Add task button
 if st.sidebar.button("Add Task"):
@@ -98,10 +76,9 @@ if st.sidebar.button("Add Task"):
             task_name,
             start_date.isoformat(),
             f"{start_time.hour}:{start_time.minute}:00",
-            f"{duration}",
-            int(nurses_required)
+            f"{duration}"
         )
-        st.sidebar.success(f"Task '{task_name}' added with {nurses_required} nurses required!")
+        st.sidebar.success(f"Task '{task_name}' added!")
     else:
         st.sidebar.error("Task name cannot be empty!")
 
