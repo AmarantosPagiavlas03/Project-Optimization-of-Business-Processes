@@ -32,7 +32,7 @@ def init_db():
 def add_task_to_db(task_name, start_date, start_time, duration,nurses_required):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute("INSERT INTO tasks (task_name, start_date, start_time, duration, nurses_required) VALUES (?, ?, ?, ?)",
+    c.execute("INSERT INTO tasks (task_name, start_date, start_time, duration, nurses_required) VALUES (?, ?, ?, ? , ? )",
               (task_name, start_date, start_time, duration,nurses_required))
     conn.commit()
     conn.close()
