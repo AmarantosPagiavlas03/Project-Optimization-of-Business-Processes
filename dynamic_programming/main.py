@@ -130,14 +130,14 @@ if st.sidebar.button("Add Task"):
         st.sidebar.error("Task name cannot be empty!")
 
 # Provide a download link for the template
-st.header("Download Template")
-template_file = generate_template()
-st.download_button(
-    label="Download Task and Shift Template",
-    data=template_file,
-    file_name="template.xlsx",
-    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-)
+# st.header("Download Template")
+# template_file = generate_template()
+# st.download_button(
+#     label="Download Task and Shift Template",
+#     data=template_file,
+#     file_name="template.xlsx",
+#     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+# )
 
 # File uploader to import tasks
 uploaded_file = st.sidebar.file_uploader("Upload Excel File", type=["xlsx", "xls"])
