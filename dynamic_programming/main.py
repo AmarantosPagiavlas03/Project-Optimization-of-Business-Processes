@@ -19,8 +19,8 @@ def init_db():
             day TEXT NOT NULL,
             start_time TEXT NOT NULL,
             end_time TEXT,
-            duration TEXT NOT NULL
-            nurses_required INTEGER NOT NULL,
+            duration TEXT NOT NULL,
+            nurses_required INTEGER NOT NULL
         )
         ''')
         conn.commit()
