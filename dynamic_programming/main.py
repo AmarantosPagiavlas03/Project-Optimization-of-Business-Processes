@@ -55,7 +55,7 @@ def get_all_tasks():
             "Duration": pd.to_timedelta(row['duration']),
             "End Date": pd.Timestamp(row['end_date']),
             "End Time": pd.to_timedelta(row['end_time']),
-            "Nurses Required": pd.to_timedelta(row['nurses_required']),
+            "Nurses Required": row['nurses_required'],
         })
     return tasks
 
