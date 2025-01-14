@@ -41,6 +41,33 @@ def init_db():
         if conn:
             conn.close()
 
+def generate_template():
+    # Define template DataFrames
+    tasks_template = pd.DataFrame({
+        "TaskName": ["Task1", "Task2"],
+        "Day": ["Monday", "Tuesday"],
+        "StartTime": ["08:00:00", "10:00:00"],
+        "EndTime": ["10:00:00", "12:00:00"],
+        "Duration": ["2:00:00", "2:00:00"],
+        "NursesRequired": [2, 3]
+    })
+    
+    shifts_template = pd.DataFrame({
+        "ShiftName": ["Morning Shift", "Evening Shift"],
+        "StartTime": ["08:00:00", "16:00:00"],
+        "EndTime": ["16:00:00", "00:00:00"],
+        "BreakTime": ["12:00:00", "20:00:00"],
+        "BreakDuration": ["0:30:00", "0:30:00"],
+        "Cost": [100.0, 120.0]
+    })
+    
+    # Save to Excel file
+    with pd.ExcelWriter("template.xlsx") as writer:
+        tasks_template.to_excel(writer, index=False, sheet_name="Tasks")
+        shifts_template.to_excel(writer, index=False, sheet_name="Shifts")
+
+    return "template.xlsx"
+
 def add_task_to_db(TaskName,Day, StartTime,EndTime, Duration,NursesRequired):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
@@ -99,6 +126,17 @@ if st.sidebar.button("Add Task"):
         st.sidebar.success(f"Task '{TaskName}' added!")
     else:
         st.sidebar.error("Task name cannot be empty!")
+
+# Provide a download link for the template
+st.header("Download Template")
+template_file = generate_template()
+with open(template_file, "rb") as file:
+    st.download_button(
+        label="Download Task and Shift Template",
+        data=file,
+        file_name="template.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
 # File uploader to import tasks
 uploaded_file = st.sidebar.file_uploader("Upload Excel File", type=["xlsx", "xls"])
