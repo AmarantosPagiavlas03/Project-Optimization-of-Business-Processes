@@ -47,11 +47,11 @@ def init_db():
         if conn:
             conn.close()
 
-def add_task_to_db(task_name,day, start_time, duration,nurses_required):
+def add_task_to_db(task_name,day, start_time,end_time, duration,nurses_required):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute("INSERT INTO tasks (task_name, day, start_time, duration, nurses_required) VALUES (?, ?, ?, ? , ?)",
-              (task_name,day, start_time, duration,nurses_required))
+    c.execute("INSERT INTO tasks (task_name, day, start_time,end_time, duration, nurses_required) VALUES (?, ?, ?, ? , ?)",
+              (task_name,day, start_time,end_time, duration,nurses_required))
     conn.commit()
     conn.close()
 
