@@ -24,28 +24,17 @@ def init_db():
         )
         ''')
         conn.commit()
-        # Create the shifts table
-        c.execute('''
-        CREATE TABLE if not exists shifts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            shift_name TEXT NOT NULL,
-            start_date TEXT NOT NULL,
-            start_time TEXT NOT NULL,
-            end_time TEXT,
-            nurses_required INTEGER NOT NULL,
-            duration TEXT NOT NULL
-        )
-        ''')
-        conn.commit()
     finally:
         if conn:
             conn.close()
 
-def add_task_to_db(task_name,day, start_time,end_time, duration,nurses_required):
+def add_task_to_db(task_name, day, start_time, end_time, duration, nurses_required):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute("INSERT INTO tasks (task_name, day, start_time,end_time, duration, nurses_required) VALUES (?, ?, ?, ? , ?,?)",
-              (task_name,day, start_time,end_time, duration,nurses_required))
+    c.execute(
+        "INSERT INTO tasks (task_name, day, start_time, end_time, duration, nurses_required) VALUES (?, ?, ?, ?, ?, ?)",
+        (task_name, day, start_time, end_time, duration, nurses_required)
+    )
     conn.commit()
     conn.close()
 
@@ -56,16 +45,7 @@ def get_all_tasks():
     c.execute("SELECT task_name, day, start_time, end_time, duration, nurses_required FROM tasks")
     rows = c.fetchall()
     conn.close()
-    tasks = []
-    for row in rows:
-        tasks.append({
-            "Task Name": row['task_name'],
-            "Start Time": pd.to_timedelta(row['start_time']),
-            "Duration": pd.to_timedelta(row['duration']),
-            "End Time": pd.to_timedelta(row['end_time']),
-            "Nurses Required": row['nurses_required'],
-        })
-    return tasks
+    return [dict(row) for row in rows]
 
 def clear_all_tasks():
     conn = sqlite3.connect(DB_FILE)
@@ -82,7 +62,6 @@ st.title("Task Scheduler with SQLite Persistence")
 
 # Sidebar for adding tasks
 st.sidebar.header("Add Task")
-
 task_name = st.sidebar.text_input("Task Name", "")
 day = st.sidebar.text_input("Day of the Week", "")
 start_time = st.sidebar.time_input("Start Time", value=datetime.now().time())
@@ -98,34 +77,14 @@ if st.sidebar.button("Add Task"):
         add_task_to_db(
             task_name,
             day,
-            f"{start_time.hour}:{start_time.minute}:00",
-            f"{end_time.hour}:{end_time.minute}:00",
-            f"{duration}",
-            f"{nurses_required}"
+            f"{start_time}",
+            f"{end_time}",
+            str(duration),
+            nurses_required
         )
         st.sidebar.success(f"Task '{task_name}' added!")
     else:
         st.sidebar.error("Task name cannot be empty!")
-
-# File uploader to import tasks
-uploaded_file = st.sidebar.file_uploader("Upload Excel File", type=["xlsx", "xls"])
-if uploaded_file:
-    try:
-        uploaded_tasks = pd.read_excel(uploaded_file)
-        required_columns = {"Task Name", "Start Date", "Start Time", "Duration"}
-        if required_columns.issubset(uploaded_tasks.columns):
-            for _, row in uploaded_tasks.iterrows():
-                add_task_to_db(
-                    row["Task Name"],
-                    pd.Timestamp(row["Start Date"]).date().isoformat(),
-                    str(row["Start Time"]),
-                    str(row["Duration"])
-                )
-            st.sidebar.success("Tasks from the uploaded file have been added!")
-        else:
-            st.sidebar.error(f"File must contain the columns: {', '.join(required_columns)}")
-    except Exception as e:
-        st.sidebar.error(f"Error reading file: {e}")
 
 # Display tasks
 st.header("Tasks List")
@@ -149,17 +108,15 @@ def create_calendar(tasks_df):
         st.write("No tasks to display in the calendar.")
         return
     
-    tasks_df["End DateTime"] = tasks_df["Start Date"] + tasks_df["Start Time"] + tasks_df["Duration"]
-    tasks_df["Start"] = (tasks_df["Start Date"] + tasks_df["Start Time"]).dt.strftime("%Y-%m-%d %H:%M:%S")
-    tasks_df["End"] = tasks_df["End DateTime"].dt.strftime("%Y-%m-%d %H:%M:%S")
-    tasks_df["Day of Week"] = (tasks_df["Start Date"]).dt.strftime("%A")  # Get day name
+    tasks_df["Start"] = pd.to_datetime(tasks_df["day"] + " " + tasks_df["start_time"])
+    tasks_df["End"] = tasks_df["Start"] + pd.to_timedelta(tasks_df["duration"])
     
     chart = alt.Chart(tasks_df).mark_bar().encode(
         x=alt.X('Start:T', title="Start Time"),
         x2='End:T',
-        y=alt.Y('Day of Week:N', title="Day of the Week", sort=['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']),
-        color=alt.Color('Task Name:N', title="Task Name"),
-        tooltip=['Task Name', 'Start', 'End', 'Day of Week']
+        y=alt.Y('day:N', title="Day of the Week", sort=['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']),
+        color=alt.Color('task_name:N', title="Task Name"),
+        tooltip=['task_name', 'Start', 'End', 'day']
     ).properties(
         title="Task Calendar with Days of the Week",
         width=800,
@@ -173,10 +130,11 @@ if tasks:
 else:
     st.write("No tasks available to display in the calendar.")
 
+# Download tasks as CSV
 if tasks:
     st.download_button(
         label="Download Tasks as CSV",
-        data=tasks_df.to_csv(index=False).encode("utf-8"),
+        data=pd.DataFrame(tasks).to_csv(index=False).encode("utf-8"),
         file_name="tasks.csv",
         mime="text/csv"
     )
