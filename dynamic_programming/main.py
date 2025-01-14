@@ -13,6 +13,10 @@ def init_db():
         c = conn.cursor()
         # Create the tasks table
         c.execute('''
+        drop TABLE tasks
+        ''')
+        conn.commit()
+        c.execute('''
         CREATE TABLE tasks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             task_name TEXT NOT NULL,
