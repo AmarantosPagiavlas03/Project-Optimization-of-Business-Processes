@@ -26,14 +26,14 @@ def init_db():
         conn.commit()
         # Create the shifts table
         c.execute('''
-        CREATE TABLE if not exists shifts (
+        CREATE TABLE if not exists Shifts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            shift_name TEXT NOT NULL,
-            start_date TEXT NOT NULL,
+            ShiftName TEXT NOT NULL,
             StartTime TEXT NOT NULL,
-            EndTime TEXT,
-            NursesRequired INTEGER NOT NULL,
-            Duration TEXT NOT NULL
+            EndTime TEXT NOT NULL,
+            BreakTime TEXT NOT NULL,
+            BreakDuration TEXT NOT NULL,
+            Cost float NOT NULL
         )
         ''')
         conn.commit()
@@ -49,11 +49,11 @@ def add_task_to_db(TaskName,Day, StartTime,EndTime, Duration,NursesRequired):
     conn.commit()
     conn.close()
 
-def get_all_tasks():
+def get_all_tasks(table = 'Tasks'):
     conn = sqlite3.connect(DB_FILE)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    c.execute("SELECT * FROM Tasks")
+    c.execute(f"SELECT * FROM {table}")
     rows = c.fetchall()
     conn.close()
     df = pd.DataFrame(rows, columns=[desc[0] for desc in c.description])
@@ -122,9 +122,11 @@ if uploaded_file:
 
 # Display tasks
 st.header("Tasks List")
-tasks_df = get_all_tasks()
+tasks_df = get_all_tasks('Tasks')
+shifts_df = get_all_tasks('Shifts')
 if not tasks_df.empty:
     st.dataframe(tasks_df)
+    st.dataframe(shifts_df)
 else:
     st.write("No tasks added yet.")
 
