@@ -16,6 +16,9 @@ def init_db():
         task_name TEXT NOT NULL,
         start_date TEXT NOT NULL,
         start_time TEXT NOT NULL,
+        end_date TEXT NOT NULL,
+        end_time TEXT NOT NULL,
+        nurses_required INTEGER NOT NULL,
         duration TEXT NOT NULL
     )
     ''')
