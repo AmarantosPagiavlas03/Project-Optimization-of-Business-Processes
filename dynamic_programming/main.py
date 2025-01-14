@@ -11,9 +11,9 @@ def init_db():
     try:
         conn = sqlite3.connect(DB_FILE)
         c = conn.cursor()
-        # Create the tasks table
+        # Create the Tasks table
         c.execute('''
-        CREATE TABLE if not exists tasks (
+        CREATE TABLE if not exists Tasks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             TaskName TEXT NOT NULL,
             Day TEXT NOT NULL,
@@ -44,7 +44,7 @@ def init_db():
 def add_task_to_db(TaskName,Day, StartTime,EndTime, Duration,NursesRequired):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute("INSERT INTO tasks (TaskName, Day, StartTime,EndTime, Duration, NursesRequired) VALUES (?, ?, ?, ? , ?,?)",
+    c.execute("INSERT INTO Tasks (TaskName, Day, StartTime,EndTime, Duration, NursesRequired) VALUES (?, ?, ?, ? , ?,?)",
               (TaskName,Day, StartTime,EndTime, Duration,NursesRequired))
     conn.commit()
     conn.close()
@@ -53,7 +53,7 @@ def get_all_tasks():
     conn = sqlite3.connect(DB_FILE)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    c.execute("SELECT * FROM tasks")
+    c.execute("SELECT * FROM Tasks")
     rows = c.fetchall()
     conn.close()
     df = pd.DataFrame(rows, columns=[desc[0] for desc in c.description])
@@ -62,7 +62,7 @@ def get_all_tasks():
 def clear_all_tasks():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute("DELETE FROM tasks")
+    c.execute("DELETE FROM Tasks")
     conn.commit()
     conn.close()
 
