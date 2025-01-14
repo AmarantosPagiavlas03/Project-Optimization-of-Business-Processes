@@ -149,17 +149,15 @@ def create_calendar(tasks_df):
         st.write("No tasks to display in the calendar.")
         return
     
-    tasks_df["End DateTime"] = tasks_df["Start Date"] + tasks_df["Start Time"] + tasks_df["Duration"]
-    tasks_df["Start"] = (tasks_df["Start Date"] + tasks_df["Start Time"]).dt.strftime("%Y-%m-%d %H:%M:%S")
-    tasks_df["End"] = tasks_df["End DateTime"].dt.strftime("%Y-%m-%d %H:%M:%S")
-    tasks_df["Day of Week"] = (tasks_df["Start Date"]).dt.strftime("%A")  # Get day name
+    tasks_df["Start"] = pd.to_datetime(tasks_df["day"] + " " + tasks_df["start_time"])
+    tasks_df["End"] = tasks_df["Start"] + pd.to_timedelta(tasks_df["duration"])
     
     chart = alt.Chart(tasks_df).mark_bar().encode(
         x=alt.X('Start:T', title="Start Time"),
         x2='End:T',
-        y=alt.Y('Day of Week:N', title="Day of the Week", sort=['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']),
-        color=alt.Color('Task Name:N', title="Task Name"),
-        tooltip=['Task Name', 'Start', 'End', 'Day of Week']
+        y=alt.Y('day:N', title="Day of the Week", sort=['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']),
+        color=alt.Color('task_name:N', title="Task Name"),
+        tooltip=['task_name', 'Start', 'End', 'day']
     ).properties(
         title="Task Calendar with Days of the Week",
         width=800,
