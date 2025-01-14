@@ -13,7 +13,7 @@ def init_db():
         c = conn.cursor()
         # Create the tasks table
         c.execute('''
-        drop TABLE tasks
+        drop TABLE if exists tasks
         ''')
         conn.commit()
         c.execute('''
