@@ -244,10 +244,8 @@ if uploaded_file:
 # Display tasks
 st.header("Tasks List")
 tasks_df = get_all('Tasks')
-shifts_df = get_all('Shifts')
 if not tasks_df.empty:
     st.dataframe(tasks_df)
-    st.dataframe(shifts_df)
 else:
     st.write("No tasks added yet.")
 
