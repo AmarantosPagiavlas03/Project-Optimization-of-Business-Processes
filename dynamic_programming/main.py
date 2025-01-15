@@ -198,6 +198,14 @@ if not shifts_df.empty:
 else:
     st.write("No shifts added yet.")
 
+if not shifts_df.empty:
+    st.download_button(
+        label="Download Shifts as CSV",
+        data=shifts_df.to_csv(index=False).encode("utf-8"),
+        file_name="shifts.csv",
+        mime="shifts/csv"
+    )
+
 # Days selection
 Days = {
     "Monday": st.sidebar.checkbox("Monday", value=True, key="Monday_checkbox"),
@@ -255,7 +263,7 @@ if st.button("Clear All Tasks"):
     st.success("All tasks have been cleared!")
 
 # Calendar view
-st.header("Task Calendar")
+# st.header("Task Calendar")
 
 # def create_calendar(tasks_df):
 #     if tasks_df.empty:
