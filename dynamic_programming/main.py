@@ -58,7 +58,7 @@ def add_task_to_db(TaskName,Day, StartTime,EndTime, Duration,NursesRequired):
     conn.commit()
     conn.close()
 
-def get_all_tasks(table = 'Tasks'):
+def get_all(table = 'Tasks'):
     conn = sqlite3.connect(DB_FILE)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
@@ -68,10 +68,10 @@ def get_all_tasks(table = 'Tasks'):
     df = pd.DataFrame(rows, columns=[desc[0] for desc in c.description])
     return df
 
-def clear_all_tasks():
+def clear_all(table = 'Tasks'):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute("DELETE FROM Tasks")
+    c.execute(f"DELETE FROM {table}")
     conn.commit()
     conn.close()
 
@@ -192,7 +192,7 @@ if st.sidebar.button("Add Shift"):
 
 # Display shifts
 st.header("Shifts List")
-shifts_df = get_all_tasks('Shifts')
+shifts_df = get_all('Shifts')
 if not shifts_df.empty:
     st.dataframe(shifts_df)
 else:
@@ -212,6 +212,10 @@ Days = {
 Flexibility = st.sidebar.text_area("Flexibility Notes", "", key="flexibility_text_area")
 ShiftNotes = st.sidebar.text_area("Additional Notes", "", key="shift_notes_text_area")
 
+# Add a "Clear Shifts" button
+if st.button("Clear All Shifts"):
+    clear_all('Shifts')
+    st.success("All shifts have been cleared!")
 
 
 # File uploader to import tasks
@@ -239,8 +243,8 @@ if uploaded_file:
 
 # Display tasks
 st.header("Tasks List")
-tasks_df = get_all_tasks('Tasks')
-shifts_df = get_all_tasks('Shifts')
+tasks_df = get_all('Tasks')
+shifts_df = get_all('Shifts')
 if not tasks_df.empty:
     st.dataframe(tasks_df)
     st.dataframe(shifts_df)
@@ -249,7 +253,7 @@ else:
 
 # Button to clear all tasks
 if st.button("Clear All Tasks"):
-    clear_all_tasks()
+    clear_all('Tasks')
     st.success("All tasks have been cleared!")
 
 # Calendar view
