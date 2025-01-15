@@ -175,13 +175,13 @@ else:
 
 # Days selection
 Days = {
-    "Monday": st.sidebar.checkbox("Monday", value=True),
-    "Tuesday": st.sidebar.checkbox("Tuesday", value=True),
-    "Wednesday": st.sidebar.checkbox("Wednesday", value=True),
-    "Thursday": st.sidebar.checkbox("Thursday", value=True),
-    "Friday": st.sidebar.checkbox("Friday", value=True),
-    "Saturday": st.sidebar.checkbox("Saturday", value=False),
-    "Sunday": st.sidebar.checkbox("Sunday", value=False),
+    "Monday": st.sidebar.checkbox("Monday", value=True, key="Monday_checkbox"),
+    "Tuesday": st.sidebar.checkbox("Tuesday", value=True, key="Tuesday_checkbox"),
+    "Wednesday": st.sidebar.checkbox("Wednesday", value=True, key="Wednesday_checkbox"),
+    "Thursday": st.sidebar.checkbox("Thursday", value=True, key="Thursday_checkbox"),
+    "Friday": st.sidebar.checkbox("Friday", value=True, key="Friday_checkbox"),
+    "Saturday": st.sidebar.checkbox("Saturday", value=False, key="Saturday_checkbox"),
+    "Sunday": st.sidebar.checkbox("Sunday", value=False, key="Sunday_checkbox"),
 }
 
 Flexibility = st.sidebar.text_area("Flexibility Notes", "")
