@@ -167,6 +167,7 @@ if st.sidebar.button("Add Shift"):
 
 # Display shifts
 st.header("Shifts List")
+shifts_df = get_all_tasks('Shifts')
 if not shifts_df.empty:
     st.dataframe(shifts_df)
 else:
