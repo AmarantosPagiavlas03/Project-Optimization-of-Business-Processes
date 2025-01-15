@@ -322,8 +322,8 @@ def main():
         num_tasks = st.sidebar.number_input("Number of Tasks", min_value=1, max_value=100, value=10)
         num_shifts = st.sidebar.number_input("Number of Shifts", min_value=1, max_value=50, value=5)
         generate_and_fill_data(num_tasks, num_shifts)
-        
-    if st.button("Optimize Task Assignment"):
-        optimize_tasks_to_shifts()
+
+    # if st.button("Optimize Task Assignment"):
+        # optimize_tasks_to_shifts()
 if __name__ == "__main__":
     main()
