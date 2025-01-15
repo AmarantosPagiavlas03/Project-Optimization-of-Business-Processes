@@ -49,34 +49,6 @@ def init_db():
         if conn:
             conn.close()
 
-def generate_template():
-    # Define template DataFrames
-    tasks_template = pd.DataFrame({
-        "TaskName": ["Task1", "Task2"],
-        "Day": ["Monday", "Tuesday"],
-        "StartTime": ["08:00:00", "10:00:00"],
-        "EndTime": ["10:00:00", "12:00:00"],
-        "Duration": ["2:00:00", "2:00:00"],
-        "NursesRequired": [2, 3]
-    })
-    
-    shifts_template = pd.DataFrame({
-        "ShiftName": ["Morning Shift", "Evening Shift"],
-        "StartTime": ["08:00:00", "16:00:00"],
-        "EndTime": ["16:00:00", "00:00:00"],
-        "BreakTime": ["12:00:00", "20:00:00"],
-        "BreakDuration": ["0:30:00", "0:30:00"],
-        "Cost": [100.0, 120.0]
-    })
-    
-    # Save to an in-memory BytesIO buffer
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-        tasks_template.to_excel(writer, index=False, sheet_name="Tasks")
-        shifts_template.to_excel(writer, index=False, sheet_name="Shifts")
-    
-    output.seek(0)
-    return output
 
 def add_task_to_db(TaskName,Day, StartTime,EndTime, Duration,NursesRequired):
     conn = sqlite3.connect(DB_FILE)
@@ -137,6 +109,69 @@ if st.sidebar.button("Add Task"):
     else:
         st.sidebar.error("Task name cannot be empty!")
 
+# Sidebar for adding shifts
+st.sidebar.header("Add Shift")
+
+Shift_StartTime = st.sidebar.time_input("Shift Start Time", value=datetime.now().time())
+Shift_EndTime = st.sidebar.time_input("Shift End Time", value=(datetime.now() + timedelta(hours=1)).time())
+BreakTime = st.sidebar.time_input("Break Start Time", value=(datetime.now() + timedelta(hours=2)).time())
+BreakDuration_hours = st.sidebar.number_input("Break Duration Hours", min_value=0, max_value=23, value=0)
+BreakDuration_minutes = st.sidebar.number_input("Break Duration Minutes", min_value=0, max_value=59, value=30)
+Weight = st.sidebar.number_input("Shift Weight", min_value=0.0, value=1.0)
+
+if st.sidebar.button("Add Shift"):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute(
+        """
+        INSERT INTO Shifts 
+        (StartTime, EndTime, BreakTime, BreakDuration, Weight, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday, Flexibility, Notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            f"{Shift_StartTime.hour}:{Shift_StartTime.minute}:00",
+            f"{Shift_EndTime.hour}:{Shift_EndTime.minute}:00",
+            f"{BreakTime.hour}:{BreakTime.minute}:00",
+            f"{timedelta(hours=BreakDuration_hours, minutes=BreakDuration_minutes)}",
+            Weight,
+            int(Days["Monday"]),
+            int(Days["Tuesday"]),
+            int(Days["Wednesday"]),
+            int(Days["Thursday"]),
+            int(Days["Friday"]),
+            int(Days["Saturday"]),
+            int(Days["Sunday"]),
+            Flexibility,
+            ShiftNotes,
+        ),
+    )
+    conn.commit()
+    conn.close()
+    st.sidebar.success("Shift added successfully!")
+
+# Display shifts
+st.header("Shifts List")
+if not shifts_df.empty:
+    st.dataframe(shifts_df)
+else:
+    st.write("No shifts added yet.")
+
+# Days selection
+Days = {
+    "Monday": st.sidebar.checkbox("Monday", value=True),
+    "Tuesday": st.sidebar.checkbox("Tuesday", value=True),
+    "Wednesday": st.sidebar.checkbox("Wednesday", value=True),
+    "Thursday": st.sidebar.checkbox("Thursday", value=True),
+    "Friday": st.sidebar.checkbox("Friday", value=True),
+    "Saturday": st.sidebar.checkbox("Saturday", value=False),
+    "Sunday": st.sidebar.checkbox("Sunday", value=False),
+}
+
+Flexibility = st.sidebar.text_area("Flexibility Notes", "")
+ShiftNotes = st.sidebar.text_area("Additional Notes", "")
+
+
+
 # File uploader to import tasks
 uploaded_file = st.sidebar.file_uploader("Upload Excel File", type=["xlsx", "xls"])
 if uploaded_file:
@@ -156,6 +191,9 @@ if uploaded_file:
             st.sidebar.error(f"File must contain the columns: {', '.join(required_columns)}")
     except Exception as e:
         st.sidebar.error(f"Error reading file: {e}")
+
+
+
 
 # Display tasks
 st.header("Tasks List")
