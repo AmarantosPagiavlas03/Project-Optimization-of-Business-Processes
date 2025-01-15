@@ -184,8 +184,8 @@ Days = {
     "Sunday": st.sidebar.checkbox("Sunday", value=False, key="Sunday_checkbox"),
 }
 
-Flexibility = st.sidebar.text_area("Flexibility Notes", "")
-ShiftNotes = st.sidebar.text_area("Additional Notes", "")
+Flexibility = st.sidebar.text_area("Flexibility Notes", "", key="flexibility_text_area")
+ShiftNotes = st.sidebar.text_area("Additional Notes", "", key="shift_notes_text_area")
 
 
 
