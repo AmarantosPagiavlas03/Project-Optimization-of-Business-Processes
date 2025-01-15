@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 from datetime import datetime, timedelta
+import random
 
 # Constants
 DB_FILE = "tasks.db"
@@ -143,6 +144,53 @@ def shift_input_form():
         add_shift_to_db(shift_data)
         st.sidebar.success("Shift added successfully!")
 
+def generate_and_fill_data(num_tasks=10, num_shifts=5):
+    """Generate random tasks and shifts and populate the database."""
+    # Initialize the database
+    init_db()
+    
+    # Generate random tasks
+    for _ in range(num_tasks):
+        task_name = f"Task_{random.randint(1, 100)}"
+        day = random.choice(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
+        start_time = datetime.now() + timedelta(hours=random.randint(0, 23), minutes=random.randint(0, 59))
+        duration = timedelta(hours=random.randint(0, 5), minutes=random.randint(0, 59))
+        end_time = start_time + duration
+        nurses_required = random.randint(1, 10)
+        add_task_to_db(
+            task_name,
+            day,
+            start_time.strftime("%H:%M:%S"),
+            end_time.strftime("%H:%M:%S"),
+            str(duration),
+            nurses_required
+        )
+
+    # Generate random shifts
+    for _ in range(num_shifts):
+        start_time = datetime.now() + timedelta(hours=random.randint(0, 23), minutes=random.randint(0, 59))
+        end_time = start_time + timedelta(hours=random.randint(1, 8))
+        break_time = start_time + timedelta(hours=random.randint(1, 3))
+        break_duration = timedelta(minutes=random.randint(15, 60))
+        weight = random.uniform(0.5, 2.0)
+        days = {day: random.choice([0, 1]) for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]}
+        flexibility = random.choice(["High", "Moderate", "Low"])
+        notes = f"Random notes {random.randint(1, 100)}"
+        shift_data = (
+            start_time.strftime("%H:%M:%S"),
+            end_time.strftime("%H:%M:%S"),
+            break_time.strftime("%H:%M:%S"),
+            str(break_duration),
+            weight,
+            *days.values(),
+            flexibility,
+            notes
+        )
+        add_shift_to_db(shift_data)
+
+    st.success(f"Generated {num_tasks} tasks and {num_shifts} shifts successfully!")
+
+
 # Main app
 def main():
     init_db()
@@ -184,6 +232,11 @@ def main():
     if st.button("Clear All Shifts"):
         clear_all("Shifts")
         st.success("All shifts have been cleared!")
+
+    if st.sidebar.button("Generate Random Data"):
+        num_tasks = st.sidebar.number_input("Number of Tasks", min_value=1, max_value=100, value=10)
+        num_shifts = st.sidebar.number_input("Number of Shifts", min_value=1, max_value=50, value=5)
+        generate_and_fill_data(num_tasks, num_shifts)
 
 if __name__ == "__main__":
     main()
