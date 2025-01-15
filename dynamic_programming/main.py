@@ -318,9 +318,9 @@ def main():
         clear_all("Shifts")
         st.success("All shifts have been cleared!")
 
+    num_tasks = st.sidebar.number_input("Number of Tasks", min_value=1, max_value=100, value=10)
+    num_shifts = st.sidebar.number_input("Number of Shifts", min_value=1, max_value=50, value=5)
     if st.sidebar.button("Generate Random Data"):
-        num_tasks = st.sidebar.number_input("Number of Tasks", min_value=1, max_value=100, value=10)
-        num_shifts = st.sidebar.number_input("Number of Shifts", min_value=1, max_value=50, value=5)
         generate_and_fill_data(num_tasks, num_shifts)
 
     if st.button("Optimize Task Assignment"):
