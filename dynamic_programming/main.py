@@ -118,8 +118,7 @@ if "shift_start_time" not in st.session_state:
 if "shift_end_time" not in st.session_state:
     st.session_state["shift_end_time"] = (datetime.now() + timedelta(hours=1)).time()
 
-# Sidebar for adding shifts
-st.sidebar.header("Add Shift")
+ 
 
 # Sidebar inputs for shift times with session state
 Shift_StartTime = st.sidebar.time_input(
