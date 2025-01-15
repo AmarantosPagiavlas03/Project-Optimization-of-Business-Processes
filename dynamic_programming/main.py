@@ -119,6 +119,22 @@ BreakDuration_hours = st.sidebar.number_input("Break Duration Hours", min_value=
 BreakDuration_minutes = st.sidebar.number_input("Break Duration Minutes", min_value=0, max_value=59, value=30)
 Weight = st.sidebar.number_input("Shift Weight", min_value=0.0, value=1.0)
 
+# Days selection
+Days = {
+    "Monday": st.sidebar.checkbox("Monday", value=True),
+    "Tuesday": st.sidebar.checkbox("Tuesday", value=True),
+    "Wednesday": st.sidebar.checkbox("Wednesday", value=True),
+    "Thursday": st.sidebar.checkbox("Thursday", value=True),
+    "Friday": st.sidebar.checkbox("Friday", value=True),
+    "Saturday": st.sidebar.checkbox("Saturday", value=False),
+    "Sunday": st.sidebar.checkbox("Sunday", value=False),
+}
+
+Flexibility = st.sidebar.text_area("Flexibility Notes", "")
+ShiftNotes = st.sidebar.text_area("Additional Notes", "")
+
+# Add shift button
+
 if st.sidebar.button("Add Shift"):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
