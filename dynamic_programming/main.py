@@ -112,8 +112,30 @@ if st.sidebar.button("Add Task"):
 # Sidebar for adding shifts
 st.sidebar.header("Add Shift")
 
-Shift_StartTime = st.sidebar.time_input("Shift Start Time", value=datetime.now().time())
-Shift_EndTime = st.sidebar.time_input("Shift End Time", value=(datetime.now() + timedelta(hours=1)).time())
+# Initialize session state for shift times
+if "shift_start_time" not in st.session_state:
+    st.session_state["shift_start_time"] = datetime.now().time()
+if "shift_end_time" not in st.session_state:
+    st.session_state["shift_end_time"] = (datetime.now() + timedelta(hours=1)).time()
+
+# Sidebar for adding shifts
+st.sidebar.header("Add Shift")
+
+# Sidebar inputs for shift times with session state
+Shift_StartTime = st.sidebar.time_input(
+    "Shift Start Time", 
+    value=st.session_state["shift_start_time"], 
+    key="shift_start_time_input"
+)
+Shift_EndTime = st.sidebar.time_input(
+    "Shift End Time", 
+    value=st.session_state["shift_end_time"], 
+    key="shift_end_time_input"
+)
+
+# Update session state when time inputs are modified
+st.session_state["shift_start_time"] = Shift_StartTime
+st.session_state["shift_end_time"] = Shift_EndTime
 BreakTime = st.sidebar.time_input("Break Start Time", value=(datetime.now() + timedelta(hours=2)).time())
 BreakDuration_hours = st.sidebar.number_input("Break Duration Hours", min_value=0, max_value=23, value=0)
 BreakDuration_minutes = st.sidebar.number_input("Break Duration Minutes", min_value=0, max_value=59, value=30)
