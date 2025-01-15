@@ -1,4 +1,4 @@
 streamlit
 pandas
 numpy
-pulp==2.7.0
+pulp
