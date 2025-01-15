@@ -151,7 +151,11 @@ Days = {
     "Sunday": st.sidebar.checkbox("Sunday", value=False),
 }
 
-Flexibility = st.sidebar.text_area("Flexibility Notes", "")
+Flexibility = st.sidebar.selectbox(
+    "Flexibility",
+    options=["High", "Low", "Moderate"],
+    key="flexibility_selectbox"
+)
 ShiftNotes = st.sidebar.text_area("Additional Notes", "")
 
 # Add shift button
