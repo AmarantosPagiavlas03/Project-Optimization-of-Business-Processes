@@ -26,10 +26,6 @@ def init_db():
         conn.commit()
         # Create the shifts table
         c.execute('''
-        DROP TABLE if exists Shifts 
-        ''')
-        conn.commit()
-        c.execute('''
         CREATE TABLE if not exists Shifts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             StartTime TEXT NOT NULL,
