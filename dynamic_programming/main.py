@@ -26,14 +26,26 @@ def init_db():
         conn.commit()
         # Create the shifts table
         c.execute('''
+        DROP TABLE if exists Shifts 
+        ''')
+        conn.commit()
+        c.execute('''
         CREATE TABLE if not exists Shifts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            ShiftName TEXT NOT NULL,
             StartTime TEXT NOT NULL,
             EndTime TEXT NOT NULL,
             BreakTime TEXT NOT NULL,
             BreakDuration TEXT NOT NULL,
-            Cost float NOT NULL
+            Weight FOAT NOT NULL,
+            Monday INT NOT NULL,
+            Tuesday INT NOT NULL,
+            Wednesday INT NOT NULL,
+            Thursday INT NOT NULL,
+            Friday INT NOT NULL,
+            Saturday INT NOT NULL,
+            Sunday INT NOT NULL,
+            Flexibility TEXT NOT NULL,
+            Notes TEXT NULL
         )
         ''')
         conn.commit()
@@ -128,16 +140,6 @@ if st.sidebar.button("Add Task"):
         st.sidebar.success(f"Task '{TaskName}' added!")
     else:
         st.sidebar.error("Task name cannot be empty!")
-
-# Provide a download link for the template
-# st.header("Download Template")
-# template_file = generate_template()
-# st.download_button(
-#     label="Download Task and Shift Template",
-#     data=template_file,
-#     file_name="template.xlsx",
-#     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-# )
 
 # File uploader to import tasks
 uploaded_file = st.sidebar.file_uploader("Upload Excel File", type=["xlsx", "xls"])
