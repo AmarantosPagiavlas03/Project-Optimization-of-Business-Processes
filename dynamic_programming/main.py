@@ -334,11 +334,19 @@ def display_tasks_and_shifts():
                         "Category": "Shift"
                     })
 
-        # Convert expanded shifts to DataFrame
+        shifts_expanded = []
+        for _, shift in shifts_df.iterrows():
+            for day in day_order:
+                if shift["Day"] == day or pd.isnull(shift["Day"]):
+                    shifts_expanded.append({
+                        "ShiftID": shift["ShiftID"],
+                        "Day": day,
+                        "Start": shift["Start"],
+                        "End": shift["End"],
+                    })
+
         shifts_expanded_df = pd.DataFrame(shifts_expanded)
-        shifts_expanded_df["Day"] = pd.Categorical(shifts_expanded_df["Day"], categories=day_order, ordered=True)  # Order days
-        
-        # Plot shifts
+        shifts_expanded_df["Day"] = pd.Categorical(shifts_expanded_df["Day"], categories=day_order, ordered=True)
         fig_shifts = px.timeline(
             shifts_expanded_df,
             x_start="Start",
@@ -350,6 +358,7 @@ def display_tasks_and_shifts():
         )
         fig_shifts.update_yaxes(categoryorder="array", categoryarray=day_order)  # Ensure days are ordered correctly
         st.plotly_chart(fig_shifts)
+
     else:
         st.write("No shifts to display.")
 
