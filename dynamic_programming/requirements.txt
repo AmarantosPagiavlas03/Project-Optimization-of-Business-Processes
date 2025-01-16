@@ -2,5 +2,5 @@ streamlit
 pandas
 numpy
 pulp
-matplotlib.pyplot
-plotly.express
+matplotlib
+plotly
