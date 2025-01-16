@@ -89,14 +89,27 @@ def clear_all(table):
 def task_input_form():
     """Sidebar form to add a new task."""
     st.sidebar.header("Add Task")
+
+    # Initialize session state for start and end time
+    if "task_start_time" not in st.session_state:
+        st.session_state["task_start_time"] = datetime.now().time()
+    if "task_end_time" not in st.session_state:
+        st.session_state["task_end_time"] = (datetime.now() + timedelta(hours=1)).time()
+
+    # Task form inputs
     TaskName = st.sidebar.text_input("Task Name", "")
     Day = st.sidebar.selectbox("Day of the Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
-    StartTime = st.sidebar.time_input("Start Time", value=datetime.now().time())
-    EndTime = st.sidebar.time_input("End Time", value=datetime.now().time())
+    StartTime = st.sidebar.time_input("Start Time", value=st.session_state["task_start_time"])
+    EndTime = st.sidebar.time_input("End Time", value=st.session_state["task_end_time"])
     duration_hours = st.sidebar.number_input("Duration Hours", min_value=0, max_value=23, value=1)
     duration_minutes = st.sidebar.number_input("Duration Minutes", min_value=0, max_value=59, value=0)
     NursesRequired = st.sidebar.number_input("Nurses Required", min_value=1, value=1)
 
+    # Update session state on user input
+    st.session_state["task_start_time"] = StartTime
+    st.session_state["task_end_time"] = EndTime
+
+    # Add task button
     if st.sidebar.button("Add Task"):
         if TaskName:
             Duration = timedelta(hours=duration_hours, minutes=duration_minutes)
@@ -111,6 +124,7 @@ def task_input_form():
             st.sidebar.success(f"Task '{TaskName}' added!")
         else:
             st.sidebar.error("Task name cannot be empty!")
+
 
 def shift_input_form():
     """Sidebar form to add a new shift."""
