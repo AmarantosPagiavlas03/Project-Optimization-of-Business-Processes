@@ -324,27 +324,6 @@ def display_tasks_and_shifts():
     else:
         st.write("No data available for visualization.")
 
-def filter_and_display():
-    """Provide filtering options and display filtered tasks or shifts."""
-    st.sidebar.subheader("Filter Options")
-    view_option = st.sidebar.radio("View", options=["Tasks", "Shifts", "Both"])
-    day_filter = st.sidebar.selectbox("Day of the Week", ["All", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
-    
-    tasks_df = get_all("Tasks")
-    shifts_df = get_all("Shifts")
-    
-    if day_filter != "All":
-        if not tasks_df.empty:
-            tasks_df = tasks_df[tasks_df["Day"] == day_filter]
-        if not shifts_df.empty:
-            shifts_df = shifts_df[shifts_df[day_filter] == 1]
-    
-    if view_option in ["Tasks", "Both"] and not tasks_df.empty:
-        st.header("Filtered Tasks")
-        st.dataframe(tasks_df)
-    if view_option in ["Shifts", "Both"] and not shifts_df.empty:
-        st.header("Filtered Shifts")
-        st.dataframe(shifts_df)
 
 # Main app
 def main():
@@ -399,9 +378,6 @@ def main():
 
     # Visualize tasks and shifts
     display_tasks_and_shifts()
-
-    # Filtering options
-    filter_and_display()
 
     # Optimization
     if st.button("Optimize Task Assignment"):
