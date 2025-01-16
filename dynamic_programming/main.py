@@ -293,98 +293,104 @@ def optimize_tasks_to_shifts():
         )
 
 def display_tasks_and_shifts():
-    """Display tasks and shifts separately as Gantt charts in a week view."""
+    """Display tasks and shifts separately as Gantt charts in a 24-hour view."""
     st.header("Visualize Tasks and Shifts for the Week")
-    
+
     # Fetch data
     tasks_df = get_all("Tasks")
     shifts_df = get_all("Shifts")
-    
+
     # Define a mapping of days to order them for visualization
     day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    hours = [f"{hour:02d}:00:00" for hour in range(24)]  # All 24 hours in a day
 
-    # Display tasks
+    # Prepare tasks DataFrame
     if not tasks_df.empty:
-        st.subheader("Tasks Schedule (Week View)")
         tasks_df["Start"] = pd.to_datetime(tasks_df["StartTime"], format="%H:%M:%S")
         tasks_df["End"] = pd.to_datetime(tasks_df["EndTime"], format="%H:%M:%S")
         tasks_df["Day"] = tasks_df["Day"].astype(str)
         tasks_df["Day"] = pd.Categorical(tasks_df["Day"], categories=day_order, ordered=True)
     else:
-        # Create a placeholder DataFrame with all days
+        # Create a placeholder DataFrame with all days and hours
         tasks_df = pd.DataFrame(columns=["TaskName", "Day", "Start", "End"])
         tasks_df["Day"] = pd.Categorical(tasks_df["Day"], categories=day_order, ordered=True)
 
-    # Expand tasks to include all days of the week
+    # Expand tasks to include all days and all hours
     tasks_expanded = []
     for day in day_order:
-        day_tasks = tasks_df[tasks_df["Day"] == day]
-        if not day_tasks.empty:
-            tasks_expanded.extend(day_tasks.to_dict("records"))
-        else:
-            tasks_expanded.append({
-                "TaskName": "No Tasks",
-                "Day": day,
-                "Start": None,
-                "End": None
-            })
+        for hour in hours:
+            day_tasks = tasks_df[(tasks_df["Day"] == day) & 
+                                 (tasks_df["Start"].dt.strftime("%H:%M:%S") == hour)]
+            if not day_tasks.empty:
+                tasks_expanded.extend(day_tasks.to_dict("records"))
+            else:
+                tasks_expanded.append({
+                    "TaskName": "No Tasks",
+                    "Day": day,
+                    "Start": pd.to_datetime(f"{hour}", format="%H:%M:%S"),
+                    "End": pd.to_datetime(f"{hour}", format="%H:%M:%S")
+                })
 
     # Convert expanded tasks to DataFrame
     tasks_expanded_df = pd.DataFrame(tasks_expanded)
     tasks_expanded_df["Day"] = pd.Categorical(tasks_expanded_df["Day"], categories=day_order, ordered=True)
 
     # Display tasks
+    st.subheader("Tasks Schedule (24-Hour View)")
     fig_tasks = px.timeline(
         tasks_expanded_df,
         x_start="Start",
         x_end="End",
         y="Day",
         color="TaskName",
-        title="Tasks Gantt Chart (Week View)",
+        title="Tasks Gantt Chart (24-Hour View)",
         labels={"Start": "Start Time", "End": "End Time", "Day": "Day of the Week", "TaskName": "Task"}
     )
+    fig_tasks.update_layout(xaxis=dict(tickformat="%H:%M", dtick=3600000))  # Show all hours
     fig_tasks.update_yaxes(categoryorder="array", categoryarray=day_order)  # Ensure days are ordered correctly
     st.plotly_chart(fig_tasks)
 
-    # Display shifts
+    # Prepare shifts DataFrame
     if not shifts_df.empty:
-        st.subheader("Shifts Schedule (Week View)")
         shifts_df["Start"] = pd.to_datetime(shifts_df["StartTime"], format="%H:%M:%S")
         shifts_df["End"] = pd.to_datetime(shifts_df["EndTime"], format="%H:%M:%S")
     else:
-        # Create a placeholder DataFrame with all days
+        # Create a placeholder DataFrame with all days and hours
         shifts_df = pd.DataFrame(columns=["ShiftID", "Day", "Start", "End"])
         shifts_df["Day"] = pd.Categorical(shifts_df["Day"], categories=day_order, ordered=True)
 
-    # Expand shifts to include all days of the week
+    # Expand shifts to include all days and all hours
     shifts_expanded = []
-    for _, shift in shifts_df.iterrows():
-        for day in day_order:
-            if shift.get(day, 0) == 1:  # Check if the shift is active on the specific day
-                shifts_expanded.append({
-                    "ShiftID": shift.get("id", None),
-                    "Day": day,
-                    "Start": shift["Start"],
-                    "End": shift["End"],
-                })
     for day in day_order:
-        if day not in [shift["Day"] for shift in shifts_expanded]:
-            shifts_expanded.append({"ShiftID": "No Shifts", "Day": day, "Start": None, "End": None})
+        for hour in hours:
+            hour_shifts = shifts_df[(shifts_df["Day"] == day) &
+                                    (shifts_df["Start"].dt.strftime("%H:%M:%S") == hour)]
+            if not hour_shifts.empty:
+                shifts_expanded.extend(hour_shifts.to_dict("records"))
+            else:
+                shifts_expanded.append({
+                    "ShiftID": "No Shifts",
+                    "Day": day,
+                    "Start": pd.to_datetime(f"{hour}", format="%H:%M:%S"),
+                    "End": pd.to_datetime(f"{hour}", format="%H:%M:%S")
+                })
 
     # Convert expanded shifts to DataFrame
     shifts_expanded_df = pd.DataFrame(shifts_expanded)
     shifts_expanded_df["Day"] = pd.Categorical(shifts_expanded_df["Day"], categories=day_order, ordered=True)
 
     # Display shifts
+    st.subheader("Shifts Schedule (24-Hour View)")
     fig_shifts = px.timeline(
         shifts_expanded_df,
         x_start="Start",
         x_end="End",
         y="Day",
         color="ShiftID",
-        title="Shifts Gantt Chart (Week View)",
+        title="Shifts Gantt Chart (24-Hour View)",
         labels={"Start": "Start Time", "End": "End Time", "Day": "Day of the Week", "ShiftID": "Shift"}
     )
+    fig_shifts.update_layout(xaxis=dict(tickformat="%H:%M", dtick=3600000))  # Show all hours
     fig_shifts.update_yaxes(categoryorder="array", categoryarray=day_order)  # Ensure days are ordered correctly
     st.plotly_chart(fig_shifts)
 
