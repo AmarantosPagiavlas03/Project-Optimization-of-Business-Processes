@@ -293,7 +293,7 @@ def optimize_tasks_to_shifts():
         )
 
 def display_tasks_and_shifts():
-    """Display tasks and shifts as Gantt charts for visualization."""
+    """Display tasks and shifts as Gantt charts for visualization with all days and hours displayed."""
     st.header("Visualize Tasks and Shifts for the Week")
 
     # Fetch data
@@ -302,6 +302,9 @@ def display_tasks_and_shifts():
 
     # Define a mapping of days to ensure consistent ordering
     day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
+    # Define all hours of the day
+    all_hours = pd.date_range("00:00", "23:59", freq="H").time
 
     # Prepare tasks DataFrame for visualization
     if not tasks_df.empty:
@@ -321,7 +324,7 @@ def display_tasks_and_shifts():
             labels={"Start": "Start Time", "End": "End Time", "Day": "Day of the Week", "TaskName": "Task"}
         )
         fig_tasks.update_yaxes(categoryorder="array", categoryarray=day_order)
-        fig_tasks.update_xaxes(tickformat="%H:%M", dtick=3600000)
+        fig_tasks.update_xaxes(tickformat="%H:%M", dtick=3600000, range=["00:00", "23:59"])
         st.plotly_chart(fig_tasks)
     else:
         st.write("No tasks available to display.")
@@ -358,7 +361,7 @@ def display_tasks_and_shifts():
             labels={"Start": "Start Time", "End": "End Time", "Day": "Day of the Week", "ShiftID": "Shift"}
         )
         fig_shifts.update_yaxes(categoryorder="array", categoryarray=day_order)
-        fig_shifts.update_xaxes(tickformat="%H:%M", dtick=3600000)
+        fig_shifts.update_xaxes(tickformat="%H:%M", dtick=3600000, range=["00:00", "23:59"])
         st.plotly_chart(fig_shifts)
     else:
         st.write("No shifts available to display.")
