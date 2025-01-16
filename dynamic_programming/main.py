@@ -319,7 +319,7 @@ def display_tasks_and_shifts():
     tasks_expanded = []
     for day in day_order:
         for hour in hours:
-            day_tasks = tasks_df[(tasks_df["Day"] == day) & 
+            day_tasks = tasks_df[(tasks_df["Day"] == day) &
                                  (tasks_df["Start"].dt.strftime("%H:%M:%S") == hour)]
             if not day_tasks.empty:
                 tasks_expanded.extend(day_tasks.to_dict("records"))
@@ -354,6 +354,19 @@ def display_tasks_and_shifts():
     if not shifts_df.empty:
         shifts_df["Start"] = pd.to_datetime(shifts_df["StartTime"], format="%H:%M:%S")
         shifts_df["End"] = pd.to_datetime(shifts_df["EndTime"], format="%H:%M:%S")
+
+        # Create a 'Day' column by checking which days the shift is active
+        shifts_expanded = []
+        for _, shift in shifts_df.iterrows():
+            for day in day_order:
+                if shift[day] == 1:  # Shift is active on this day
+                    shifts_expanded.append({
+                        "ShiftID": shift["id"],
+                        "Day": day,
+                        "Start": shift["Start"],
+                        "End": shift["End"]
+                    })
+        shifts_df = pd.DataFrame(shifts_expanded)
     else:
         # Create a placeholder DataFrame with all days and hours
         shifts_df = pd.DataFrame(columns=["ShiftID", "Day", "Start", "End"])
@@ -393,7 +406,6 @@ def display_tasks_and_shifts():
     fig_shifts.update_layout(xaxis=dict(tickformat="%H:%M", dtick=3600000))  # Show all hours
     fig_shifts.update_yaxes(categoryorder="array", categoryarray=day_order)  # Ensure days are ordered correctly
     st.plotly_chart(fig_shifts)
-
 
 
 # Main app
