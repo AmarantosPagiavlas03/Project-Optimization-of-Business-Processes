@@ -415,9 +415,25 @@ def main():
     if st.button("Clear All Tasks"):
         clear_all("Tasks")
         st.success("All tasks have been cleared!")
+        # Refresh tasks display
+        tasks_df = get_all("Tasks")
+        if tasks_df.empty:
+            st.write("No tasks added yet.")
+        else:
+            st.write("**Tasks List**")
+            st.dataframe(tasks_df)
+
     if st.button("Clear All Shifts"):
         clear_all("Shifts")
         st.success("All shifts have been cleared!")
+        # Refresh shifts display
+        shifts_df = get_all("Shifts")
+        if shifts_df.empty:
+            st.write("No shifts added yet.")
+        else:
+            st.write("**Shifts List**")
+            st.dataframe(shifts_df)
+
 
     # Random data generation
     num_tasks = st.sidebar.number_input("Number of Tasks", min_value=1, max_value=100, value=10)
