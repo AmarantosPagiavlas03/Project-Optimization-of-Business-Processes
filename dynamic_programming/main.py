@@ -306,8 +306,8 @@ def display_tasks_and_shifts():
 
     # Prepare tasks DataFrame
     if not tasks_df.empty:
-        tasks_df["Start"] = pd.to_datetime(tasks_df["StartTime"], format="%H:%M:%S")
-        tasks_df["End"] = pd.to_datetime(tasks_df["EndTime"], format="%H:%M:%S")
+        tasks_df["Start"] = pd.to_datetime(tasks_df["StartTime"], format="%H:%M:%S", errors="coerce")
+        tasks_df["End"] = pd.to_datetime(tasks_df["EndTime"], format="%H:%M:%S", errors="coerce")
         tasks_df["Day"] = tasks_df["Day"].astype(str)
         tasks_df["Day"] = pd.Categorical(tasks_df["Day"], categories=day_order, ordered=True)
     else:
@@ -352,8 +352,8 @@ def display_tasks_and_shifts():
 
     # Prepare shifts DataFrame
     if not shifts_df.empty:
-        shifts_df["Start"] = pd.to_datetime(shifts_df["StartTime"], format="%H:%M:%S")
-        shifts_df["End"] = pd.to_datetime(shifts_df["EndTime"], format="%H:%M:%S")
+        shifts_df["Start"] = pd.to_datetime(shifts_df["StartTime"], format="%H:%M:%S", errors="coerce")
+        shifts_df["End"] = pd.to_datetime(shifts_df["EndTime"], format="%H:%M:%S", errors="coerce")
 
         # Create a 'Day' column by checking which days the shift is active
         shifts_expanded = []
