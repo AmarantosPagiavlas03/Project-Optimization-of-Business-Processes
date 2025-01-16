@@ -306,6 +306,7 @@ def display_tasks_and_shifts():
 
     # Prepare tasks DataFrame
     if not tasks_df.empty:
+        # Convert Start and End to datetime
         tasks_df["Start"] = pd.to_datetime(tasks_df["StartTime"], format="%H:%M:%S", errors="coerce")
         tasks_df["End"] = pd.to_datetime(tasks_df["EndTime"], format="%H:%M:%S", errors="coerce")
         tasks_df["Day"] = tasks_df["Day"].astype(str)
@@ -319,8 +320,12 @@ def display_tasks_and_shifts():
     tasks_expanded = []
     for day in day_order:
         for hour in hours:
-            day_tasks = tasks_df[(tasks_df["Day"] == day) &
-                                 (tasks_df["Start"].dt.strftime("%H:%M:%S") == hour)]
+            if not tasks_df.empty:
+                day_tasks = tasks_df[(tasks_df["Day"] == day) &
+                                     (tasks_df["Start"].dt.strftime("%H:%M:%S") == hour)]
+            else:
+                day_tasks = pd.DataFrame()  # Empty DataFrame for placeholder
+
             if not day_tasks.empty:
                 tasks_expanded.extend(day_tasks.to_dict("records"))
             else:
@@ -334,6 +339,10 @@ def display_tasks_and_shifts():
     # Convert expanded tasks to DataFrame
     tasks_expanded_df = pd.DataFrame(tasks_expanded)
     tasks_expanded_df["Day"] = pd.Categorical(tasks_expanded_df["Day"], categories=day_order, ordered=True)
+
+    # Ensure Start and End columns are datetime-like
+    tasks_expanded_df["Start"] = pd.to_datetime(tasks_expanded_df["Start"], errors="coerce")
+    tasks_expanded_df["End"] = pd.to_datetime(tasks_expanded_df["End"], errors="coerce")
 
     # Display tasks
     st.subheader("Tasks Schedule (24-Hour View)")
@@ -352,6 +361,7 @@ def display_tasks_and_shifts():
 
     # Prepare shifts DataFrame
     if not shifts_df.empty:
+        # Convert Start and End to datetime
         shifts_df["Start"] = pd.to_datetime(shifts_df["StartTime"], format="%H:%M:%S", errors="coerce")
         shifts_df["End"] = pd.to_datetime(shifts_df["EndTime"], format="%H:%M:%S", errors="coerce")
 
@@ -376,8 +386,12 @@ def display_tasks_and_shifts():
     shifts_expanded = []
     for day in day_order:
         for hour in hours:
-            hour_shifts = shifts_df[(shifts_df["Day"] == day) &
-                                    (shifts_df["Start"].dt.strftime("%H:%M:%S") == hour)]
+            if not shifts_df.empty:
+                hour_shifts = shifts_df[(shifts_df["Day"] == day) &
+                                        (shifts_df["Start"].dt.strftime("%H:%M:%S") == hour)]
+            else:
+                hour_shifts = pd.DataFrame()  # Empty DataFrame for placeholder
+
             if not hour_shifts.empty:
                 shifts_expanded.extend(hour_shifts.to_dict("records"))
             else:
@@ -391,6 +405,10 @@ def display_tasks_and_shifts():
     # Convert expanded shifts to DataFrame
     shifts_expanded_df = pd.DataFrame(shifts_expanded)
     shifts_expanded_df["Day"] = pd.Categorical(shifts_expanded_df["Day"], categories=day_order, ordered=True)
+
+    # Ensure Start and End columns are datetime-like
+    shifts_expanded_df["Start"] = pd.to_datetime(shifts_expanded_df["Start"], errors="coerce")
+    shifts_expanded_df["End"] = pd.to_datetime(shifts_expanded_df["End"], errors="coerce")
 
     # Display shifts
     st.subheader("Shifts Schedule (24-Hour View)")
