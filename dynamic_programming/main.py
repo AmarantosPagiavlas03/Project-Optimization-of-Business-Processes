@@ -321,32 +321,27 @@ def display_tasks_and_shifts():
         shifts_df["Start"] = pd.to_datetime(shifts_df["StartTime"], format="%H:%M:%S")
         shifts_df["End"] = pd.to_datetime(shifts_df["EndTime"], format="%H:%M:%S")
 
-        # Expand shifts to include applicable days
+    #    Expand shifts to include all days of the week
         shifts_expanded = []
         for _, shift in shifts_df.iterrows():
             for day in day_order:
-                if shift[day] == 1:  # If the shift is active on the specific day
+                if shift.get(day, 0) == 1:  # Check if the shift is active on the specific day
                     shifts_expanded.append({
-                        "ShiftID": shift["id"],
-                        "Day": day,
-                        "Start": shift["Start"],
-                        "End": shift["End"],
-                        "Category": "Shift"
-                    })
-
-        shifts_expanded = []
-        for _, shift in shifts_df.iterrows():
-            for day in day_order:
-                if shift["Day"] == day or pd.isnull(shift["Day"]):
-                    shifts_expanded.append({
-                        "ShiftID": shift["ShiftID"],
+                        "ShiftID": shift.get("id", None),
                         "Day": day,
                         "Start": shift["Start"],
                         "End": shift["End"],
                     })
+        for day in day_order:
+            if day not in [shift["Day"] for shift in shifts_expanded]:
+                shifts_expanded.append({"ShiftID": None, "Day": day, "Start": None, "End": None})
 
+        # Convert expanded shifts to DataFrame
         shifts_expanded_df = pd.DataFrame(shifts_expanded)
         shifts_expanded_df["Day"] = pd.Categorical(shifts_expanded_df["Day"], categories=day_order, ordered=True)
+
+        # Display shifts
+        st.subheader("Shifts Schedule (Week View)")
         fig_shifts = px.timeline(
             shifts_expanded_df,
             x_start="Start",
