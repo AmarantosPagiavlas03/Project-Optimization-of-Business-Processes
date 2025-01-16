@@ -293,18 +293,15 @@ def optimize_tasks_to_shifts():
         )
 
 def display_tasks_and_shifts():
-    """Display tasks and shifts as Gantt charts for visualization with all days and hours displayed."""
+    """Display tasks and shifts as Gantt charts with all days and hours displayed."""
     st.header("Visualize Tasks and Shifts for the Week")
 
     # Fetch data
     tasks_df = get_all("Tasks")
     shifts_df = get_all("Shifts")
 
-    # Define a mapping of days to ensure consistent ordering
+    # Define the day order and the full hour range
     day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-
-    # Define all hours of the day
-    all_hours = pd.date_range("00:00", "23:59", freq="H").time
 
     # Prepare tasks DataFrame for visualization
     if not tasks_df.empty:
@@ -324,7 +321,11 @@ def display_tasks_and_shifts():
             labels={"Start": "Start Time", "End": "End Time", "Day": "Day of the Week", "TaskName": "Task"}
         )
         fig_tasks.update_yaxes(categoryorder="array", categoryarray=day_order)
-        fig_tasks.update_xaxes(tickformat="%H:%M", dtick=3600000, range=["00:00", "23:59"])
+        fig_tasks.update_xaxes(
+            tickformat="%H:%M", 
+            dtick=3600000,  # One hour in milliseconds
+            range=["2023-01-01 00:00", "2023-01-01 23:59"]  # Full day range for visualization
+        )
         st.plotly_chart(fig_tasks)
     else:
         st.write("No tasks available to display.")
@@ -361,11 +362,14 @@ def display_tasks_and_shifts():
             labels={"Start": "Start Time", "End": "End Time", "Day": "Day of the Week", "ShiftID": "Shift"}
         )
         fig_shifts.update_yaxes(categoryorder="array", categoryarray=day_order)
-        fig_shifts.update_xaxes(tickformat="%H:%M", dtick=3600000, range=["00:00", "23:59"])
+        fig_shifts.update_xaxes(
+            tickformat="%H:%M",
+            dtick=3600000,  # One hour in milliseconds
+            range=["2023-01-01 00:00", "2023-01-01 23:59"]  # Full day range for visualization
+        )
         st.plotly_chart(fig_shifts)
     else:
         st.write("No shifts available to display.")
-
 
 # Main app
 def main():
