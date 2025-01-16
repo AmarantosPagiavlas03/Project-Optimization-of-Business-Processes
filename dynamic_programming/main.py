@@ -302,11 +302,13 @@ def display_tasks_and_shifts():
 
     # Define the day order and the full hour range
     day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    full_day_range = ["2023-01-01 00:00:00", "2023-01-01 23:59:59"]
 
     # Prepare tasks DataFrame for visualization
     if not tasks_df.empty:
-        tasks_df["Start"] = pd.to_datetime(tasks_df["StartTime"], format="%H:%M:%S", errors="coerce")
-        tasks_df["End"] = pd.to_datetime(tasks_df["EndTime"], format="%H:%M:%S", errors="coerce")
+        # Add dummy date to Start and End times for compatibility
+        tasks_df["Start"] = pd.to_datetime(f"2023-01-01 " + tasks_df["StartTime"], format="%Y-%m-%d %H:%M:%S")
+        tasks_df["End"] = pd.to_datetime(f"2023-01-01 " + tasks_df["EndTime"], format="%Y-%m-%d %H:%M:%S")
         tasks_df["Day"] = pd.Categorical(tasks_df["Day"], categories=day_order, ordered=True)
 
         # Display tasks as a Gantt chart
@@ -322,9 +324,9 @@ def display_tasks_and_shifts():
         )
         fig_tasks.update_yaxes(categoryorder="array", categoryarray=day_order)
         fig_tasks.update_xaxes(
-            tickformat="%H:%M", 
+            tickformat="%H:%M",
             dtick=3600000,  # One hour in milliseconds
-            range=["2023-01-01 00:00", "2023-01-01 23:59"]  # Full day range for visualization
+            range=full_day_range  # Full 24-hour range
         )
         st.plotly_chart(fig_tasks)
     else:
@@ -332,8 +334,9 @@ def display_tasks_and_shifts():
 
     # Prepare shifts DataFrame for visualization
     if not shifts_df.empty:
-        shifts_df["Start"] = pd.to_datetime(shifts_df["StartTime"], format="%H:%M:%S", errors="coerce")
-        shifts_df["End"] = pd.to_datetime(shifts_df["EndTime"], format="%H:%M:%S", errors="coerce")
+        # Add dummy date to Start and End times for compatibility
+        shifts_df["Start"] = pd.to_datetime(f"2023-01-01 " + shifts_df["StartTime"], format="%Y-%m-%d %H:%M:%S")
+        shifts_df["End"] = pd.to_datetime(f"2023-01-01 " + shifts_df["EndTime"], format="%Y-%m-%d %H:%M:%S")
 
         # Expand shifts for days they are active
         shift_expanded = []
@@ -365,7 +368,7 @@ def display_tasks_and_shifts():
         fig_shifts.update_xaxes(
             tickformat="%H:%M",
             dtick=3600000,  # One hour in milliseconds
-            range=["2023-01-01 00:00", "2023-01-01 23:59"]  # Full day range for visualization
+            range=full_day_range  # Full 24-hour range
         )
         st.plotly_chart(fig_shifts)
     else:
