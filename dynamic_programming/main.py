@@ -4,7 +4,8 @@ import sqlite3
 from datetime import datetime, timedelta
 import random
 from pulp import LpProblem, LpMinimize, LpVariable, lpSum
-
+import matplotlib.pyplot as plt
+import plotly.express as px
 
 # Constants
 DB_FILE = "tasks.db"
@@ -276,17 +277,90 @@ def optimize_tasks_to_shifts():
             mime="text/csv"
         )
 
+def display_tasks_and_shifts():
+    """Display tasks and shifts as a Gantt chart."""
+    st.header("Visualize Tasks and Shifts")
+    
+    # Fetch data
+    tasks_df = get_all("Tasks")
+    shifts_df = get_all("Shifts")
+    
+    if tasks_df.empty and shifts_df.empty:
+        st.write("No tasks or shifts to display.")
+        return
+    
+    if not tasks_df.empty:
+        # Prepare tasks for visualization
+        tasks_df["Start"] = pd.to_datetime(tasks_df["StartTime"], format="%H:%M:%S")
+        tasks_df["End"] = pd.to_datetime(tasks_df["EndTime"], format="%H:%M:%S")
+        tasks_df["Category"] = "Task"
+    
+    if not shifts_df.empty:
+        # Prepare shifts for visualization
+        shifts_df["Start"] = pd.to_datetime(shifts_df["StartTime"], format="%H:%M:%S")
+        shifts_df["End"] = pd.to_datetime(shifts_df["EndTime"], format="%H:%M:%S")
+        shifts_df["Category"] = "Shift"
+    
+    # Combine for visualization
+    combined_df = pd.concat([
+        tasks_df[["TaskName", "Day", "Start", "End", "Category"]] if not tasks_df.empty else pd.DataFrame(),
+        shifts_df[["id", "Monday", "Start", "End", "Category"]] if not shifts_df.empty else pd.DataFrame()
+    ], ignore_index=True)
+    combined_df.rename(columns={"TaskName": "Name", "id": "ShiftID"}, inplace=True)
+
+    # Plot Gantt chart
+    if not combined_df.empty:
+        fig = px.timeline(
+            combined_df,
+            x_start="Start",
+            x_end="End",
+            y="Day",
+            color="Category",
+            title="Tasks and Shifts Schedule",
+            labels={"Start": "Start Time", "End": "End Time", "Day": "Day of the Week", "Category": "Type"}
+        )
+        fig.update_yaxes(categoryorder="category ascending")
+        st.plotly_chart(fig)
+    else:
+        st.write("No data available for visualization.")
+
+def filter_and_display():
+    """Provide filtering options and display filtered tasks or shifts."""
+    st.sidebar.subheader("Filter Options")
+    view_option = st.sidebar.radio("View", options=["Tasks", "Shifts", "Both"])
+    day_filter = st.sidebar.selectbox("Day of the Week", ["All", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
+    
+    tasks_df = get_all("Tasks")
+    shifts_df = get_all("Shifts")
+    
+    if day_filter != "All":
+        if not tasks_df.empty:
+            tasks_df = tasks_df[tasks_df["Day"] == day_filter]
+        if not shifts_df.empty:
+            shifts_df = shifts_df[shifts_df[day_filter] == 1]
+    
+    if view_option in ["Tasks", "Both"] and not tasks_df.empty:
+        st.header("Filtered Tasks")
+        st.dataframe(tasks_df)
+    if view_option in ["Shifts", "Both"] and not shifts_df.empty:
+        st.header("Filtered Shifts")
+        st.dataframe(shifts_df)
+
 # Main app
 def main():
     init_db()
     st.title("Task Scheduler with SQLite Persistence")
 
+    # Input forms for adding tasks and shifts
     task_input_form()
     shift_input_form()
 
-    st.header("Tasks List")
+    # Display tasks and shifts lists
+    st.header("Tasks and Shifts Data")
     tasks_df = get_all("Tasks")
+    shifts_df = get_all("Shifts")
     if not tasks_df.empty:
+        st.write("**Tasks List**")
         st.dataframe(tasks_df)
         st.download_button(
             label="Download Tasks as CSV",
@@ -297,13 +371,8 @@ def main():
     else:
         st.write("No tasks added yet.")
 
-    if st.button("Clear All Tasks"):
-        clear_all("Tasks")
-        st.success("All tasks have been cleared!")
-
-    st.header("Shifts List")
-    shifts_df = get_all("Shifts")
     if not shifts_df.empty:
+        st.write("**Shifts List**")
         st.dataframe(shifts_df)
         st.download_button(
             label="Download Shifts as CSV",
@@ -314,15 +383,27 @@ def main():
     else:
         st.write("No shifts added yet.")
 
+    # Clear buttons
+    if st.button("Clear All Tasks"):
+        clear_all("Tasks")
+        st.success("All tasks have been cleared!")
     if st.button("Clear All Shifts"):
         clear_all("Shifts")
         st.success("All shifts have been cleared!")
 
+    # Random data generation
     num_tasks = st.sidebar.number_input("Number of Tasks", min_value=1, max_value=100, value=10)
     num_shifts = st.sidebar.number_input("Number of Shifts", min_value=1, max_value=50, value=5)
     if st.sidebar.button("Generate Random Data"):
         generate_and_fill_data(num_tasks, num_shifts)
 
+    # Visualize tasks and shifts
+    display_tasks_and_shifts()
+
+    # Filtering options
+    filter_and_display()
+
+    # Optimization
     if st.button("Optimize Task Assignment"):
         optimize_tasks_to_shifts()
 if __name__ == "__main__":
