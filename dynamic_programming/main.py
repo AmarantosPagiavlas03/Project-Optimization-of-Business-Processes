@@ -298,11 +298,31 @@ def display_tasks_and_shifts():
         st.subheader("Tasks Schedule (Week View)")
         tasks_df["Start"] = pd.to_datetime(tasks_df["StartTime"], format="%H:%M:%S")
         tasks_df["End"] = pd.to_datetime(tasks_df["EndTime"], format="%H:%M:%S")
-        tasks_df["Day"] = pd.Categorical(tasks_df["Day"], categories=day_order, ordered=True)  # Order days
+        tasks_df["Day"] = tasks_df["Day"].astype(str)
+        tasks_df["Day"] = pd.Categorical(tasks_df["Day"], categories=day_order, ordered=True)
         
-        # Plot tasks
+        # Expand tasks to include all days of the week
+        tasks_expanded = []
+        for day in day_order:
+            day_tasks = tasks_df[tasks_df["Day"] == day]
+            if not day_tasks.empty:
+                tasks_expanded.extend(day_tasks.to_dict("records"))
+            else:
+                tasks_expanded.append({
+                    "TaskName": None,
+                    "Day": day,
+                    "Start": None,
+                    "End": None
+                })
+
+        # Convert expanded tasks to DataFrame
+        tasks_expanded_df = pd.DataFrame(tasks_expanded)
+        tasks_expanded_df["Day"] = pd.Categorical(tasks_expanded_df["Day"], categories=day_order, ordered=True)
+
+        # Display tasks
+        st.subheader("Tasks Schedule (Week View)")
         fig_tasks = px.timeline(
-            tasks_df,
+            tasks_expanded_df,
             x_start="Start",
             x_end="End",
             y="Day",
