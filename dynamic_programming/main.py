@@ -310,8 +310,7 @@ def display_tasks_and_shifts():
     tasks_df = get_all("Tasks")
     shifts_df = get_all("Shifts")
 
-        # Display tasks and shifts lists
-    st.header("Tasks and Shifts Data")
+    # Display tasks and shifts lists
     tasks_df = get_all("Tasks")
     shifts_df = get_all("Shifts")
     if not tasks_df.empty:
