@@ -280,7 +280,7 @@ def optimize_tasks_to_shifts():
             })
 
     results_df = pd.DataFrame(results)
-
+    st.dataframe(results_df)
     # Check if all tasks are assigned
     assigned_tasks = results_df["TaskID"].unique()
     unassigned_tasks = tasks_df.loc[~tasks_df.index.isin(assigned_tasks)]
