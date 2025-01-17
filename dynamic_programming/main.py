@@ -333,6 +333,11 @@ def optimize_tasks_to_shiftsv2():
             ):
                 var_name = f"Task_{task_id}_Shift_{shift_id}"
                 task_shift_vars[(task_id, shift_id)] = LpVariable(var_name, cat="Binary")
+                print(f"Task {task_id} can be assigned to Shift {shift_id}")
+
+    if not task_shift_vars:
+        st.error("No valid task-shift assignments were found. Check your data and constraints.")
+        return
 
     # Objective Function: Minimize total shift weight
     problem += lpSum(
@@ -357,6 +362,12 @@ def optimize_tasks_to_shiftsv2():
 
     # Solve the problem
     problem.solve()
+
+    # Debug output
+    print("Solver Status:", LpProblem.status[problem.status])
+    if LpProblem.status[problem.status] != "Optimal":
+        st.error("The optimization problem did not find an optimal solution.")
+        return
 
     # Collect results
     results = []
