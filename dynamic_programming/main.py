@@ -27,7 +27,7 @@ def init_db():
         )
     ''')
     c.execute('''
-        CREATE TABLE IF NOT EXISTS Shifts (
+        CREATE TABLE IF NOT EXISTS ShiftsTable (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             StartTime TEXT NOT NULL,
             EndTime TEXT NOT NULL,
@@ -45,46 +45,10 @@ def init_db():
             Notes TEXT
         )
     ''')
-    # Check and add missing columns for Shifts
-    required_columns = {
-        "Weight": "FLOAT NOT NULL",
-        "Monday": "INT NOT NULL",
-        "Tuesday": "INT NOT NULL",
-        "Wednesday": "INT NOT NULL",
-        "Thursday": "INT NOT NULL",
-        "Friday": "INT NOT NULL",
-        "Saturday": "INT NOT NULL",
-        "Sunday": "INT NOT NULL",
-        "Flexibility": "TEXT NOT NULL",
-        "Notes": "TEXT"
-    }
-    for column, definition in required_columns.items():
-        add_column_if_not_exists("Shifts", column, definition)
     
     conn.commit()
     conn.close()
 
-def add_column_if_not_exists(table_name, column_name, column_definition):
-    """Add a column to a table if it does not exist."""
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    
-    # Check if the column exists
-    c.execute(f"PRAGMA table_info({table_name})")
-    columns = [info[1] for info in c.fetchall()]  # Column names are in the second field
-    
-    if column_name not in columns:
-        # Add the column if it doesn't exist
-        try:
-            c.execute(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_definition}")
-            print(f"Column '{column_name}' added to table '{table_name}'.")
-        except Exception as e:
-            print(f"Error adding column '{column_name}': {e}")
-    else:
-        print(f"Column '{column_name}' already exists in table '{table_name}'.")
-    
-    conn.commit()
-    conn.close()
 
 def add_task_to_db(TaskName, Day, StartTime, EndTime, Duration, NursesRequired):
     conn = sqlite3.connect(DB_FILE)
@@ -97,11 +61,10 @@ def add_task_to_db(TaskName, Day, StartTime, EndTime, Duration, NursesRequired):
     conn.close()
 
 def add_shift_to_db(data):
-    add_column_if_not_exists("Shifts", "Weight", "FLOAT NOT NULL")
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''
-        INSERT INTO Shifts (
+        INSERT INTO ShiftsTable (
             StartTime, EndTime, BreakTime, BreakDuration, Weight,
             Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday,
             Flexibility, Notes
@@ -251,7 +214,7 @@ def generate_and_fill_data(num_tasks=10, num_shifts=5):
 def optimize_tasks_to_shifts():
     # Fetch data
     tasks_df = get_all("Tasks")
-    shifts_df = get_all("Shifts")
+    shifts_df = get_all("ShiftsTable")
 
     if tasks_df.empty or shifts_df.empty:
         st.error("Tasks or shifts data is missing. Add data and try again.")
@@ -492,13 +455,9 @@ def display_tasks_and_shifts():
     """Display tasks and shifts as Gantt charts with all days and hours displayed."""
     st.header("Visualize Tasks and Shifts for the Week")
 
-    # Fetch data
-    tasks_df = get_all("Tasks")
-    shifts_df = get_all("Shifts")
-
     # Display tasks and shifts lists
     tasks_df = get_all("Tasks")
-    shifts_df = get_all("Shifts")
+    shifts_df = get_all("ShiftsTable")
     if not tasks_df.empty:
         st.write("**Tasks List**")
         st.dataframe(tasks_df)
@@ -631,10 +590,10 @@ def main():
     # Clear All Shifts button in the second column
     with col2:
         if st.button("Clear All Shifts"):
-            clear_all("Shifts")
+            clear_all("ShiftsTable")
             st.success("All shifts have been cleared!")
             # Refresh shifts display
-            shifts_df = get_all("Shifts")
+            shifts_df = get_all("ShiftsTable")
             if shifts_df.empty:
                 st.write("No shifts added yet.")
             else:
