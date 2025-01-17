@@ -46,6 +46,15 @@ def init_db():
             Notes TEXT
         )
     ''')
+    # Check and add missing columns for Shifts
+    required_columns = {
+        "Weight": "FLOAT NOT NULL",
+        "Flexibility": "TEXT NOT NULL",
+        "Notes": "TEXT"
+    }
+    for column, definition in required_columns.items():
+        add_column_if_not_exists("Shifts", column, definition)
+    
     conn.commit()
     conn.close()
 
