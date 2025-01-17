@@ -7,7 +7,7 @@ from pulp import LpProblem, LpMinimize, LpVariable, lpSum
 import matplotlib.pyplot as plt
 import plotly.express as px
 
-DB_FILE = "tasks.db"
+DB_FILE = "tasksv2.db"
 
 
 # Database functions
