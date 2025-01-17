@@ -460,19 +460,28 @@ def main():
     # Optimization
     st.markdown("""
         <style>
+        .big-centered-button {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
         .big-centered-button button {
-            display: block;
-            margin: 0 auto;
             padding: 15px 30px;
             font-size: 20px;
             background-color: #007bff;
             color: white;
+            border: none;
             border-radius: 5px;
+            cursor: pointer;
+        }
+        .big-centered-button button:hover {
+            background-color: #0056b3;
         }
         </style>
     """, unsafe_allow_html=True)
-    if st.markdown('<div class="big-centered-button">' +
-                st.button("Optimize Task Assignment") + '</div>', unsafe_allow_html=True):
+    st.markdown('<div class="big-centered-button">', unsafe_allow_html=True)
+    if st.button("Optimize Task Assignment"):
         optimize_tasks_to_shifts()
+    st.markdown('</div>', unsafe_allow_html=True)
 if __name__ == "__main__":
     main()
