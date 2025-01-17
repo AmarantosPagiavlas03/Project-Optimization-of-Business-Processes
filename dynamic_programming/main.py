@@ -49,6 +49,13 @@ def init_db():
     # Check and add missing columns for Shifts
     required_columns = {
         "Weight": "FLOAT NOT NULL",
+        "Monday": "INT NOT NULL",
+        "Tuesday": "INT NOT NULL",
+        "Wednesday": "INT NOT NULL",
+        "Thursday": "INT NOT NULL",
+        "Friday": "INT NOT NULL",
+        "Saturday": "INT NOT NULL",
+        "Sunday": "INT NOT NULL",
         "Flexibility": "TEXT NOT NULL",
         "Notes": "TEXT"
     }
