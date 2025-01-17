@@ -603,7 +603,7 @@ def main():
     conn.close()
 
     for column in schema:
-        print(column)
+        st.header(column)
 
     init_db()
     st.header("Tools")
