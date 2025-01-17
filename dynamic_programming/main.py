@@ -17,10 +17,6 @@ def init_db():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''
-        drop TABLE IF  EXISTS Tasks  
-    ''')
-    conn.commit()
-    c.execute('''
         CREATE TABLE IF NOT EXISTS Tasks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             TaskName TEXT NOT NULL,
@@ -31,10 +27,6 @@ def init_db():
             NursesRequired INTEGER NOT NULL
         )
     ''')
-    c.execute('''
-        drop TABLE IF  EXISTS Shifts  
-    ''')
-    conn.commit()
     c.execute('''
         CREATE TABLE IF NOT EXISTS Shifts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
