@@ -503,15 +503,15 @@ def display_tasks_and_shifts():
         )
 
 
-    # if not shifts_df.empty:
-    st.write("**Shifts List**")
-    st.dataframe(shifts_df)
-    st.download_button(
-        label="Download Shifts as CSV",
-        data=shifts_df.to_csv(index=False).encode("utf-8"),
-        file_name="shifts.csv",
-        mime="text/csv"
-    )
+    if not shifts_df.empty:
+        st.write("**Shifts List**")
+        st.dataframe(shifts_df)
+        st.download_button(
+            label="Download Shifts as CSV",
+            data=shifts_df.to_csv(index=False).encode("utf-8"),
+            file_name="shifts.csv",
+            mime="text/csv"
+        )
     
     # Define the day order and the full hour range
     day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
