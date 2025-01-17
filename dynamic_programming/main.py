@@ -209,39 +209,38 @@ def generate_and_fill_data(num_tasks=10, num_shifts=5):
     st.success(f"Generated {num_tasks} tasks and {num_shifts} shifts successfully!")
 
 def optimize_tasks_to_shifts():
-    # Fetch tasks and shifts data
+    # Fetch data
     tasks_df = get_all("Tasks")
     shifts_df = get_all("Shifts")
 
-    # Ensure data exists
     if tasks_df.empty or shifts_df.empty:
         st.error("Tasks or shifts data is missing. Add data and try again.")
         return
 
-    # Problem definition
-    problem = LpProblem("Task_Assignment", LpMinimize)
-
-    # Convert start and end times to datetime for easier comparison
+    # Prepare data
     tasks_df["StartTime"] = pd.to_datetime(tasks_df["StartTime"], format="%H:%M:%S").dt.time
     tasks_df["EndTime"] = pd.to_datetime(tasks_df["EndTime"], format="%H:%M:%S").dt.time
     shifts_df["StartTime"] = pd.to_datetime(shifts_df["StartTime"], format="%H:%M:%S").dt.time
     shifts_df["EndTime"] = pd.to_datetime(shifts_df["EndTime"], format="%H:%M:%S").dt.time
 
-    # Create decision variables for task-shift assignments
+    # LP Problem
+    problem = LpProblem("Task_Assignment", LpMinimize)
+
+    # Decision Variables
     task_shift_vars = {}
     for task_id, task in tasks_df.iterrows():
         for shift_id, shift in shifts_df.iterrows():
-            # Check if the task and shift overlap in time and day
+            # Check if the shift can cover the task
             if (
                 task["Day"] in shift.keys() and
-                shift[task["Day"]] == 1 and  # Shift is available on task day
+                shift[task["Day"]] == 1 and
                 shift["StartTime"] <= task["StartTime"] and
                 shift["EndTime"] >= task["EndTime"]
             ):
-                var_name = f"Assign_Task_{task_id}_to_Shift_{shift_id}"
+                var_name = f"Task_{task_id}_Shift_{shift_id}"
                 task_shift_vars[(task_id, shift_id)] = LpVariable(var_name, cat="Binary")
 
-    # Objective Function: Minimize total shift weight for all assignments
+    # Objective Function: Minimize total shift weight
     problem += lpSum(
         task_shift_vars[(task_id, shift_id)] * shifts_df.loc[shift_id, "Weight"]
         for task_id, shift_id in task_shift_vars
@@ -253,9 +252,9 @@ def optimize_tasks_to_shifts():
         problem += lpSum(
             task_shift_vars[(task_id, shift_id)]
             for shift_id in shifts_df.index if (task_id, shift_id) in task_shift_vars
-        ) >= 1, f"Task_{task_id}_Assigned"
+        ) >= 1, f"Task_{task_id}_Coverage"
 
-    # 2. A shift cannot exceed its nurse capacity
+    # 2. Ensure shifts do not exceed their nurse capacity
     for shift_id in shifts_df.index:
         problem += lpSum(
             task_shift_vars[(task_id, shift_id)] * tasks_df.loc[task_id, "NursesRequired"]
@@ -279,18 +278,27 @@ def optimize_tasks_to_shifts():
 
     results_df = pd.DataFrame(results)
 
-    # Display results
-    if results_df.empty:
-        st.write("No feasible solution found.")
+    # Check if all tasks are assigned
+    assigned_tasks = results_df["TaskID"].unique()
+    unassigned_tasks = tasks_df.loc[~tasks_df.index.isin(assigned_tasks)]
+    if not unassigned_tasks.empty:
+        st.warning("Some tasks could not be assigned:")
+        st.dataframe(unassigned_tasks)
     else:
-        st.write("Optimal Task Assignment:")
+        st.success("All tasks successfully assigned!")
+
+    # Display results
+    if not results_df.empty:
+        st.write("Optimal Task Assignments:")
         st.dataframe(results_df)
         st.download_button(
-            label="Download Assignment as CSV",
+            label="Download Assignments as CSV",
             data=results_df.to_csv(index=False).encode("utf-8"),
-            file_name="task_shift_assignment.csv",
+            file_name="task_assignments.csv",
             mime="text/csv"
         )
+    else:
+        st.error("No feasible solution found.")
 
 def display_tasks_and_shifts():
     """Display tasks and shifts as Gantt charts with all days and hours displayed."""
@@ -415,9 +423,25 @@ def main():
     if st.button("Clear All Tasks"):
         clear_all("Tasks")
         st.success("All tasks have been cleared!")
+        # Refresh tasks display
+        tasks_df = get_all("Tasks")
+        if tasks_df.empty:
+            st.write("No tasks added yet.")
+        else:
+            st.write("**Tasks List**")
+            st.dataframe(tasks_df)
+
     if st.button("Clear All Shifts"):
         clear_all("Shifts")
         st.success("All shifts have been cleared!")
+        # Refresh shifts display
+        shifts_df = get_all("Shifts")
+        if shifts_df.empty:
+            st.write("No shifts added yet.")
+        else:
+            st.write("**Shifts List**")
+            st.dataframe(shifts_df)
+
 
     # Random data generation
     num_tasks = st.sidebar.number_input("Number of Tasks", min_value=1, max_value=100, value=10)
