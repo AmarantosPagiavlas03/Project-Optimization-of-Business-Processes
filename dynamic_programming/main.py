@@ -302,6 +302,154 @@ def optimize_tasks_to_shifts():
     else:
         st.error("No feasible solution found.")
 
+def optimize_tasks_to_shiftsv2():
+    # Fetch data
+    tasks_df = get_all("Tasks")
+    shifts_df = get_all("Shifts")
+
+    if tasks_df.empty or shifts_df.empty:
+        st.error("Tasks or shifts data is missing. Add data and try again.")
+        return
+
+    # Prepare data
+    tasks_df["StartTime"] = pd.to_datetime(tasks_df["StartTime"], format="%H:%M:%S").dt.time
+    tasks_df["EndTime"] = pd.to_datetime(tasks_df["EndTime"], format="%H:%M:%S").dt.time
+    shifts_df["StartTime"] = pd.to_datetime(shifts_df["StartTime"], format="%H:%M:%S").dt.time
+    shifts_df["EndTime"] = pd.to_datetime(shifts_df["EndTime"], format="%H:%M:%S").dt.time
+
+    # Helper function to check overlap
+    def overlap(task, shift):
+        task_start, task_end = task["StartTime"], task["EndTime"]
+        shift_start, shift_end = shift["StartTime"], shift["EndTime"]
+        break_start = datetime.strptime(shift["BreakTime"], "%H:%M:%S").time()
+        break_end = (datetime.combine(datetime.today(), break_start) + pd.to_timedelta(shift["BreakDuration"])).time()
+
+        # Check if task is within shift and not during the break
+        return (
+            shift_start <= task_start < shift_end and
+            shift_start < task_end <= shift_end and
+            not (task_start < break_end and task_end > break_start)
+        )
+
+    # LP Problem
+    problem = LpProblem("Task_Assignment", LpMinimize)
+
+    # Decision Variables
+    task_shift_vars = {}
+    nurse_shift_vars = {}
+    for task_id, task in tasks_df.iterrows():
+        for shift_id, shift in shifts_df.iterrows():
+            if (
+                shift[task["Day"]] == 1 and
+                overlap(task, shift)
+            ):
+                var_name = f"Task_{task_id}_Shift_{shift_id}"
+                task_shift_vars[(task_id, shift_id)] = LpVariable(var_name, cat="Binary")
+
+    nurses = [f"Nurse_{i}" for i in range(len(shifts_df))]  # Assuming one nurse per shift max
+    for nurse in nurses:
+        for shift_id in shifts_df.index:
+            var_name = f"Nurse_{nurse}_Shift_{shift_id}"
+            nurse_shift_vars[(nurse, shift_id)] = LpVariable(var_name, cat="Binary")
+
+    # Objective Function: Minimize total shift weight
+    problem += lpSum(
+        task_shift_vars[(task_id, shift_id)] * shifts_df.loc[shift_id, "Weight"]
+        for task_id, shift_id in task_shift_vars
+    )
+
+    # Constraints
+    # 1. Each task must be assigned to at least one shift
+    for task_id in tasks_df.index:
+        problem += lpSum(
+            task_shift_vars[(task_id, shift_id)]
+            for shift_id in shifts_df.index if (task_id, shift_id) in task_shift_vars
+        ) >= 1, f"Task_{task_id}_Coverage"
+
+    # 2. Ensure shifts do not exceed their nurse capacity
+    for shift_id in shifts_df.index:
+        problem += lpSum(
+            task_shift_vars[(task_id, shift_id)] * tasks_df.loc[task_id, "NursesRequired"]
+            for task_id in tasks_df.index if (task_id, shift_id) in task_shift_vars
+        ) <= lpSum(
+            nurse_shift_vars[(nurse, shift_id)] for nurse in nurses
+        ), f"Shift_{shift_id}_Capacity"
+
+    # 3. Assign each nurse to at most one shift
+    for nurse in nurses:
+        problem += lpSum(
+            nurse_shift_vars[(nurse, shift_id)] for shift_id in shifts_df.index
+        ) <= 1, f"Nurse_{nurse}_OneShift"
+
+    # 4. Ensure a nurse is assigned to a shift only if tasks are assigned
+    for shift_id in shifts_df.index:
+        problem += lpSum(
+            nurse_shift_vars[(nurse, shift_id)] for nurse in nurses
+        ) >= lpSum(
+            task_shift_vars[(task_id, shift_id)] for task_id in tasks_df.index if (task_id, shift_id) in task_shift_vars
+        ), f"Shift_{shift_id}_HasNurse"
+
+    # Solve the problem
+    problem.solve()
+
+    # Collect results
+    task_results = []
+    for (task_id, shift_id), var in task_shift_vars.items():
+        if var.value() == 1:
+            task_results.append({
+                "TaskID": task_id,
+                "ShiftID": shift_id,
+                "TaskName": tasks_df.loc[task_id, "TaskName"],
+                "ShiftStart": shifts_df.loc[shift_id, "StartTime"],
+                "ShiftEnd": shifts_df.loc[shift_id, "EndTime"]
+            })
+
+    nurse_results = []
+    for (nurse, shift_id), var in nurse_shift_vars.items():
+        if var.value() == 1:
+            nurse_results.append({
+                "Nurse": nurse,
+                "ShiftID": shift_id,
+                "ShiftStart": shifts_df.loc[shift_id, "StartTime"],
+                "ShiftEnd": shifts_df.loc[shift_id, "EndTime"]
+            })
+
+    task_results_df = pd.DataFrame(task_results)
+    nurse_results_df = pd.DataFrame(nurse_results)
+
+    # Check if all tasks are assigned
+    assigned_tasks = task_results_df["TaskID"].unique()
+    unassigned_tasks = tasks_df.loc[~tasks_df.index.isin(assigned_tasks)]
+    if not unassigned_tasks.empty:
+        st.warning("Some tasks could not be assigned:")
+        st.dataframe(unassigned_tasks)
+    else:
+        st.success("All tasks successfully assigned!")
+
+    # Display results
+    if not task_results_df.empty:
+        st.write("Optimal Task Assignments:")
+        st.dataframe(task_results_df)
+        st.download_button(
+            label="Download Task Assignments as CSV",
+            data=task_results_df.to_csv(index=False).encode("utf-8"),
+            file_name="task_assignments.csv",
+            mime="text/csv"
+        )
+
+    if not nurse_results_df.empty:
+        st.write("Optimal Nurse Assignments:")
+        st.dataframe(nurse_results_df)
+        st.download_button(
+            label="Download Nurse Assignments as CSV",
+            data=nurse_results_df.to_csv(index=False).encode("utf-8"),
+            file_name="nurse_assignments.csv",
+            mime="text/csv"
+        )
+    else:
+        st.error("No feasible nurse assignments found.")
+
+
 def display_tasks_and_shifts():
     """Display tasks and shifts as Gantt charts with all days and hours displayed."""
     st.header("Visualize Tasks and Shifts for the Week")
@@ -460,5 +608,8 @@ def main():
     # Optimization
     if st.button("Optimize Task Assignment"):
         optimize_tasks_to_shifts()
+    # Optimization
+    if st.button("Optimize Task Assignment V2"):
+        optimize_tasks_to_shiftsv2()
 if __name__ == "__main__":
     main()
