@@ -280,7 +280,7 @@ def optimize_tasks_to_shifts():
             })
 
     results_df = pd.DataFrame(results)
-    st.dataframe(results_df)
+    
     # Check if all tasks are assigned
     assigned_tasks = results_df["TaskID"].unique()
     unassigned_tasks = tasks_df.loc[~tasks_df.index.isin(assigned_tasks)]
@@ -417,7 +417,7 @@ def optimize_tasks_to_shiftsv2():
 
     task_results_df = pd.DataFrame(task_results)
     nurse_results_df = pd.DataFrame(nurse_results)
-    print(task_results)
+    st.dataframe(task_results_df)
     # Check if all tasks are assigned
     assigned_tasks = task_results_df["TaskID"].unique()
     unassigned_tasks = tasks_df.loc[~tasks_df.index.isin(assigned_tasks)]
