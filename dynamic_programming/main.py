@@ -323,8 +323,7 @@ def display_tasks_and_shifts():
             file_name="tasks.csv",
             mime="text/csv"
         )
-    else:
-        st.write("No tasks added yet.")
+
 
     if not shifts_df.empty:
         st.write("**Shifts List**")
@@ -335,8 +334,6 @@ def display_tasks_and_shifts():
             file_name="shifts.csv",
             mime="text/csv"
         )
-    else:
-        st.write("No shifts added yet.")
     
     # Define the day order and the full hour range
     day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
@@ -420,8 +417,6 @@ def main():
     # Input forms for adding tasks and shifts
     task_input_form()
     shift_input_form()
-
-
 
     # Clear buttons
     if st.button("Clear All Tasks"):
