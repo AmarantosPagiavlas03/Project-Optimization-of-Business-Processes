@@ -49,6 +49,28 @@ def init_db():
     conn.commit()
     conn.close()
 
+def add_column_if_not_exists(table_name, column_name, column_definition):
+    """Add a column to a table if it does not exist."""
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    
+    # Check if the column exists
+    c.execute(f"PRAGMA table_info({table_name})")
+    columns = [info[1] for info in c.fetchall()]  # Column names are in the second field
+    
+    if column_name not in columns:
+        # Add the column if it doesn't exist
+        try:
+            c.execute(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_definition}")
+            print(f"Column '{column_name}' added to table '{table_name}'.")
+        except Exception as e:
+            print(f"Error adding column '{column_name}': {e}")
+    else:
+        print(f"Column '{column_name}' already exists in table '{table_name}'.")
+    
+    conn.commit()
+    conn.close()
+
 def add_task_to_db(TaskName, Day, StartTime, EndTime, Duration, NursesRequired):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
@@ -60,6 +82,7 @@ def add_task_to_db(TaskName, Day, StartTime, EndTime, Duration, NursesRequired):
     conn.close()
 
 def add_shift_to_db(data):
+    add_column_if_not_exists("Shifts", "Weight", "FLOAT NOT NULL")
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''
