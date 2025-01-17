@@ -310,6 +310,34 @@ def display_tasks_and_shifts():
     tasks_df = get_all("Tasks")
     shifts_df = get_all("Shifts")
 
+        # Display tasks and shifts lists
+    st.header("Tasks and Shifts Data")
+    tasks_df = get_all("Tasks")
+    shifts_df = get_all("Shifts")
+    if not tasks_df.empty:
+        st.write("**Tasks List**")
+        st.dataframe(tasks_df)
+        st.download_button(
+            label="Download Tasks as CSV",
+            data=tasks_df.to_csv(index=False).encode("utf-8"),
+            file_name="tasks.csv",
+            mime="text/csv"
+        )
+    else:
+        st.write("No tasks added yet.")
+
+    if not shifts_df.empty:
+        st.write("**Shifts List**")
+        st.dataframe(shifts_df)
+        st.download_button(
+            label="Download Shifts as CSV",
+            data=shifts_df.to_csv(index=False).encode("utf-8"),
+            file_name="shifts.csv",
+            mime="text/csv"
+        )
+    else:
+        st.write("No shifts added yet.")
+    
     # Define the day order and the full hour range
     day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     full_day_range = ["2023-01-01 00:00:00", "2023-01-01 23:59:59"]
@@ -393,33 +421,7 @@ def main():
     task_input_form()
     shift_input_form()
 
-    # Display tasks and shifts lists
-    st.header("Tasks and Shifts Data")
-    tasks_df = get_all("Tasks")
-    shifts_df = get_all("Shifts")
-    if not tasks_df.empty:
-        st.write("**Tasks List**")
-        st.dataframe(tasks_df)
-        st.download_button(
-            label="Download Tasks as CSV",
-            data=tasks_df.to_csv(index=False).encode("utf-8"),
-            file_name="tasks.csv",
-            mime="text/csv"
-        )
-    else:
-        st.write("No tasks added yet.")
 
-    if not shifts_df.empty:
-        st.write("**Shifts List**")
-        st.dataframe(shifts_df)
-        st.download_button(
-            label="Download Shifts as CSV",
-            data=shifts_df.to_csv(index=False).encode("utf-8"),
-            file_name="shifts.csv",
-            mime="text/csv"
-        )
-    else:
-        st.write("No shifts added yet.")
 
     # Clear buttons
     if st.button("Clear All Tasks"):
