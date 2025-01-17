@@ -596,6 +596,15 @@ def display_tasks_and_shifts():
 
 # Main app
 def main():
+    conn = sqlite3.connect("tasks.db")
+    c = conn.cursor()
+    c.execute("PRAGMA table_info(Shifts)")
+    schema = c.fetchall()
+    conn.close()
+
+    for column in schema:
+        print(column)
+
     init_db()
     st.header("Tools")
 
