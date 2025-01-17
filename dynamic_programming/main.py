@@ -3,7 +3,7 @@ import pandas as pd
 import sqlite3
 from datetime import datetime, timedelta
 import random
-from pulp import LpProblem, LpMinimize, LpVariable, lpSum
+from pulp import LpProblem, LpMinimize, LpVariable, lpSum, LpStatus
 import matplotlib.pyplot as plt
 import plotly.express as px
 
@@ -364,7 +364,7 @@ def optimize_tasks_to_shiftsv2():
     problem.solve()
 
     # Debug output
-    print("Solver Status:", LpProblem.status[problem.status])
+    print("Solver Status:", LpStatus[problem.status])
     if LpProblem.status[problem.status] != "Optimal":
         st.error("The optimization problem did not find an optimal solution.")
         return
