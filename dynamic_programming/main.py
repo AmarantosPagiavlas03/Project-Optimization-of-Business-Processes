@@ -458,7 +458,21 @@ def main():
     display_tasks_and_shifts()
 
     # Optimization
-    if st.button("Optimize Task Assignment"):
+    st.markdown("""
+        <style>
+        .big-centered-button button {
+            display: block;
+            margin: 0 auto;
+            padding: 15px 30px;
+            font-size: 20px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+    if st.markdown('<div class="big-centered-button">' +
+                st.button("Optimize Task Assignment") + '</div>', unsafe_allow_html=True):
         optimize_tasks_to_shifts()
 if __name__ == "__main__":
     main()
