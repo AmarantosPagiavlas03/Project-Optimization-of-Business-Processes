@@ -411,7 +411,7 @@ def display_tasks_and_shifts():
 # Main app
 def main():
     init_db()
-    st.title("Task Scheduler with SQLite Persistence")
+    st.header("Tools")
 
     # Input forms for adding tasks and shifts
     task_input_form()
