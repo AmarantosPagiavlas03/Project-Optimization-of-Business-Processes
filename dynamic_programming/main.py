@@ -306,7 +306,7 @@ def optimize_tasks_to_shifts():
 def optimize_tasks_to_shiftsv2():
     # Fetch data
     tasks_df = get_all("Tasks")
-    shifts_df = get_all("Shifts")
+    shifts_df = get_all("ShiftsTable")
 
     if tasks_df.empty or shifts_df.empty:
         st.error("Tasks or shifts data is missing. Add data and try again.")
