@@ -3,7 +3,7 @@ import pandas as pd
 import sqlite3
 from datetime import datetime, timedelta
 import random
-from pulp import LpProblem, LpMinimize, LpVariable, lpSum
+from pulp import LpProblem, LpMinimize, LpVariable, lpSum, LpStatus
 import matplotlib.pyplot as plt
 import plotly.express as px
 
@@ -280,7 +280,7 @@ def optimize_tasks_to_shifts():
             })
 
     results_df = pd.DataFrame(results)
-
+    
     # Check if all tasks are assigned
     assigned_tasks = results_df["TaskID"].unique()
     unassigned_tasks = tasks_df.loc[~tasks_df.index.isin(assigned_tasks)]
@@ -306,7 +306,7 @@ def optimize_tasks_to_shifts():
 def optimize_tasks_to_shiftsv2():
     # Fetch data
     tasks_df = get_all("Tasks")
-    shifts_df = get_all("Shifts")
+    shifts_df = get_all("ShiftsTable")
 
     if tasks_df.empty or shifts_df.empty:
         st.error("Tasks or shifts data is missing. Add data and try again.")
@@ -318,40 +318,26 @@ def optimize_tasks_to_shiftsv2():
     shifts_df["StartTime"] = pd.to_datetime(shifts_df["StartTime"], format="%H:%M:%S").dt.time
     shifts_df["EndTime"] = pd.to_datetime(shifts_df["EndTime"], format="%H:%M:%S").dt.time
 
-    # Helper function to check overlap
-    def overlap(task, shift):
-        task_start, task_end = task["StartTime"], task["EndTime"]
-        shift_start, shift_end = shift["StartTime"], shift["EndTime"]
-        break_start = datetime.strptime(shift["BreakTime"], "%H:%M:%S").time()
-        break_end = (datetime.combine(datetime.today(), break_start) + pd.to_timedelta(shift["BreakDuration"])).time()
-
-        # Check if task is within shift and not during the break
-        return (
-            shift_start <= task_start < shift_end and
-            shift_start < task_end <= shift_end and
-            not (task_start < break_end and task_end > break_start)
-        )
-
     # LP Problem
     problem = LpProblem("Task_Assignment", LpMinimize)
 
     # Decision Variables
     task_shift_vars = {}
-    nurse_shift_vars = {}
     for task_id, task in tasks_df.iterrows():
         for shift_id, shift in shifts_df.iterrows():
+            # Check if the shift can cover the task
             if (
                 shift[task["Day"]] == 1 and
-                overlap(task, shift)
+                shift["StartTime"] <= task["StartTime"] and
+                shift["EndTime"] >= task["EndTime"]
             ):
                 var_name = f"Task_{task_id}_Shift_{shift_id}"
                 task_shift_vars[(task_id, shift_id)] = LpVariable(var_name, cat="Binary")
+                print(f"Task {task_id} can be assigned to Shift {shift_id}")
 
-    nurses = [f"Nurse_{i}" for i in range(len(shifts_df))]  # Assuming one nurse per shift max
-    for nurse in nurses:
-        for shift_id in shifts_df.index:
-            var_name = f"Nurse_{nurse}_Shift_{shift_id}"
-            nurse_shift_vars[(nurse, shift_id)] = LpVariable(var_name, cat="Binary")
+    if not task_shift_vars:
+        st.error("No valid task-shift assignments were found. Check your data and constraints.")
+        return
 
     # Objective Function: Minimize total shift weight
     problem += lpSum(
@@ -372,32 +358,25 @@ def optimize_tasks_to_shiftsv2():
         problem += lpSum(
             task_shift_vars[(task_id, shift_id)] * tasks_df.loc[task_id, "NursesRequired"]
             for task_id in tasks_df.index if (task_id, shift_id) in task_shift_vars
-        ) <= lpSum(
-            nurse_shift_vars[(nurse, shift_id)] for nurse in nurses
-        ), f"Shift_{shift_id}_Capacity"
-
-    # 3. Assign each nurse to at most one shift
-    for nurse in nurses:
-        problem += lpSum(
-            nurse_shift_vars[(nurse, shift_id)] for shift_id in shifts_df.index
-        ) <= 1, f"Nurse_{nurse}_OneShift"
-
-    # 4. Ensure a nurse is assigned to a shift only if tasks are assigned
-    for shift_id in shifts_df.index:
-        problem += lpSum(
-            nurse_shift_vars[(nurse, shift_id)] for nurse in nurses
-        ) >= lpSum(
-            task_shift_vars[(task_id, shift_id)] for task_id in tasks_df.index if (task_id, shift_id) in task_shift_vars
-        ), f"Shift_{shift_id}_HasNurse"
+        ) <= shifts_df.loc[shift_id, "Monday"], f"Shift_{shift_id}_Capacity"
 
     # Solve the problem
     problem.solve()
 
+    # Debug output
+    solver_status = LpStatus[problem.status]
+    print("Solver Status:", solver_status)
+    st.warning(solver_status)
+
+    if solver_status != "Optimal":
+        st.error(f"The optimization problem did not find an optimal solution. Solver status: {solver_status}")
+        return
+
     # Collect results
-    task_results = []
+    results = []
     for (task_id, shift_id), var in task_shift_vars.items():
         if var.value() == 1:
-            task_results.append({
+            results.append({
                 "TaskID": task_id,
                 "ShiftID": shift_id,
                 "TaskName": tasks_df.loc[task_id, "TaskName"],
@@ -405,21 +384,10 @@ def optimize_tasks_to_shiftsv2():
                 "ShiftEnd": shifts_df.loc[shift_id, "EndTime"]
             })
 
-    nurse_results = []
-    for (nurse, shift_id), var in nurse_shift_vars.items():
-        if var.value() == 1:
-            nurse_results.append({
-                "Nurse": nurse,
-                "ShiftID": shift_id,
-                "ShiftStart": shifts_df.loc[shift_id, "StartTime"],
-                "ShiftEnd": shifts_df.loc[shift_id, "EndTime"]
-            })
-
-    task_results_df = pd.DataFrame(task_results)
-    nurse_results_df = pd.DataFrame(nurse_results)
+    results_df = pd.DataFrame(results)
 
     # Check if all tasks are assigned
-    assigned_tasks = task_results_df["TaskID"].unique()
+    assigned_tasks = results_df["TaskID"].unique()
     unassigned_tasks = tasks_df.loc[~tasks_df.index.isin(assigned_tasks)]
     if not unassigned_tasks.empty:
         st.warning("Some tasks could not be assigned:")
@@ -428,27 +396,17 @@ def optimize_tasks_to_shiftsv2():
         st.success("All tasks successfully assigned!")
 
     # Display results
-    if not task_results_df.empty:
+    if not results_df.empty:
         st.write("Optimal Task Assignments:")
-        st.dataframe(task_results_df)
+        st.dataframe(results_df)
         st.download_button(
-            label="Download Task Assignments as CSV",
-            data=task_results_df.to_csv(index=False).encode("utf-8"),
+            label="Download Assignments as CSV",
+            data=results_df.to_csv(index=False).encode("utf-8"),
             file_name="task_assignments.csv",
             mime="text/csv"
         )
-
-    if not nurse_results_df.empty:
-        st.write("Optimal Nurse Assignments:")
-        st.dataframe(nurse_results_df)
-        st.download_button(
-            label="Download Nurse Assignments as CSV",
-            data=nurse_results_df.to_csv(index=False).encode("utf-8"),
-            file_name="nurse_assignments.csv",
-            mime="text/csv"
-        )
     else:
-        st.error("No feasible nurse assignments found.")
+        st.error("No feasible solution found.")
 
 
 def display_tasks_and_shifts():
@@ -555,14 +513,6 @@ def display_tasks_and_shifts():
 
 # Main app
 def main():
-    conn = sqlite3.connect("tasks.db")
-    c = conn.cursor()
-    c.execute("PRAGMA table_info(Shifts)")
-    schema = c.fetchall()
-    conn.close()
-
-    for column in schema:
-        st.header(column)
 
     init_db()
     st.header("Tools")
