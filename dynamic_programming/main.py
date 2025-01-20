@@ -6,6 +6,7 @@ import random
 from pulp import LpProblem, LpMinimize, LpVariable, lpSum, LpStatus
 import matplotlib.pyplot as plt
 import plotly.express as px
+from gurobipy import Model, GRB, quicksum
 
 DB_FILE = "tasksv2.db"
 
@@ -445,6 +446,206 @@ VALUES
         )
     else:
         st.error("No feasible solution found.")
+
+def optimize_tasks_with_gurobi():
+       # Fetch data
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute('''
+    delete from Tasks
+    ''')
+    conn.commit()
+    conn.close()
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute('''
+    delete from ShiftsTable
+    ''')
+    conn.commit()
+    conn.close()
+
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute('''
+INSERT INTO Tasks (
+    TaskName,
+    Day,
+    StartTime,
+    EndTime,
+    Duration,
+    NursesRequired
+)
+VALUES
+    ('Dressing Change', 'Monday', '07:30:00', '07:45:00', 15, 1),
+    ('Vital Signs Monitoring', 'Monday', '10:30:00', '11:00:00', 30, 2),
+    ('Wound Care', 'Monday', '14:30:00', '15:15:00', 45, 3),
+    ('Medication Administration', 'Monday', '22:00:00', '22:30:00', 30, 2),
+    ('Physical Therapy', 'Tuesday', '08:00:00', '08:45:00', 45, 2),
+    ('Dressing Change', 'Tuesday', '13:30:00', '13:45:00', 15, 1),
+    ('Vital Signs Monitoring', 'Tuesday', '16:00:00', '16:30:00', 30, 2),
+    ('Medication Administration', 'Tuesday', '21:30:00', '22:00:00', 30, 2),
+    ('Wound Care', 'Wednesday', '07:30:00', '08:15:00', 45, 3),
+    ('Physical Therapy', 'Wednesday', '12:00:00', '12:45:00', 45, 2),
+    ('Dressing Change', 'Wednesday', '18:00:00', '18:15:00', 15, 1),
+    ('Vital Signs Monitoring', 'Thursday', '09:00:00', '09:30:00', 30, 2),
+    ('Medication Administration', 'Thursday', '13:00:00', '13:30:00', 30, 2),
+    ('Wound Care', 'Thursday', '17:30:00', '18:15:00', 45, 3),
+    ('Dressing Change', 'Friday', '07:30:00', '07:45:00', 15, 1),
+    ('Vital Signs Monitoring', 'Friday', '14:30:00', '15:00:00', 30, 2),
+    ('Medication Administration', 'Friday', '21:30:00', '22:00:00', 30, 2),
+    ('Wound Care', 'Saturday', '09:30:00', '10:15:00', 45, 3),
+    ('Physical Therapy', 'Saturday', '14:00:00', '14:45:00', 45, 2),
+    ('Vital Signs Monitoring', 'Saturday', '20:00:00', '20:30:00', 30, 2),
+    ('Medication Administration', 'Sunday', '07:30:00', '08:00:00', 30, 1),
+    ('Dressing Change', 'Sunday', '14:30:00', '14:45:00', 15, 1),
+    ('Wound Care', 'Sunday', '20:00:00', '20:45:00', 45, 3);
+
+
+    ''')
+    conn.commit()
+    conn.close()
+
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute('''
+   INSERT INTO ShiftsTable (
+    StartTime,
+    EndTime,
+    BreakTime,
+    BreakDuration,
+    Weight,
+    Monday,
+    Tuesday,
+    Wednesday,
+    Thursday,
+    Friday,
+    Saturday,
+    Sunday,
+    Flexibility,
+    Notes
+)
+VALUES
+    ('07:00:00', '15:00:00', '11:00:00', '0:30:00', 1200, 1, 1, 1, 1, 1, 0, 0, 'Moderate', 'Morning shift'),
+    ('15:00:00', '23:00:00', '19:00:00', '0:30:00', 1400, 1, 1, 1, 1, 1, 1, 1, 'Moderate', 'Evening shift'),
+    ('23:00:00', '07:00:00', '03:00:00', '0:30:00', 1600, 1, 1, 1, 1, 1, 1, 1, 'High', 'Night shift'),
+    ('08:00:00', '14:00:00', '12:00:00', '0:20:00', 1000, 1, 1, 1, 1, 1, 0, 0, 'Low', 'Short morning shift'),
+    ('14:00:00', '20:00:00', '17:00:00', '0:30:00', 1100, 1, 1, 1, 1, 1, 1, 1, 'Moderate', 'Afternoon shift'),
+    ('20:00:00', '02:00:00', '23:00:00', '0:20:00', 1300, 0, 1, 1, 1, 1, 1, 1, 'High', 'Evening/night hybrid shift'),
+    ('09:00:00', '17:00:00', '13:00:00', '0:45:00', 1500, 1, 1, 0, 1, 1, 0, 0, 'Low', 'Standard day shift'),
+    ('06:00:00', '14:00:00', '10:00:00', '0:30:00', 1100, 1, 1, 1, 1, 1, 1, 0, 'Low', 'Early morning shift'),
+    ('14:00:00', '22:00:00', '18:00:00', '0:30:00', 1200, 1, 1, 1, 1, 1, 1, 1, 'Moderate', 'Full afternoon-evening shift'),
+    ('10:00:00', '18:00:00', '13:30:00', '0:30:00', 1300, 1, 1, 1, 1, 1, 0, 0, 'Low', 'Midday to evening shift');
+
+
+    ''')
+    conn.commit()
+    conn.close()
+    # Fetch data
+    tasks_df = get_all("Tasks")
+    shifts_df = get_all("ShiftsTable")
+
+    if tasks_df.empty or shifts_df.empty:
+        st.error("Tasks or shifts data is missing. Add data and try again.")
+        return
+
+    # Convert time to comparable format
+    tasks_df["StartTime"] = pd.to_datetime(tasks_df["StartTime"], format="%H:%M:%S").dt.time
+    tasks_df["EndTime"] = pd.to_datetime(tasks_df["EndTime"], format="%H:%M:%S").dt.time
+    shifts_df["StartTime"] = pd.to_datetime(shifts_df["StartTime"], format="%H:%M:%S").dt.time
+    shifts_df["EndTime"] = pd.to_datetime(shifts_df["EndTime"], format="%H:%M:%S").dt.time
+
+    # Create Gurobi Model
+    model = Model("Task_Assignment")
+
+    # Decision Variables
+    task_shift_vars = {}
+    shift_worker_vars = {}
+
+    for task_id, task in tasks_df.iterrows():
+        for shift_id, shift in shifts_df.iterrows():
+            # Check if the shift can cover the task
+            if (
+                shift[task["Day"]] == 1 and
+                shift["StartTime"] <= task["StartTime"] and
+                shift["EndTime"] >= task["EndTime"]
+            ):
+                var_name = f"Task_{task_id}_Shift_{shift_id}"
+                task_shift_vars[(task_id, shift_id)] = model.addVar(
+                    vtype=GRB.BINARY, name=var_name
+                )
+
+    for shift_id in shifts_df.index:
+        shift_worker_vars[shift_id] = model.addVar(
+            vtype=GRB.INTEGER, lb=0, name=f"Workers_Shift_{shift_id}"
+        )
+
+    # Objective Function: Minimize total cost
+    model.setObjective(
+        quicksum(
+            shift_worker_vars[shift_id] * shifts_df.loc[shift_id, "Weight"]
+            for shift_id in shifts_df.index
+        ),
+        GRB.MINIMIZE
+    )
+
+    # Constraints
+    # 1. Each task must be assigned to at least one shift
+    for task_id in tasks_df.index:
+        model.addConstr(
+            quicksum(
+                task_shift_vars[(task_id, shift_id)]
+                for shift_id in shifts_df.index if (task_id, shift_id) in task_shift_vars
+            ) >= 1,
+            name=f"Task_{task_id}_Coverage"
+        )
+
+    # 2. Workers per shift must satisfy all assigned tasks' nurse requirements
+    for shift_id in shifts_df.index:
+        model.addConstr(
+            quicksum(
+                task_shift_vars[(task_id, shift_id)] * tasks_df.loc[task_id, "NursesRequired"]
+                for task_id in tasks_df.index if (task_id, shift_id) in task_shift_vars
+            ) <= shift_worker_vars[shift_id],
+            name=f"Shift_{shift_id}_Workers"
+        )
+
+    # Optimize the model
+    model.optimize()
+
+    # Collect results
+    if model.status == GRB.OPTIMAL:
+        st.success("Optimization successful!")
+        results = []
+        for (task_id, shift_id), var in task_shift_vars.items():
+            if var.x > 0.5:  # Binary variable is 1
+                results.append({
+                    "TaskID": task_id,
+                    "ShiftID": shift_id,
+                    "TaskName": tasks_df.loc[task_id, "TaskName"],
+                    "TaskDay": tasks_df.loc[task_id, "Day"],
+                    "TaskStart": tasks_df.loc[task_id, "StartTime"],
+                    "TaskEnd": tasks_df.loc[task_id, "EndTime"],
+                    "ShiftStart": shifts_df.loc[shift_id, "StartTime"],
+                    "ShiftEnd": shifts_df.loc[shift_id, "EndTime"],
+                    "ShiftNotes": shifts_df.loc[shift_id, "Notes"],
+                    "WorkersAssigned": shift_worker_vars[shift_id].x
+                })
+
+        results_df = pd.DataFrame(results)
+
+        if not results_df.empty:
+            st.write("Optimal Task Assignments with Worker Counts:")
+            st.dataframe(results_df)
+            st.download_button(
+                label="Download Assignments as CSV",
+                data=results_df.to_csv(index=False).encode("utf-8"),
+                file_name="task_assignments_with_workers.csv",
+                mime="text/csv"
+            )
+        else:
+            st.error("No feasible solution found.")
+    else:
+        st.error(f"Optimization failed with status: {model.status}")
 
 def display_tasks_and_shifts():
     """Display tasks and shifts as Gantt charts with all days and hours displayed."""
