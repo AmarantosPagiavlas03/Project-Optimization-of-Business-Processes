@@ -333,7 +333,7 @@ def optimize_tasks_to_shiftsv2():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''
-INSERT INTO Shifts (
+INSERT INTO ShiftsTable (
     StartTime,
     EndTime,
     BreakTime,
