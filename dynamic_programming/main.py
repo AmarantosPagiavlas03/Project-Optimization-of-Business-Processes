@@ -442,6 +442,8 @@ def optimize_tasks_to_shiftsv2():
 
     # Decision Variables
     task_shift_vars = {}
+    shift_worker_vars = {}
+
     for task_id, task in tasks_df.iterrows():
         for shift_id, shift in shifts_df.iterrows():
             # Check if the shift can cover the task
@@ -452,17 +454,15 @@ def optimize_tasks_to_shiftsv2():
             ):
                 var_name = f"Task_{task_id}_Shift_{shift_id}"
                 task_shift_vars[(task_id, shift_id)] = LpVariable(var_name, cat="Binary")
-                print(f"Task {task_id} can be assigned to Shift {shift_id}")
 
-    if not task_shift_vars:
-        st.error("No valid task-shift assignments were found. Check your data and constraints.")
-        return
+    for shift_id in shifts_df.index:
+        shift_worker_vars[shift_id] = LpVariable(f"Workers_Shift_{shift_id}", lowBound=0, cat="Integer")
 
-    # Objective Function: Minimize total shift weight
+    # Objective Function: Minimize total cost
     problem += lpSum(
-        task_shift_vars[(task_id, shift_id)] * shifts_df.loc[shift_id, "Weight"]
-        for task_id, shift_id in task_shift_vars
-    )
+        shift_worker_vars[shift_id] * shifts_df.loc[shift_id, "Weight"]
+        for shift_id in shifts_df.index
+    ), "Minimize_Total_Cost"
 
     # Constraints
     # 1. Each task must be assigned to at least one shift
@@ -472,12 +472,12 @@ def optimize_tasks_to_shiftsv2():
             for shift_id in shifts_df.index if (task_id, shift_id) in task_shift_vars
         ) >= 1, f"Task_{task_id}_Coverage"
 
-    # 2. Ensure shifts do not exceed their nurse capacity
+    # 2. Workers per shift must satisfy all assigned tasks' nurse requirements
     for shift_id in shifts_df.index:
         problem += lpSum(
             task_shift_vars[(task_id, shift_id)] * tasks_df.loc[task_id, "NursesRequired"]
             for task_id in tasks_df.index if (task_id, shift_id) in task_shift_vars
-        ) <= shifts_df.loc[shift_id, "Monday"], f"Shift_{shift_id}_Capacity"
+        ) <= shift_worker_vars[shift_id], f"Shift_{shift_id}_Workers"
 
     # Solve the problem
     problem.solve()
