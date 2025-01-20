@@ -399,6 +399,7 @@ VALUES
                 "TaskEnd": tasks_df.loc[task_id, "EndTime"],
                 "ShiftStart": shifts_df.loc[shift_id, "StartTime"],
                 "ShiftEnd": shifts_df.loc[shift_id, "EndTime"],
+                "ShiftNotes": shifts_df.loc[shift_id, "Notes"],
                 "WorkersAssigned": shift_worker_vars[shift_id].varValue
             })
 
