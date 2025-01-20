@@ -211,11 +211,8 @@ def generate_and_fill_data(num_tasks=10, num_shifts=5):
 
     st.success(f"Generated {num_tasks} tasks and {num_shifts} shifts successfully!")
 
-
-
-def optimize_tasks_with_gurobi():
-       # Fetch data
-
+def insert():
+    
 
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
@@ -292,6 +289,10 @@ VALUES
     ''')
     conn.commit()
     conn.close()
+
+def optimize_tasks_with_gurobi():
+       # Fetch data
+
     # Fetch data
     tasks_df = get_all("Tasks")
     shifts_df = get_all("ShiftsTable")
@@ -554,7 +555,9 @@ def main():
         generate_and_fill_data(num_tasks, num_shifts)
 
     # Optimization
-    if st.button("Optimize Task Assignment2"):
+    if st.button("Custom Insert"):
+        insert()
+    if st.button("Optimize Task Assignment"):
         optimize_tasks_with_gurobi()
     # Visualize tasks and shifts
     display_tasks_and_shifts()
