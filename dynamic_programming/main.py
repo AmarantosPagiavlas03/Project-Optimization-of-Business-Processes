@@ -214,8 +214,7 @@ def generate_and_fill_data(num_tasks=10, num_shifts=5):
 
 def optimize_tasks_to_shiftsv2():
     # Fetch data
-    # tasks_df = get_all("Tasks")
-    # shifts_df = get_all("ShiftsTable")
+
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''
@@ -333,6 +332,8 @@ VALUES
     conn.commit()
     conn.close()
 
+    tasks_df = get_all("Tasks")
+    shifts_df = get_all("ShiftsTable")
 
     tasks_df['StartTime'] = pd.to_datetime(tasks_df['Start Window'], format='%H:%M').dt.time
     tasks_df['EndTime'] = pd.to_datetime(tasks_df['End Window'], format='%H:%M').dt.time
