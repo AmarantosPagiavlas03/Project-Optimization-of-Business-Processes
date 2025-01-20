@@ -799,6 +799,8 @@ def main():
     # Optimization
     if st.button("Optimize Task Assignmen"):
         optimize_tasks_to_shiftsv2()
+    if st.button("Optimize Task Assignment2"):
+        optimize_tasks_with_gurobi()
     # Visualize tasks and shifts
     display_tasks_and_shifts()
 
