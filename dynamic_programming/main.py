@@ -211,102 +211,22 @@ def generate_and_fill_data(num_tasks=10, num_shifts=5):
 
     st.success(f"Generated {num_tasks} tasks and {num_shifts} shifts successfully!")
 
-def optimize_tasks_to_shifts():
-    # Fetch data
-    tasks_df = get_all("Tasks")
-    shifts_df = get_all("ShiftsTable")
-
-    if tasks_df.empty or shifts_df.empty:
-        st.error("Tasks or shifts data is missing. Add data and try again.")
-        return
-
-    # Prepare data
-    tasks_df["StartTime"] = pd.to_datetime(tasks_df["StartTime"], format="%H:%M:%S").dt.time
-    tasks_df["EndTime"] = pd.to_datetime(tasks_df["EndTime"], format="%H:%M:%S").dt.time
-    shifts_df["StartTime"] = pd.to_datetime(shifts_df["StartTime"], format="%H:%M:%S").dt.time
-    shifts_df["EndTime"] = pd.to_datetime(shifts_df["EndTime"], format="%H:%M:%S").dt.time
-
-    # LP Problem
-    problem = LpProblem("Task_Assignment", LpMinimize)
-
-    # Decision Variables
-    task_shift_vars = {}
-    for task_id, task in tasks_df.iterrows():
-        for shift_id, shift in shifts_df.iterrows():
-            # Check if the shift can cover the task
-            if (
-                task["Day"] in shift.keys() and
-                shift[task["Day"]] == 1 and
-                shift["StartTime"] <= task["StartTime"] and
-                shift["EndTime"] >= task["EndTime"]
-            ):
-                var_name = f"Task_{task_id}_Shift_{shift_id}"
-                task_shift_vars[(task_id, shift_id)] = LpVariable(var_name, cat="Binary")
-
-    # Objective Function: Minimize total shift weight
-    problem += lpSum(
-        task_shift_vars[(task_id, shift_id)] * shifts_df.loc[shift_id, "Weight"]
-        for task_id, shift_id in task_shift_vars
-    )
-
-    # Constraints
-    # 1. Each task must be assigned to at least one shift
-    for task_id in tasks_df.index:
-        problem += lpSum(
-            task_shift_vars[(task_id, shift_id)]
-            for shift_id in shifts_df.index if (task_id, shift_id) in task_shift_vars
-        ) >= 1, f"Task_{task_id}_Coverage"
-
-    # 2. Ensure shifts do not exceed their nurse capacity
-    for shift_id in shifts_df.index:
-        problem += lpSum(
-            task_shift_vars[(task_id, shift_id)] * tasks_df.loc[task_id, "NursesRequired"]
-            for task_id in tasks_df.index if (task_id, shift_id) in task_shift_vars
-        ) <= shifts_df.loc[shift_id, "Monday"], f"Shift_{shift_id}_Capacity"
-
-    # Solve the problem
-    problem.solve()
-
-    # Collect results
-    results = []
-    for (task_id, shift_id), var in task_shift_vars.items():
-        if var.value() == 1:
-            results.append({
-                "TaskID": task_id,
-                "ShiftID": shift_id,
-                "TaskName": tasks_df.loc[task_id, "TaskName"],
-                "ShiftStart": shifts_df.loc[shift_id, "StartTime"],
-                "ShiftEnd": shifts_df.loc[shift_id, "EndTime"]
-            })
-
-    results_df = pd.DataFrame(results)
-    
-    # Check if all tasks are assigned
-    assigned_tasks = results_df["TaskID"].unique()
-    unassigned_tasks = tasks_df.loc[~tasks_df.index.isin(assigned_tasks)]
-    if not unassigned_tasks.empty:
-        st.warning("Some tasks could not be assigned:")
-        st.dataframe(unassigned_tasks)
-    else:
-        st.success("All tasks successfully assigned!")
-
-    # Display results
-    if not results_df.empty:
-        st.write("Optimal Task Assignments:")
-        st.dataframe(results_df)
-        st.download_button(
-            label="Download Assignments as CSV",
-            data=results_df.to_csv(index=False).encode("utf-8"),
-            file_name="task_assignments.csv",
-            mime="text/csv"
-        )
-    else:
-        st.error("No feasible solution found.")
 
 def optimize_tasks_to_shiftsv2():
     # Fetch data
-    tasks_df = get_all("Tasks")
-    shifts_df = get_all("ShiftsTable")
+    # tasks_df = get_all("Tasks")
+    # shifts_df = get_all("ShiftsTable")
+    tasks_path = 'nursing_tasks_schedule.xlsx'
+    shifts_path = 'large_shifts.xlsx'
+
+    tasks_df = pd.ExcelFile(tasks_path).parse(0)
+    shifts_df = pd.ExcelFile(shifts_path).parse(0)
+    tasks_df['StartTime'] = pd.to_datetime(tasks_df['Start Window'], format='%H:%M').dt.time
+    tasks_df['EndTime'] = pd.to_datetime(tasks_df['End Window'], format='%H:%M').dt.time
+    shifts_df['StartTime'] = pd.to_datetime(shifts_df['StartTime'], format='%H:%M:%S').dt.time
+    shifts_df['EndTime'] = pd.to_datetime(shifts_df['EndTime'], format='%H:%M:%S').dt.time
+    shifts_df['BreakTime'] = pd.to_datetime(shifts_df['BreakTime'], format='%H:%M:%S').dt.time
+    shifts_df['BreakDuration'] = pd.to_timedelta(shifts_df['BreakDuration'])
 
     if tasks_df.empty or shifts_df.empty:
         st.error("Tasks or shifts data is missing. Add data and try again.")
@@ -562,10 +482,7 @@ def main():
     display_tasks_and_shifts()
 
     # Optimization
-    if st.button("Optimize Task Assignment"):
-        optimize_tasks_to_shifts()
-    # Optimization
-    if st.button("Optimize Task Assignment V2"):
+    if st.button("Optimize Task Assignmen"):
         optimize_tasks_to_shiftsv2()
 if __name__ == "__main__":
     main()
