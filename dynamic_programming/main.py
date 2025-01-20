@@ -487,7 +487,6 @@ def optimize_tasks_to_shiftsv2():
     print("Solver Status:", solver_status)
     st.warning(solver_status)
 
-
     # Collect results
     results = []
     for (task_id, shift_id), var in task_shift_vars.items():
@@ -497,11 +496,11 @@ def optimize_tasks_to_shiftsv2():
                 "ShiftID": shift_id,
                 "TaskName": tasks_df.loc[task_id, "TaskName"],
                 "ShiftStart": shifts_df.loc[shift_id, "StartTime"],
-                "ShiftEnd": shifts_df.loc[shift_id, "EndTime"]
+                "ShiftEnd": shifts_df.loc[shift_id, "EndTime"],
+                "WorkersAssigned": shift_worker_vars[shift_id].varValue
             })
 
     results_df = pd.DataFrame(results)
- 
 
     # Check if all tasks are assigned
     assigned_tasks = results_df["TaskID"].unique()
@@ -515,17 +514,16 @@ def optimize_tasks_to_shiftsv2():
 
     # Display results
     if not results_df.empty:
-        st.write("Optimal Task Assignments:")
+        st.write("Optimal Task Assignments with Worker Counts:")
         st.dataframe(results_df)
         st.download_button(
             label="Download Assignments as CSV",
             data=results_df.to_csv(index=False).encode("utf-8"),
-            file_name="task_assignments.csv",
+            file_name="task_assignments_with_workers.csv",
             mime="text/csv"
         )
     else:
         st.error("No feasible solution found.")
-
 
 def display_tasks_and_shifts():
     """Display tasks and shifts as Gantt charts with all days and hours displayed."""
