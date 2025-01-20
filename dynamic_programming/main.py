@@ -215,20 +215,7 @@ def generate_and_fill_data(num_tasks=10, num_shifts=5):
 
 def optimize_tasks_with_gurobi():
        # Fetch data
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    c.execute('''
-    delete from Tasks
-    ''')
-    conn.commit()
-    conn.close()
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    c.execute('''
-    delete from ShiftsTable
-    ''')
-    conn.commit()
-    conn.close()
+
 
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
