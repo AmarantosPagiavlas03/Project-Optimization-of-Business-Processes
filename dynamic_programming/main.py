@@ -610,10 +610,7 @@ VALUES
 
     # Optimize the model
     model.optimize()
-    model.computeIIS()
-    for constr in model.getConstrs():
-        if constr.IISConstr:
-            st.write(f"Infeasible Constraint: {constr.constrName}")
+
 
     # Collect results
     if model.status == GRB.OPTIMAL:
@@ -649,6 +646,10 @@ VALUES
             st.error("No feasible solution found.")
     else:
         st.error(f"Optimization failed with status: {model.status}")
+        model.computeIIS()
+        for constr in model.getConstrs():
+            if constr.IISConstr:
+                st.write(f"Infeasible Constraint: {constr.constrName}")
 
 def display_tasks_and_shifts():
     """Display tasks and shifts as Gantt charts with all days and hours displayed."""
