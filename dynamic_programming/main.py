@@ -216,11 +216,124 @@ def optimize_tasks_to_shiftsv2():
     # Fetch data
     # tasks_df = get_all("Tasks")
     # shifts_df = get_all("ShiftsTable")
-    tasks_path = 'nursing_tasks_schedule.xlsx'
-    shifts_path = 'large_shifts.xlsx'
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute('''
+        INSERT INTO Tasks (
+    Task_Name,
+    Day,
+    Start_Window,
+    End_Window,
+    Duration_of_Task,
+    Nurses_Required
+)
+VALUES
+    ('Bathing', 'Wednesday', '08:15:00', '22:30:00', 45, 2),
+    ('Physical Therapy', 'Friday', '06:15:00', '18:00:00', 60, 1),
+    ('Wound Care', 'Monday', '16:45:00', '22:00:00', 60, 4),
+    ('Wound Care', 'Friday', '18:30:00', '21:30:00', 15, 5),
+    ('Physical Therapy', 'Wednesday', '07:30:00', '12:00:00', 45, 1),
+    ('Vital Checks', 'Tuesday', '15:30:00', '18:30:00', 15, 5),
+    ('Physical Therapy', 'Tuesday', '10:15:00', '18:30:00', 15, 3),
+    ('Bathing', 'Sunday', '12:00:00', '17:30:00', 45, 5),
+    ('Physical Therapy', 'Monday', '17:45:00', '21:00:00', 45, 1),
+    ('Physical Therapy', 'Saturday', '15:00:00', '15:30:00', 60, 2),
+    ('Wound Care', 'Tuesday', '17:45:00', '20:30:00', 30, 5),
+    ('Wound Care', 'Wednesday', '11:30:00', '16:00:00', 45, 4),
+    ('Medication', 'Thursday', '10:15:00', '18:15:00', 15, 2),
+    ('Vital Checks', 'Wednesday', '07:15:00', '10:15:00', 30, 1),
+    ('Medication', 'Wednesday', '12:00:00', '17:00:00', 30, 1),
+    ('Medication', 'Tuesday', '09:45:00', '11:00:00', 15, 5),
+    ('Bathing', 'Thursday', '07:45:00', '17:30:00', 15, 2),
+    ('Vital Checks', 'Tuesday', '12:15:00', '14:30:00', 60, 3),
+    ('Physical Therapy', 'Thursday', '15:15:00', '18:15:00', 60, 3),
+    ('Bathing', 'Tuesday', '09:15:00', '10:15:00', 15, 3),
+    ('Wound Care', 'Wednesday', '11:15:00', '13:30:00', 15, 1),
+    ('Physical Therapy', 'Tuesday', '07:45:00', '08:00:00', 45, 5),
+    ('Medication', 'Sunday', '17:45:00', '20:00:00', 45, 1),
+    ('Vital Checks', 'Friday', '11:45:00', '19:45:00', 30, 5),
+    ('Medication', 'Tuesday', '11:30:00', '14:30:00', 15, 2),
+    ('Physical Therapy', 'Friday', '18:00:00', '22:00:00', 60, 5),
+    ('Bathing', 'Tuesday', '13:30:00', '14:30:00', 45, 4),
+    ('Vital Checks', 'Saturday', '08:00:00', '19:00:00', 60, 4),
+    ('Wound Care', 'Tuesday', '08:30:00', '10:00:00', 30, 3),
+    ('Medication', 'Thursday', '18:00:00', '22:00:00', 60, 4),
+    ('Wound Care', 'Friday', '15:30:00', '18:00:00', 15, 1),
+    ('Physical Therapy', 'Wednesday', '11:45:00', '15:30:00', 45, 4),
+    ('Vital Checks', 'Monday', '12:00:00', '20:15:00', 60, 4),
+    ('Medication', 'Monday', '08:00:00', '20:30:00', 45, 1),
+    ('Physical Therapy', 'Saturday', '15:30:00', '21:30:00', 15, 3),
+    ('Medication', 'Saturday', '14:30:00', '21:00:00', 30, 2),
+    ('Vital Checks', 'Friday', '10:15:00', '20:45:00', 45, 5),
+    ('Bathing', 'Saturday', '16:15:00', '16:30:00', 30, 1),
+    ('Wound Care', 'Thursday', '13:00:00', '18:15:00', 15, 4),
+    ('Wound Care', 'Friday', '06:00:00', '11:30:00', 15, 2),
+    ('Wound Care', 'Tuesday', '16:45:00', '17:15:00', 45, 1),
+    ('Wound Care', 'Tuesday', '12:30:00', '14:30:00', 15, 4),
+    ('Medication', 'Sunday', '18:15:00', '20:00:00', 60, 1),
+    ('Physical Therapy', 'Monday', '09:15:00', '10:30:00', 15, 2),
+    ('Medication', 'Monday', '08:30:00', '15:00:00', 45, 1),
+    ('Wound Care', 'Thursday', '07:15:00', '14:45:00', 45, 5),
+    ('Medication', 'Monday', '16:30:00', '19:30:00', 60, 1),
+    ('Bathing', 'Wednesday', '13:15:00', '19:45:00', 15, 2),
+    ('Vital Checks', 'Thursday', '06:15:00', '06:30:00', 30, 1),
+    ('Wound Care', 'Sunday', '11:00:00', '18:45:00', 15, 5),
+    ('Physical Therapy', 'Wednesday', '14:15:00', '18:00:00', 45, 5),
+    ('Bathing', 'Wednesday', '12:15:00', '20:30:00', 60, 5),
+    ('Wound Care', 'Wednesday', '13:45:00', '20:00:00', 45, 5),
+    ('Vital Checks', 'Saturday', '14:00:00', '17:30:00', 30, 4),
+    ('Vital Checks', 'Thursday', '13:30:00', '22:45:00', 45, 3),
+    ('Wound Care', 'Sunday', '12:15:00', '21:15:00', 15, 5),
+    ('Vital Checks', 'Monday', '18:15:00', '19:00:00', 60, 5),
+    ('Wound Care', 'Friday', '08:15:00', '15:30:00', 15, 5),
+    ('Physical Therapy', 'Sunday', '09:00:00', '12:30:00', 15, 3),
+    ('Physical Therapy', 'Saturday', '08:00:00', '10:45:00', 45, 2),
+    ('Medication', 'Tuesday', '06:00:00', '14:15:00', 30, 1),
+    ('Medication', 'Thursday', '15:15:00', '18:15:00', 60, 1),
+    ('Physical Therapy', 'Thursday', '10:15:00', '17:00:00', 15, 4),
+    ('Wound Care', 'Sunday', '11:45:00', '16:30:00', 60, 1),
+    ('Physical Therapy', 'Thursday', '16:15:00', '18:15:00', 15, 5),
+    ('Wound Care', 'Friday', '13:45:00', '16:00:00', 30, 4),
+    ('Physical Therapy', 'Thursday', '13:45:00', '19:30:00', 45, 3),
+    ('Vital Checks', 'Monday', '07:15:00', '10:30:00', 45, 2),
+    ('Medication', 'Monday', '09:15:00', '18:30:00', 45, 3),
+    ('Wound Care', 'Monday', '11:15:00', '18:45:00', 60, 3),
+    ('Vital Checks', 'Monday', '16:30:00', '22:00:00', 60, 5),
+    ('Physical Therapy', 'Thursday', '17:00:00', '17:45:00', 60, 1),
+    ('Medication', 'Thursday', '15:30:00', '15:45:00', 15, 4),
+    ('Medication', 'Tuesday', '11:15:00', '14:15:00', 15, 5),
+    ('Wound Care', 'Saturday', '16:00:00', '22:00:00', 15, 5),
+    ('Vital Checks', 'Tuesday', '11:15:00', '18:15:00', 30, 2),
+    ('Medication', 'Saturday', '11:30:00', '18:30:00', 60, 2),
+    ('Bathing', 'Monday', '07:15:00', '13:45:00', 45, 1),
+    ('Physical Therapy', 'Sunday', '15:15:00', '21:00:00', 45, 3),
+    ('Physical Therapy', 'Thursday', '17:30:00', '20:45:00', 45, 4),
+    ('Medication', 'Monday', '07:45:00', '17:00:00', 60, 4),
+    ('Medication', 'Monday', '13:30:00', '21:00:00', 15, 4),
+    ('Vital Checks', 'Sunday', '15:15:00', '20:30:00', 15, 4),
+    ('Bathing', 'Wednesday', '13:15:00', '14:45:00', 45, 2),
+    ('Vital Checks', 'Friday', '09:30:00', '20:30:00', 60, 1),
+    ('Vital Checks', 'Sunday', '15:00:00', '20:15:00', 45, 5),
+    ('Physical Therapy', 'Saturday', '16:00:00', '21:00:00', 60, 1),
+    ('Physical Therapy', 'Wednesday', '08:45:00', '17:45:00', 15, 5),
+    ('Wound Care', 'Wednesday', '13:00:00', '17:15:00', 30, 3),
+    ('Medication', 'Monday', '18:45:00', '19:45:00', 60, 3),
+    ('Wound Care', 'Thursday', '11:45:00', '17:15:00', 15, 1),
+    ('Physical Therapy', 'Sunday', '08:30:00', '18:15:00', 30, 5),
+    ('Medication', 'Monday', '12:15:00', '12:45:00', 30, 1),
+    ('Medication', 'Saturday', '16:30:00', '17:00:00', 15, 4),
+    ('Physical Therapy', 'Saturday', '10:00:00', '10:45:00', 15, 1),
+    ('Medication', 'Thursday', '14:45:00', '20:30:00', 60, 1),
+    ('Bathing', 'Monday', '06:30:00', '07:45:00', 45, 3),
+    ('Physical Therapy', 'Friday', '12:45:00', '22:00:00', 30, 3),
+    ('Physical Therapy', 'Saturday', '10:30:00', '13:45:00', 30, 3),
+    ('Physical Therapy', 'Wednesday', '09:15:00', '19:15:00', 60, 1);
 
-    tasks_df = pd.ExcelFile(tasks_path).parse(0)
-    shifts_df = pd.ExcelFile(shifts_path).parse(0)
+    ''')
+    conn.commit()
+    conn.close()
+
+
     tasks_df['StartTime'] = pd.to_datetime(tasks_df['Start Window'], format='%H:%M').dt.time
     tasks_df['EndTime'] = pd.to_datetime(tasks_df['End Window'], format='%H:%M').dt.time
     shifts_df['StartTime'] = pd.to_datetime(shifts_df['StartTime'], format='%H:%M:%S').dt.time
