@@ -496,7 +496,6 @@ VALUES
     ('Wound Care', 'Saturday', '09:30:00', '10:15:00', 45, 3),
     ('Physical Therapy', 'Saturday', '14:00:00', '14:45:00', 45, 2),
     ('Vital Signs Monitoring', 'Saturday', '20:00:00', '20:30:00', 30, 2),
-    ('Medication Administration', 'Sunday', '07:30:00', '08:00:00', 30, 1),
     ('Dressing Change', 'Sunday', '14:30:00', '14:45:00', 15, 1),
     ('Wound Care', 'Sunday', '20:00:00', '20:45:00', 45, 3);
 
