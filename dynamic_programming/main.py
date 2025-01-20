@@ -555,13 +555,12 @@ VALUES
     shifts_df["EndTime"] = pd.to_datetime(shifts_df["EndTime"], format="%H:%M:%S").dt.time
 
     # Create Gurobi Model
-    model = Model("Task_Assignment_Relaxed")
+    model = Model("Task_Assignment_With_Workers")
 
     # Decision Variables
     task_shift_vars = {}
     shift_worker_vars = {}
     task_slack_vars = {}
-    shift_slack_vars = {}
 
     for task_id, task in tasks_df.iterrows():
         for shift_id, shift in shifts_df.iterrows():
@@ -581,15 +580,10 @@ VALUES
             vtype=GRB.INTEGER, lb=0, name=f"Workers_Shift_{shift_id}"
         )
 
-    # Slack variables
+    # Slack variables for unassigned tasks
     for task_id in tasks_df.index:
         task_slack_vars[task_id] = model.addVar(
             vtype=GRB.CONTINUOUS, lb=0, name=f"Task_Slack_{task_id}"
-        )
-
-    for shift_id in shifts_df.index:
-        shift_slack_vars[shift_id] = model.addVar(
-            vtype=GRB.CONTINUOUS, lb=0, name=f"Shift_Slack_{shift_id}"
         )
 
     # Objective Function: Minimize total cost and slack penalties
@@ -601,10 +595,6 @@ VALUES
         quicksum(
             task_slack_vars[task_id] * 100  # Penalize unassigned tasks
             for task_id in tasks_df.index
-        ) +
-        quicksum(
-            shift_slack_vars[shift_id] * 50  # Penalize under-staffed shifts
-            for shift_id in shifts_df.index
         ),
         GRB.MINIMIZE
     )
@@ -620,14 +610,14 @@ VALUES
             name=f"Task_{task_id}_Coverage"
         )
 
-    # 2. Workers per shift must satisfy all assigned tasks' nurse requirements or use slack
+    # 2. Workers per shift must meet the requirements of all assigned tasks
     for shift_id in shifts_df.index:
         model.addConstr(
-            quicksum(
+            shift_worker_vars[shift_id] >= quicksum(
                 task_shift_vars[(task_id, shift_id)] * tasks_df.loc[task_id, "NursesRequired"]
                 for task_id in tasks_df.index if (task_id, shift_id) in task_shift_vars
-            ) - shift_slack_vars[shift_id] <= shift_worker_vars[shift_id],
-            name=f"Shift_{shift_id}_Workers"
+            ),
+            name=f"Shift_{shift_id}_Worker_Requirement"
         )
 
     # Optimize the model
