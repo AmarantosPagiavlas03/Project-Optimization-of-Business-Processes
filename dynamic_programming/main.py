@@ -515,6 +515,24 @@ def optimize_tasks_to_shiftsv2():
     else:
         st.success("All tasks successfully assigned!")
 
+    for task_id, task in tasks_df.iterrows():
+        print(f"Task {task_id}: {task['TaskName']} ({task['Day']} {task['StartTime']} - {task['EndTime']})")
+    for shift_id, shift in shifts_df.iterrows():
+        if (
+            shift[task["Day"]] == 1 and
+            shift["StartTime"] <= task["StartTime"] and
+            shift["EndTime"] >= task["EndTime"]
+        ):
+            print(f"  Compatible with Shift {shift_id} ({shift['StartTime']} - {shift['EndTime']})")
+    for shift_id in shifts_df.index:
+        total_nurses_required = sum(
+            tasks_df.loc[task_id, "NursesRequired"]
+            for task_id, _ in task_shift_vars if (task_id, shift_id) in task_shift_vars
+        )
+        print(f"Shift {shift_id}: Capacity {shifts_df.loc[shift_id, 'Monday']} - Required {total_nurses_required}")
+
+
+
     # Display results
     if not results_df.empty:
         st.write("Optimal Task Assignments with Worker Counts:")
