@@ -611,6 +611,10 @@ VALUES
 
     # Optimize the model
     model.optimize()
+    model.computeIIS()
+    for constr in model.getConstrs():
+        if constr.IISConstr:
+            st.write(f"Infeasible Constraint: {constr.constrName}")
 
     # Collect results
     if model.status == GRB.OPTIMAL:
