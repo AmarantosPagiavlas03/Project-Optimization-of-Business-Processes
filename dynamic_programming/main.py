@@ -231,47 +231,39 @@ def optimize_tasks_to_shiftsv2():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''
-    INSERT INTO Tasks (
-        TaskName,
-        Day,
-        StartTime,
-        EndTime,
-        Duration,
-        NursesRequired
-    )
-    VALUES
-        ('Dressing Change', 'Monday', '08:00:00', '08:15:00', 15, 1),
-        ('Wound Care', 'Monday', '09:30:00', '10:15:00', 45, 2),
-        ('Vital Signs Monitoring', 'Monday', '10:30:00', '11:00:00', 30, 2),
-        ('Medication Administration', 'Monday', '11:15:00', '11:45:00', 30, 1),
-        ('Physical Therapy', 'Monday', '14:00:00', '14:45:00', 45, 1),
-        ('Dressing Change', 'Tuesday', '07:30:00', '07:45:00', 15, 1),
-        ('Wound Care', 'Tuesday', '08:00:00', '08:45:00', 45, 2),
-        ('Vital Signs Monitoring', 'Tuesday', '09:00:00', '09:30:00', 30, 2),
-        ('Medication Administration', 'Tuesday', '10:00:00', '10:30:00', 30, 1),
-        ('Physical Therapy', 'Wednesday', '09:00:00', '09:45:00', 45, 2),
-        ('Dressing Change', 'Wednesday', '10:00:00', '10:15:00', 15, 1),
-        ('Wound Care', 'Wednesday', '11:00:00', '11:45:00', 45, 3),
-        ('Vital Signs Monitoring', 'Wednesday', '14:00:00', '14:30:00', 30, 2),
-        ('Medication Administration', 'Wednesday', '15:00:00', '15:30:00', 30, 1),
-        ('Dressing Change', 'Thursday', '08:00:00', '08:15:00', 15, 1),
-        ('Physical Therapy', 'Thursday', '09:30:00', '10:15:00', 45, 1),
-        ('Wound Care', 'Thursday', '11:00:00', '11:45:00', 45, 3),
-        ('Vital Signs Monitoring', 'Thursday', '13:30:00', '14:00:00', 30, 2),
-        ('Medication Administration', 'Thursday', '14:30:00', '15:00:00', 30, 1),
-        ('Dressing Change', 'Friday', '07:00:00', '07:15:00', 15, 1),
-        ('Wound Care', 'Friday', '08:00:00', '08:45:00', 45, 2),
-        ('Vital Signs Monitoring', 'Friday', '09:00:00', '09:30:00', 30, 3),
-        ('Medication Administration', 'Friday', '10:00:00', '10:30:00', 30, 1),
-        ('Physical Therapy', 'Saturday', '08:30:00', '09:15:00', 45, 1),
-        ('Wound Care', 'Saturday', '10:00:00', '10:45:00', 45, 3),
-        ('Vital Signs Monitoring', 'Saturday', '11:00:00', '11:30:00', 30, 2),
-        ('Medication Administration', 'Saturday', '12:00:00', '12:30:00', 30, 1),
-        ('Dressing Change', 'Sunday', '07:00:00', '07:15:00', 15, 1),
-        ('Wound Care', 'Sunday', '08:00:00', '08:45:00', 45, 2),
-        ('Vital Signs Monitoring', 'Sunday', '09:00:00', '09:30:00', 30, 3),
-        ('Medication Administration', 'Sunday', '10:00:00', '10:30:00', 30, 1),
-        ('Physical Therapy', 'Sunday', '11:00:00', '11:45:00', 45, 2);
+INSERT INTO Tasks (
+    TaskName,
+    Day,
+    StartTime,
+    EndTime,
+    Duration,
+    NursesRequired
+)
+VALUES
+    ('Dressing Change', 'Monday', '07:30:00', '07:45:00', 15, 1),
+    ('Vital Signs Monitoring', 'Monday', '10:30:00', '11:00:00', 30, 2),
+    ('Wound Care', 'Monday', '14:30:00', '15:15:00', 45, 3),
+    ('Medication Administration', 'Monday', '22:00:00', '22:30:00', 30, 2),
+    ('Physical Therapy', 'Tuesday', '08:00:00', '08:45:00', 45, 2),
+    ('Dressing Change', 'Tuesday', '13:30:00', '13:45:00', 15, 1),
+    ('Vital Signs Monitoring', 'Tuesday', '16:00:00', '16:30:00', 30, 2),
+    ('Medication Administration', 'Tuesday', '21:30:00', '22:00:00', 30, 2),
+    ('Wound Care', 'Wednesday', '07:30:00', '08:15:00', 45, 3),
+    ('Physical Therapy', 'Wednesday', '12:00:00', '12:45:00', 45, 2),
+    ('Dressing Change', 'Wednesday', '18:00:00', '18:15:00', 15, 1),
+    ('Vital Signs Monitoring', 'Thursday', '09:00:00', '09:30:00', 30, 2),
+    ('Medication Administration', 'Thursday', '13:00:00', '13:30:00', 30, 2),
+    ('Wound Care', 'Thursday', '17:30:00', '18:15:00', 45, 3),
+    ('Dressing Change', 'Friday', '07:30:00', '07:45:00', 15, 1),
+    ('Vital Signs Monitoring', 'Friday', '14:30:00', '15:00:00', 30, 2),
+    ('Medication Administration', 'Friday', '21:30:00', '22:00:00', 30, 2),
+    ('Wound Care', 'Saturday', '09:30:00', '10:15:00', 45, 3),
+    ('Physical Therapy', 'Saturday', '14:00:00', '14:45:00', 45, 2),
+    ('Vital Signs Monitoring', 'Saturday', '20:00:00', '20:30:00', 30, 2),
+    ('Medication Administration', 'Sunday', '07:30:00', '08:00:00', 30, 1),
+    ('Dressing Change', 'Sunday', '14:30:00', '14:45:00', 15, 1),
+    ('Wound Care', 'Sunday', '20:00:00', '20:45:00', 45, 3);
+
 
     ''')
     conn.commit()
