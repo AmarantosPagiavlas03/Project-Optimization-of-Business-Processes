@@ -643,6 +643,7 @@ VALUES
                 })
 
         results_df = pd.DataFrame(results)
+        st.dataframe(results_df)
 
         if not results_df.empty:
             st.write("Optimal Task Assignments with Worker Counts:")
@@ -656,9 +657,7 @@ VALUES
         else:
             st.error("No feasible solution found.")
             model.computeIIS()
-            for constr in model.getConstrs():
-                if constr.IISConstr:
-                    st.write(f"Infeasible Constraint: {constr.constrName}")
+
 
     else:
         st.error(f"Optimization failed with status: {model.status}")
