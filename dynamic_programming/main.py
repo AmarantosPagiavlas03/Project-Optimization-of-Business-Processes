@@ -540,7 +540,7 @@ VALUES
     ''')
     conn.commit()
     conn.close()
-    # Fetch data
+
     tasks_df = get_all("Tasks")
     shifts_df = get_all("ShiftsTable")
 
@@ -555,11 +555,13 @@ VALUES
     shifts_df["EndTime"] = pd.to_datetime(shifts_df["EndTime"], format="%H:%M:%S").dt.time
 
     # Create Gurobi Model
-    model = Model("Task_Assignment")
+    model = Model("Task_Assignment_Relaxed")
 
     # Decision Variables
     task_shift_vars = {}
     shift_worker_vars = {}
+    task_slack_vars = {}
+    shift_slack_vars = {}
 
     for task_id, task in tasks_df.iterrows():
         for shift_id, shift in shifts_df.iterrows():
@@ -579,33 +581,52 @@ VALUES
             vtype=GRB.INTEGER, lb=0, name=f"Workers_Shift_{shift_id}"
         )
 
-    # Objective Function: Minimize total cost
+    # Slack variables
+    for task_id in tasks_df.index:
+        task_slack_vars[task_id] = model.addVar(
+            vtype=GRB.CONTINUOUS, lb=0, name=f"Task_Slack_{task_id}"
+        )
+
+    for shift_id in shifts_df.index:
+        shift_slack_vars[shift_id] = model.addVar(
+            vtype=GRB.CONTINUOUS, lb=0, name=f"Shift_Slack_{shift_id}"
+        )
+
+    # Objective Function: Minimize total cost and slack penalties
     model.setObjective(
         quicksum(
             shift_worker_vars[shift_id] * shifts_df.loc[shift_id, "Weight"]
+            for shift_id in shifts_df.index
+        ) +
+        quicksum(
+            task_slack_vars[task_id] * 100  # Penalize unassigned tasks
+            for task_id in tasks_df.index
+        ) +
+        quicksum(
+            shift_slack_vars[shift_id] * 50  # Penalize under-staffed shifts
             for shift_id in shifts_df.index
         ),
         GRB.MINIMIZE
     )
 
     # Constraints
-    # 1. Each task must be assigned to at least one shift
+    # 1. Each task must be assigned to at least one shift or have slack
     for task_id in tasks_df.index:
         model.addConstr(
             quicksum(
                 task_shift_vars[(task_id, shift_id)]
                 for shift_id in shifts_df.index if (task_id, shift_id) in task_shift_vars
-            ) >= 1,
+            ) + task_slack_vars[task_id] >= 1,
             name=f"Task_{task_id}_Coverage"
         )
 
-    # 2. Workers per shift must satisfy all assigned tasks' nurse requirements
+    # 2. Workers per shift must satisfy all assigned tasks' nurse requirements or use slack
     for shift_id in shifts_df.index:
         model.addConstr(
             quicksum(
                 task_shift_vars[(task_id, shift_id)] * tasks_df.loc[task_id, "NursesRequired"]
                 for task_id in tasks_df.index if (task_id, shift_id) in task_shift_vars
-            ) <= shift_worker_vars[shift_id],
+            ) - shift_slack_vars[shift_id] <= shift_worker_vars[shift_id],
             name=f"Shift_{shift_id}_Workers"
         )
 
@@ -646,6 +667,7 @@ VALUES
             st.error("No feasible solution found.")
     else:
         st.error(f"Optimization failed with status: {model.status}")
+
 
 def display_tasks_and_shifts():
     """Display tasks and shifts as Gantt charts with all days and hours displayed."""
