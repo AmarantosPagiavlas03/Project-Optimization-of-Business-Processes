@@ -501,13 +501,14 @@ def optimize_tasks_to_shiftsv2():
             })
 
     results_df = pd.DataFrame(results)
-    st.dataframe(results_df)
+ 
 
     # Check if all tasks are assigned
     assigned_tasks = results_df["TaskID"].unique()
     unassigned_tasks = tasks_df.loc[~tasks_df.index.isin(assigned_tasks)]
     if not unassigned_tasks.empty:
         st.warning("Some tasks could not be assigned:")
+        st.write("Unassigned Tasks:")
         st.dataframe(unassigned_tasks)
     else:
         st.success("All tasks successfully assigned!")
