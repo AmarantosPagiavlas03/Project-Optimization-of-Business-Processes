@@ -126,7 +126,6 @@ def task_input_form():
         else:
             st.sidebar.error("Task name cannot be empty!")
 
-
 def shift_input_form():
     """Sidebar form to add a new shift."""
     st.sidebar.header("Add Shift")
@@ -218,7 +217,7 @@ def optimize_tasks_to_shiftsv2():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''
-        INSERT INTO Tasks (
+    INSERT INTO Tasks (
     TaskName,
     Day,
     StartTime,
@@ -327,21 +326,13 @@ VALUES
     ('Physical Therapy', 'Friday', '12:45:00', '22:00:00', 30, 3),
     ('Physical Therapy', 'Saturday', '10:30:00', '13:45:00', 30, 3),
     ('Physical Therapy', 'Wednesday', '09:15:00', '19:15:00', 60, 1);
-
     ''')
     conn.commit()
     conn.close()
 
     tasks_df = get_all("Tasks")
     shifts_df = get_all("ShiftsTable")
-
-    tasks_df['StartTime'] = pd.to_datetime(tasks_df['Start Window'], format='%H:%M').dt.time
-    tasks_df['EndTime'] = pd.to_datetime(tasks_df['End Window'], format='%H:%M').dt.time
-    shifts_df['StartTime'] = pd.to_datetime(shifts_df['StartTime'], format='%H:%M:%S').dt.time
-    shifts_df['EndTime'] = pd.to_datetime(shifts_df['EndTime'], format='%H:%M:%S').dt.time
-    shifts_df['BreakTime'] = pd.to_datetime(shifts_df['BreakTime'], format='%H:%M:%S').dt.time
-    shifts_df['BreakDuration'] = pd.to_timedelta(shifts_df['BreakDuration'])
-
+    
     if tasks_df.empty or shifts_df.empty:
         st.error("Tasks or shifts data is missing. Add data and try again.")
         return
