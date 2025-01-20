@@ -677,11 +677,12 @@ def main():
     if st.sidebar.button("Generate Random Data"):
         generate_and_fill_data(num_tasks, num_shifts)
 
-    # Visualize tasks and shifts
-    display_tasks_and_shifts()
-
     # Optimization
     if st.button("Optimize Task Assignmen"):
         optimize_tasks_to_shiftsv2()
+    # Visualize tasks and shifts
+    display_tasks_and_shifts()
+
+
 if __name__ == "__main__":
     main()
