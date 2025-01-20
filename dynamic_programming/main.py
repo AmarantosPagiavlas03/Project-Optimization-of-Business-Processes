@@ -219,12 +219,12 @@ def optimize_tasks_to_shiftsv2():
     c = conn.cursor()
     c.execute('''
         INSERT INTO Tasks (
-    Task_Name,
+    TaskName,
     Day,
-    Start_Window,
-    End_Window,
-    Duration_of_Task,
-    Nurses_Required
+    StartTime,
+    EndTime,
+    Duration,
+    NursesRequired
 )
 VALUES
     ('Bathing', 'Wednesday', '08:15:00', '22:30:00', 45, 2),
