@@ -312,6 +312,24 @@ VALUES
         st.error("Tasks or shifts data is missing. Add data and try again.")
         return
 
+    for task_id, task in tasks_df.iterrows():
+        for shift_id, shift in shifts_df.iterrows():
+            if (
+                shift[task["Day"]] == 1 and
+                shift["StartTime"] <= task["StartTime"] and
+                shift["EndTime"] >= task["EndTime"]
+            ):
+                print(f"Task {task_id} ({task['TaskName']} on {task['Day']} from {task['StartTime']} to {task['EndTime']}) matches Shift {shift_id} ({shift['StartTime']} to {shift['EndTime']})")
+            else:
+                print(f"Task {task_id} does NOT match Shift {shift_id}. Reasons:")
+                if shift[task["Day"]] != 1:
+                    print(f"  - Shift does not cover the day ({task['Day']}).")
+                if shift["StartTime"] > task["StartTime"]:
+                    print(f"  - Shift starts after the task starts.")
+                if shift["EndTime"] < task["EndTime"]:
+                    print(f"  - Shift ends before the task ends.")
+
+
     # Prepare data
     tasks_df["StartTime"] = pd.to_datetime(tasks_df["StartTime"], format="%H:%M:%S").dt.time
     tasks_df["EndTime"] = pd.to_datetime(tasks_df["EndTime"], format="%H:%M:%S").dt.time
