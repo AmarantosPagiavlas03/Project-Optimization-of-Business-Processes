@@ -504,6 +504,7 @@ def optimize_tasks_to_shiftsv2():
             })
 
     results_df = pd.DataFrame(results)
+    st.dataframe(results_df)
 
     # Check if all tasks are assigned
     assigned_tasks = results_df["TaskID"].unique()
