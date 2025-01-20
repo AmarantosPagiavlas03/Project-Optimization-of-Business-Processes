@@ -487,9 +487,6 @@ def optimize_tasks_to_shiftsv2():
     print("Solver Status:", solver_status)
     st.warning(solver_status)
 
-    # if solver_status != "Optimal":
-    #     st.error(f"The optimization problem did not find an optimal solution. Solver status: {solver_status}")
-    #     return
 
     # Collect results
     results = []
