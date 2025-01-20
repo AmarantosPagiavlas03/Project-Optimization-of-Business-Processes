@@ -496,6 +496,8 @@ def optimize_tasks_to_shiftsv2():
                 "ShiftID": shift_id,
                 "TaskName": tasks_df.loc[task_id, "TaskName"],
                 "TaskDay": tasks_df.loc[task_id, "Day"],
+                "TaskStart": tasks_df.loc[task_id, "StartTime"],
+                "TaskEnd": tasks_df.loc[task_id, "EndTime"],
                 "ShiftStart": shifts_df.loc[shift_id, "StartTime"],
                 "ShiftEnd": shifts_df.loc[shift_id, "EndTime"],
                 "WorkersAssigned": shift_worker_vars[shift_id].varValue
