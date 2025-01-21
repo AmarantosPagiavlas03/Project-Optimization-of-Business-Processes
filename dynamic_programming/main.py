@@ -574,7 +574,7 @@ def main():
 
     with st.sidebar:
         # Add spacer to push buttons to the bottom of the sidebar
-        for _ in range(55): 
+        for _ in range(1202): 
             st.sidebar.write("") 
             
         st.markdown("---")  # Add a separator line
