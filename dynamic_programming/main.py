@@ -28,6 +28,9 @@ def init_db():
         )
     ''')
     c.execute('''
+        drop TABLE IF EXISTS ShiftsTable 
+    ''')
+    c.execute('''
         CREATE TABLE IF NOT EXISTS ShiftsTable (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             StartTime TEXT NOT NULL,
@@ -42,7 +45,6 @@ def init_db():
             Friday INT NOT NULL,
             Saturday INT NOT NULL,
             Sunday INT NOT NULL,
-            Flexibility TEXT NOT NULL,
             Notes TEXT
         )
     ''')
@@ -67,9 +69,8 @@ def add_shift_to_db(data):
     c.execute('''
         INSERT INTO ShiftsTable (
             StartTime, EndTime, BreakTime, BreakDuration, Weight,
-            Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday,
-            Flexibility, Notes
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday, Notes
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', data)
     conn.commit()
     conn.close()
@@ -195,7 +196,7 @@ def generate_and_fill_data(num_tasks=10, num_shifts=5):
         break_duration = timedelta(minutes=random.randint(15, 60))
         weight = random.uniform(0.5, 2.0)
         days = {day: random.choice([0, 1]) for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]}
-        flexibility = random.choice(["High", "Moderate", "Low"])
+
         notes = f"Random notes {random.randint(1, 100)}"
         shift_data = (
             start_time.strftime("%H:%M:%S"),
@@ -204,7 +205,6 @@ def generate_and_fill_data(num_tasks=10, num_shifts=5):
             str(break_duration),
             weight,
             *days.values(),
-            flexibility,
             notes
         )
         add_shift_to_db(shift_data)
@@ -270,20 +270,19 @@ VALUES
     Friday,
     Saturday,
     Sunday,
-    Flexibility,
     Notes
 )
 VALUES
-    ('07:00:00', '15:00:00', '11:00:00', '0:30:00', 1200, 1, 1, 1, 1, 1, 0, 0, 'Moderate', 'Morning shift'),
-    ('15:00:00', '23:00:00', '19:00:00', '0:30:00', 1400, 1, 1, 1, 1, 1, 1, 1, 'Moderate', 'Evening shift'),
-    ('23:00:00', '07:00:00', '03:00:00', '0:30:00', 1600, 1, 1, 1, 1, 1, 1, 1, 'High', 'Night shift'),
-    ('08:00:00', '14:00:00', '12:00:00', '0:20:00', 1000, 1, 1, 1, 1, 1, 0, 0, 'Low', 'Short morning shift'),
-    ('14:00:00', '20:00:00', '17:00:00', '0:30:00', 1100, 1, 1, 1, 1, 1, 1, 1, 'Moderate', 'Afternoon shift'),
-    ('20:00:00', '02:00:00', '23:00:00', '0:20:00', 1300, 0, 1, 1, 1, 1, 1, 1, 'High', 'Evening/night hybrid shift'),
-    ('09:00:00', '17:00:00', '13:00:00', '0:45:00', 1500, 1, 1, 0, 1, 1, 0, 0, 'Low', 'Standard day shift'),
-    ('06:00:00', '14:00:00', '10:00:00', '0:30:00', 1100, 1, 1, 1, 1, 1, 1, 0, 'Low', 'Early morning shift'),
-    ('14:00:00', '22:00:00', '18:00:00', '0:30:00', 1200, 1, 1, 1, 1, 1, 1, 1, 'Moderate', 'Full afternoon-evening shift'),
-    ('10:00:00', '18:00:00', '13:30:00', '0:30:00', 1300, 1, 1, 1, 1, 1, 0, 0, 'Low', 'Midday to evening shift');
+    ('07:00:00', '15:00:00', '11:00:00', '0:30:00', 1200, 1, 1, 1, 1, 1, 0, 0, 'Morning shift'),
+    ('15:00:00', '23:00:00', '19:00:00', '0:30:00', 1400, 1, 1, 1, 1, 1, 1, 1, 'Evening shift'),
+    ('23:00:00', '07:00:00', '03:00:00', '0:30:00', 1600, 1, 1, 1, 1, 1, 1, 1, 'Night shift'),
+    ('08:00:00', '14:00:00', '12:00:00', '0:20:00', 1000, 1, 1, 1, 1, 1, 0, 0, 'Short morning shift'),
+    ('14:00:00', '20:00:00', '17:00:00', '0:30:00', 1100, 1, 1, 1, 1, 1, 1, 1, 'Afternoon shift'),
+    ('20:00:00', '02:00:00', '23:00:00', '0:20:00', 1300, 0, 1, 1, 1, 1, 1, 1, 'Evening/night hybrid shift'),
+    ('09:00:00', '17:00:00', '13:00:00', '0:45:00', 1500, 1, 1, 0, 1, 1, 0, 0, 'Standard day shift'),
+    ('06:00:00', '14:00:00', '10:00:00', '0:30:00', 1100, 1, 1, 1, 1, 1, 1, 0, 'Early morning shift'),
+    ('14:00:00', '22:00:00', '18:00:00', '0:30:00', 1200, 1, 1, 1, 1, 1, 1, 1, 'Full afternoon-evening shift'),
+    ('10:00:00', '18:00:00', '13:30:00', '0:30:00', 1300, 1, 1, 1, 1, 1, 0, 0, 'Midday to evening shift');
 
 
     ''')
