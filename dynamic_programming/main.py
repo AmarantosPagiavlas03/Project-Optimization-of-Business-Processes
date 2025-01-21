@@ -572,12 +572,11 @@ def main():
     generate_and_fill_data_form()
 
 
-    # Add an empty placeholder to create space dynamically
-    spacer = st.sidebar.empty()  # Create an empty widget to act as a spacer
-    spacer.markdown("<br><br><br>", unsafe_allow_html=True) 
-
-    # Add "Clear All Tasks" and "Clear All Shifts" buttons in the sidebar at the bottom
     with st.sidebar:
+        # Add spacer to push buttons to the bottom of the sidebar
+        for _ in range(55): 
+            st.sidebar.write("") 
+            
         st.markdown("---")  # Add a separator line
 
         # Two columns for side-by-side buttons
@@ -609,7 +608,6 @@ def main():
                     st.write("**Shifts List**")
                     st.dataframe(shifts_df)
 
-    # Use the empty placeholder to add dynamic space
 
  
 
