@@ -28,7 +28,7 @@ def init_db():
         )
     ''')
     c.execute('''
-        CREATE TABLE IF NOT EXISTS ShiftsTable (
+        CREATE TABLE IF NOT EXISTS ShiftsTable1 (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             StartTime TEXT NOT NULL,
             EndTime TEXT NOT NULL,
@@ -64,7 +64,7 @@ def add_shift_to_db(data):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''
-        INSERT INTO ShiftsTable (
+        INSERT INTO ShiftsTable1 (
             StartTime, EndTime, BreakTime, BreakDuration, Weight,
             Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday, Notes
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -254,7 +254,7 @@ VALUES
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''
-   INSERT INTO ShiftsTable (
+   INSERT INTO ShiftsTable1 (
     StartTime,
     EndTime,
     BreakTime,
@@ -289,7 +289,7 @@ VALUES
 def optimize_tasks_with_gurobi():
     # Fetch data
     tasks_df = get_all("Tasks")
-    shifts_df = get_all("ShiftsTable")
+    shifts_df = get_all("ShiftsTable1")
 
     if tasks_df.empty or shifts_df.empty:
         st.error("Tasks or shifts data is missing. Add data and try again.")
@@ -445,7 +445,7 @@ def display_tasks_and_shifts():
 
     # Display tasks and shifts lists
     tasks_df = get_all("Tasks")
-    shifts_df = get_all("ShiftsTable")
+    shifts_df = get_all("ShiftsTable1")
     if not tasks_df.empty:
         st.write("**Tasks List**")
         st.dataframe(tasks_df)
@@ -570,10 +570,10 @@ def main():
     # Clear All Shifts button in the second column
     with col2:
         if st.button("Clear All Shifts"):
-            clear_all("ShiftsTable")
+            clear_all("ShiftsTable1")
             st.success("All shifts have been cleared!")
             # Refresh shifts display
-            shifts_df = get_all("ShiftsTable")
+            shifts_df = get_all("ShiftsTable1")
             if shifts_df.empty:
                 st.write("No shifts added yet.")
             else:
