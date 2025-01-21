@@ -690,34 +690,6 @@ def optimize_workers_for_shifts():
     # 1. Read needed data
     shifts_df = get_all("ShiftsTable1")
     workers_df = get_all("Workers")
-
-    # The shift_worker_vars from the first optimization are not stored in DB,
-    # but we do have the final integer result for each shift’s needed worker count
-    # from the results CSV or from the model. Typically you'd store that in a table,
-    # or re-run in memory. For this example, let's define a new column in ShiftsTable1
-    # if you want (or we just pretend we have it). Instead, we will re-derive it from
-    # the existing approach or just ask the user to enter "how many workers does each shift need?"
-
-    # For demonstration, let's say the user manually enters a minimal coverage requirement
-    # for each shift (like "1" or "2" or "3"). Alternatively, you can read the results
-    # from a CSV or store them in a table. The code below checks for a column "NeededWorkers"
-    # in ShiftsTable1. If missing, we fallback to a user-provided input.
-
-    if "NeededWorkers" not in shifts_df.columns:
-        st.info("**No 'NeededWorkers' column found in ShiftsTable1.**")
-        st.write("We will assume each shift needs coverage from the first optimization or a user input.")
-        needed_workers_inputs = {}
-        for i, row in shifts_df.iterrows():
-            shift_label = f"Shift ID {row['id']} ({row['StartTime']} - {row['EndTime']})"
-            needed_workers_inputs[i] = st.number_input(
-                f"Workers needed for {shift_label}",
-                min_value=0, value=1, step=1
-            )
-        # Store the results in a new column for the model usage
-        shifts_df["NeededWorkers"] = shifts_df.index.map(needed_workers_inputs)
-    else:
-        st.success("Found 'NeededWorkers' column in ShiftsTable1. Using existing data.")
-
     # Prepare time fields for comparison
     # Convert day preference for each worker to time
     # Convert shift start/end to time
