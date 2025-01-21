@@ -171,67 +171,67 @@ def clear_all(table):
     conn.commit()
     conn.close()
 
-def update_needed_workers_for_each_day(results_df):
-    """
-    Use the first-optimization assignments (results_df) to populate
-    MondayNeeded, TuesdayNeeded, ... columns for each ShiftID in ShiftsTable3.
-    """
+# def update_needed_workers_for_each_day(results_df):
+#     """
+#     Use the first-optimization assignments (results_df) to populate
+#     MondayNeeded, TuesdayNeeded, ... columns for each ShiftID in ShiftsTable3.
+#     """
 
-    # 1. Aggregate how many workers are needed for each (ShiftID, Day).
-    #    If a single shift has multiple tasks on the same day, you might 
-    #    want sum() or max(). That depends on your logic. Let's use max() here.
-    shift_day_needs = (
-        results_df
-        .groupby(["ShiftID", "TaskDay"])["WorkersNeededForShift"]
-        .max()  # or .sum()
-        .reset_index()
-    )
-    # 2. Build a dictionary: shift_day_dict[shift_id][day] = needed count
-    day_list = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-    shift_day_dict = {}
+#     # 1. Aggregate how many workers are needed for each (ShiftID, Day).
+#     #    If a single shift has multiple tasks on the same day, you might 
+#     #    want sum() or max(). That depends on your logic. Let's use max() here.
+#     shift_day_needs = (
+#         results_df
+#         .groupby(["ShiftID", "TaskDay"])["WorkersNeededForShift"]
+#         .max()  # or .sum()
+#         .reset_index()
+#     )
+#     # 2. Build a dictionary: shift_day_dict[shift_id][day] = needed count
+#     day_list = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+#     shift_day_dict = {}
 
-    for _, row in shift_day_needs.iterrows():
-        sid = row["ShiftID"]
-        day = row["TaskDay"]         # e.g. "Monday"
-        needed = int(row["WorkersNeededForShift"])
+#     for _, row in shift_day_needs.iterrows():
+#         sid = row["ShiftID"]
+#         day = row["TaskDay"]         # e.g. "Monday"
+#         needed = int(row["WorkersNeededForShift"])
 
-        if sid not in shift_day_dict:
-            shift_day_dict[sid] = {d: 0 for d in day_list}  # default 0 for each day
+#         if sid not in shift_day_dict:
+#             shift_day_dict[sid] = {d: 0 for d in day_list}  # default 0 for each day
 
-        # Assign the needed count for that day
-        shift_day_dict[sid][day] = needed
+#         # Assign the needed count for that day
+#         shift_day_dict[sid][day] = needed
  
-    # 3. Update ShiftsTable3 for each shift ID
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
+#     # 3. Update ShiftsTable3 for each shift ID
+#     conn = sqlite3.connect(DB_FILE)
+#     c = conn.cursor()
 
-    for sid, day_map in shift_day_dict.items():
-        c.execute('''
-            UPDATE ShiftsTable3
-            SET
-              MondayNeeded    = :mon,
-              TuesdayNeeded   = :tue,
-              WednesdayNeeded = :wed,
-              ThursdayNeeded  = :thu,
-              FridayNeeded    = :fri,
-              SaturdayNeeded  = :sat,
-              SundayNeeded    = :sun
-            WHERE id = :shift_id
-        ''', {
-            "mon": day_map["Monday"],
-            "tue": day_map["Tuesday"],
-            "wed": day_map["Wednesday"],
-            "thu": day_map["Thursday"],
-            "fri": day_map["Friday"],
-            "sat": day_map["Saturday"],
-            "sun": day_map["Sunday"],
-            "shift_id": sid
-        })
+#     for sid, day_map in shift_day_dict.items():
+#         c.execute('''
+#             UPDATE ShiftsTable3
+#             SET
+#               MondayNeeded    = :mon,
+#               TuesdayNeeded   = :tue,
+#               WednesdayNeeded = :wed,
+#               ThursdayNeeded  = :thu,
+#               FridayNeeded    = :fri,
+#               SaturdayNeeded  = :sat,
+#               SundayNeeded    = :sun
+#             WHERE id = :shift_id
+#         ''', {
+#             "mon": day_map["Monday"],
+#             "tue": day_map["Tuesday"],
+#             "wed": day_map["Wednesday"],
+#             "thu": day_map["Thursday"],
+#             "fri": day_map["Friday"],
+#             "sat": day_map["Saturday"],
+#             "sun": day_map["Sunday"],
+#             "shift_id": sid
+#         })
 
-    conn.commit()
-    conn.close()
+#     conn.commit()
+#     conn.close()
 
-    st.success("Day-specific NeededWorkers columns have been updated in ShiftsTable3!")
+#     st.success("Day-specific NeededWorkers columns have been updated in ShiftsTable3!")
 
 
 # ------------------------------------------------------------------
@@ -302,7 +302,7 @@ def shift_input_form():
         Shift_StartTime = st.selectbox("Shift Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
         Shift_EndTime = st.selectbox("Shift End Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
         BreakTime = st.selectbox("Break Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
-        
+
         BreakDuration_hours = st.number_input("Break Duration Hours", min_value=0, max_value=23, value=0)
         BreakDuration_minutes = st.number_input("Break Duration Minutes", min_value=0, max_value=59, value=30)
         Weight = st.number_input("Shift Weight", min_value=0.0, value=1.0)
