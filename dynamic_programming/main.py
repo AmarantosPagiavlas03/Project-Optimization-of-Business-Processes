@@ -606,7 +606,8 @@ def main():
     if st.button("Data Example"):
         insert()
     if st.button("Optimize Task Assignment"):
-        optimize_tasks_with_gurobi()
+        with st.spinner('Wait for it...'):
+            optimize_tasks_with_gurobi()
     # Visualize tasks and shifts
     display_tasks_and_shifts()
 
