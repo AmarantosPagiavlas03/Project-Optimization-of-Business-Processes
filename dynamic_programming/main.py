@@ -35,23 +35,33 @@ def init_db():
 
     # Table: Shifts
     c.execute('''
-        CREATE TABLE IF NOT EXISTS ShiftsTable2 (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            StartTime TEXT NOT NULL,
-            EndTime TEXT NOT NULL,
-            BreakTime TEXT NOT NULL,
-            BreakDuration TEXT NOT NULL,
-            Weight FLOAT NOT NULL,
-            Monday INT NOT NULL,
-            Tuesday INT NOT NULL,
-            Wednesday INT NOT NULL,
-            Thursday INT NOT NULL,
-            Friday INT NOT NULL,
-            Saturday INT NOT NULL,
-            Sunday INT NOT NULL,
-            Notes TEXT,
-            NeededWorkers INT DEFAULT 0
-        )
+    CREATE TABLE IF NOT EXISTS ShiftsTable2 (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        StartTime TEXT NOT NULL,
+        EndTime TEXT NOT NULL,
+        BreakTime TEXT NOT NULL,
+        BreakDuration TEXT NOT NULL,
+        Weight FLOAT NOT NULL,
+
+        Monday INT NOT NULL,
+        Tuesday INT NOT NULL,
+        Wednesday INT NOT NULL,
+        Thursday INT NOT NULL,
+        Friday INT NOT NULL,
+        Saturday INT NOT NULL,
+        Sunday INT NOT NULL,
+
+        Notes TEXT,
+
+        -- Add day-specific columns for needed workers
+        MondayNeeded INT DEFAULT 0,
+        TuesdayNeeded INT DEFAULT 0,
+        WednesdayNeeded INT DEFAULT 0,
+        ThursdayNeeded INT DEFAULT 0,
+        FridayNeeded INT DEFAULT 0,
+        SaturdayNeeded INT DEFAULT 0,
+        SundayNeeded INT DEFAULT 0
+    );
     ''')
 
     # Table: Workers
@@ -160,34 +170,74 @@ def clear_all(table):
     conn.commit()
     conn.close()
 
-def update_needed_workers(results_df):
+def update_needed_workers_for_each_day(results_df):
     """
-    Update the NeededWorkers column in ShiftsTable2 based on the
-    'WorkersNeededForShift' column in results_df.
+    Use the first-optimization assignments (results_df) to populate
+    MondayNeeded, TuesdayNeeded, ... columns for each ShiftID in ShiftsTable2.
 
-    :param results_df: A DataFrame that has, at minimum, the columns:
-                       ['ShiftID', 'WorkersNeededForShift'].
+    Assumes results_df has columns:
+        - "ShiftID": the ID from ShiftsTable2
+        - "TaskDay": a string like "Monday", "Tuesday", ...
+        - "WorkersNeededForShift": integer count of how many workers needed
     """
+
+    # 1. Aggregate how many workers are needed for each (ShiftID, Day).
+    #    If a single shift has multiple tasks on the same day, you might 
+    #    want sum() or max(). That depends on your logic. Let's use max() here.
+    shift_day_needs = (
+        results_df
+        .groupby(["ShiftID", "TaskDay"])["WorkersNeededForShift"]
+        .max()  # or .sum()
+        .reset_index()
+    )
+
+    # 2. Build a dictionary: shift_day_dict[shift_id][day] = needed count
+    day_list = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    shift_day_dict = {}
+
+    for _, row in shift_day_needs.iterrows():
+        sid = row["ShiftID"]
+        day = row["TaskDay"]         # e.g. "Monday"
+        needed = int(row["WorkersNeededForShift"])
+
+        if sid not in shift_day_dict:
+            shift_day_dict[sid] = {d: 0 for d in day_list}  # default 0 for each day
+
+        # Assign the needed count for that day
+        shift_day_dict[sid][day] = needed
+
+    # 3. Update ShiftsTable2 for each shift ID
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
 
-    # 1. Group by each ShiftID in the results to find the required number of workers.
-    #    (If all tasks in the same shift show the same needed worker count, you could
-    #    just take max or min. Or if you have a single row per shift, no grouping is needed.)
-    shift_needs = results_df.groupby("ShiftID")["WorkersNeededForShift"].max().reset_index()
-
-    # 2. Run the SQL UPDATE for each unique shift in results_df
-    for _, row in shift_needs.iterrows():
-        shift_id = row["ShiftID"]
-        needed = int(row["WorkersNeededForShift"])
-        c.execute(
-            "UPDATE ShiftsTable2 SET NeededWorkers = ? WHERE id = ?",
-            (needed, shift_id)
-        )
+    for sid, day_map in shift_day_dict.items():
+        c.execute('''
+            UPDATE ShiftsTable2
+            SET
+              MondayNeeded    = :mon,
+              TuesdayNeeded   = :tue,
+              WednesdayNeeded = :wed,
+              ThursdayNeeded  = :thu,
+              FridayNeeded    = :fri,
+              SaturdayNeeded  = :sat,
+              SundayNeeded    = :sun
+            WHERE id = :shift_id
+        ''', {
+            "mon": day_map["Monday"],
+            "tue": day_map["Tuesday"],
+            "wed": day_map["Wednesday"],
+            "thu": day_map["Thursday"],
+            "fri": day_map["Friday"],
+            "sat": day_map["Saturday"],
+            "sun": day_map["Sunday"],
+            "shift_id": sid
+        })
 
     conn.commit()
     conn.close()
-    st.success("NeededWorkers updated successfully from results_df!")
+
+    st.success("Day-specific NeededWorkers columns have been updated in ShiftsTable2!")
+
 
 # ------------------------------------------------------------------
 #                         Form Inputs
@@ -672,7 +722,7 @@ def optimize_tasks_with_gurobi():
 
         # Create DataFrames
         results_df = pd.DataFrame(results)
-        update_needed_workers(results_df)
+        update_needed_workers_for_each_day(results_df)
         day_summary_df = pd.DataFrame.from_dict(day_summary, orient="index").reset_index()
         day_summary_df.columns = ["Day", "TotalCost", "NumTasks", "NumWorkers"]
 
