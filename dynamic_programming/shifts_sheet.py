@@ -26,13 +26,12 @@ for shift_id in shift_ids:
     break_time_hour = (start_hour + 2) % 24  # Break starts 2 hours after the shift starts
     break_time = datetime.time(break_time_hour, random.choice([0, 15, 30, 45]))
 
-
     shifts_data.append({
         "id": shift_id,
         "StartTime": start_time.strftime("%H:%M:%S"),
         "EndTime": end_time.strftime("%H:%M:%S"),
         "BreakTime": break_time.strftime("%H:%M:%S"),
-        "BreakDuration": str(break_duration),
+        "BreakDuration": (break_duration),
         "ShiftLength": round(shift_length, 2),  # Rounded to 2 decimal places
         **{day: random.randint(0, 1) for day in days},  # Randomly assign active days
         "Flexibility": random.choice(["Low", "Moderate", "High"]),
