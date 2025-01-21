@@ -185,7 +185,6 @@ def update_needed_workers_for_each_day(results_df):
         .max()  # or .sum()
         .reset_index()
     )
-    st.dataframe(shift_day_needs)
     # 2. Build a dictionary: shift_day_dict[shift_id][day] = needed count
     day_list = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     shift_day_dict = {}
@@ -723,7 +722,7 @@ def optimize_tasks_with_gurobi():
 
         if not results_df.empty:
             st.write("**Optimal Task Assignments with Worker Counts**")
-            st.dataframe(results_df)
+            st.dataframe(results_df,hide_index=True)
 
             st.download_button(
                 label="Download Assignments as CSV",
@@ -733,7 +732,7 @@ def optimize_tasks_with_gurobi():
             )
 
             st.write("**Daily Summary of Costs, Tasks, and Workers**")
-            st.dataframe(day_summary_df)
+            st.dataframe(day_summary_df,hide_index=True)
 
             st.download_button(
                 label="Download Daily Summary as CSV",
@@ -966,7 +965,7 @@ def display_tasks_and_shifts():
 
     if not tasks_df.empty:
         st.write("**Tasks List**")
-        st.dataframe(tasks_df)
+        st.dataframe(tasks_df,hide_index=True)
         st.download_button(
             label="Download Tasks as CSV",
             data=tasks_df.to_csv(index=False).encode("utf-8"),
@@ -976,7 +975,7 @@ def display_tasks_and_shifts():
 
     if not shifts_df.empty:
         st.write("**Shifts List**")
-        st.dataframe(shifts_df)
+        st.dataframe(shifts_df,hide_index=True)
         st.download_button(
             label="Download Shifts as CSV",
             data=shifts_df.to_csv(index=False).encode("utf-8"),
