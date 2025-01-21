@@ -598,12 +598,8 @@ def main():
                 st.dataframe(shifts_df)
 
 
-
-    # Random data generation
-    num_tasks = st.sidebar.number_input("Number of Tasks", min_value=0, max_value=100, value=10)
-    num_shifts = st.sidebar.number_input("Number of Shifts", min_value=0, max_value=50, value=5)
-    if st.sidebar.button("Generate Random Data"):
-        generate_and_fill_data(num_tasks, num_shifts)
+ 
+    generate_and_fill_data_form()
 
     # Optimization
     if st.button("Data Example"):
