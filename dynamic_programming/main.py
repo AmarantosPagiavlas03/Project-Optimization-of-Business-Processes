@@ -569,12 +569,11 @@ def main():
     # Input forms for adding tasks and shifts
     task_input_form()
     shift_input_form()
+    st.markdown("---") 
     generate_and_fill_data_form()
 
 
     with st.sidebar:
- 
-            
         st.markdown("---")  # Add a separator line
 
         # Two columns for side-by-side buttons
@@ -605,6 +604,7 @@ def main():
                 else:
                     st.write("**Shifts List**")
                     st.dataframe(shifts_df)
+        st.markdown("---") 
 
 
  
