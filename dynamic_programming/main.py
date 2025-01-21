@@ -200,7 +200,7 @@ def update_needed_workers_for_each_day(results_df):
 
         # Assign the needed count for that day
         shift_day_dict[sid][day] = needed
-
+    st.write(shift_day_dict[0]["Monday"])
     # 3. Update ShiftsTable3 for each shift ID
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
