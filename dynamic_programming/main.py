@@ -569,8 +569,14 @@ def main():
     # Input forms for adding tasks and shifts
     task_input_form()
     shift_input_form()
+    generate_and_fill_data_form()
+
 
     with st.sidebar:
+        # Add spacer to push buttons to the bottom of the sidebar
+        for _ in range(10): 
+            st.sidebar.write("") 
+            
         st.markdown("---")  # Add a separator line
 
         # Two columns for side-by-side buttons
@@ -604,7 +610,6 @@ def main():
 
 
  
-    generate_and_fill_data_form()
 
     # Optimization
     if st.button("Data Example"):
