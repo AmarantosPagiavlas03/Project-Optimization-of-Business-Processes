@@ -370,8 +370,6 @@ def optimize_tasks_with_gurobi():
 
     # Optimize the model
     with st.spinner("Optimizing tasks and shifts. Please wait..."):
-        import time
-        time.sleep(2)
         model.optimize()
 
 
