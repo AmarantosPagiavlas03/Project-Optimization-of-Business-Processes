@@ -6,6 +6,7 @@ import random
 from pulp import LpProblem, LpMinimize, LpVariable, lpSum, LpStatus
 import plotly.express as px
 from gurobipy import Model, GRB, quicksum
+from datetime import time
 
 DB_FILE = "tasksv2.db"
 
@@ -242,6 +243,12 @@ def update_needed_workers_for_each_day(results_df):
 # ------------------------------------------------------------------
 #                         Form Inputs
 # ------------------------------------------------------------------
+
+def generate_time_intervals():
+    intervals = [time(hour=h, minute=m) for h in range(24) for m in range(0, 60, 15)]
+    intervals.append(time(0, 0))  # Add 24:00 as 00:00
+    return intervals
+
 def task_input_form():
     """Sidebar form to add a new task."""
     with st.sidebar.expander("Add Task", expanded=False):
@@ -253,8 +260,12 @@ def task_input_form():
         # Task form inputs
         TaskName = st.text_input("Task Name", "")
         Day = st.selectbox("Day of the Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
-        StartTime = st.time_input("Start Time", value=st.session_state["task_start_time"])
-        EndTime = st.time_input("End Time", value=st.session_state["task_end_time"])
+        # StartTime = st.time_input("Start Time", value=st.session_state["task_start_time"])
+        # EndTime = st.time_input("End Time", value=st.session_state["task_end_time"])
+        intervals = generate_time_intervals()
+        StartTime = st.selectbox("Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
+        EndTime = st.selectbox("End Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
+
         duration_hours = st.number_input("Duration Hours", min_value=0, max_value=23, value=1)
         duration_minutes = st.number_input("Duration Minutes", min_value=0, max_value=59, value=0)
         NursesRequired = st.number_input("Nurses Required", min_value=1, value=1)
@@ -1065,7 +1076,7 @@ def display_tasks_and_shifts():
 # ------------------------------------------------------------------
 def main():
     init_db()
-    st.title("Shift & Task Scheduler with Worker Assignment")
+    st.title("Nursing ward planning")
 
     st.header("Tools")
 
