@@ -369,7 +369,8 @@ def optimize_tasks_with_gurobi():
         )
 
     # Optimize the model
-    model.optimize()
+    with st.spinner("Optimizing tasks and shifts. Please wait..."):
+        model.optimize()
 
 
     # Collect results
@@ -606,8 +607,7 @@ def main():
     if st.button("Data Example"):
         insert()
     if st.button("Optimize Task Assignment"):
-        with st.spinner('Wait for it...'):
-            optimize_tasks_with_gurobi()
+        optimize_tasks_with_gurobi()
     # Visualize tasks and shifts
     display_tasks_and_shifts()
 
