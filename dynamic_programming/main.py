@@ -673,7 +673,7 @@ def optimize_tasks_with_gurobi():
     # Collect results
     if model.status == GRB.OPTIMAL:
         st.success("Task-shift optimization successful!")
-        st.balloons()
+        st.hearts()
         results = []
         day_summary = {}
 
@@ -910,7 +910,7 @@ def optimize_workers_for_shifts():
 
     if model.status == GRB.OPTIMAL:
         st.success("Worker assignment optimization successful!")
-        st.balloons()
+        st.hearts()
 
         results = []
         for (w_idx, s_idx), var in x.items():
