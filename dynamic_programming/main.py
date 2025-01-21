@@ -87,7 +87,7 @@ def clear_all(table):
 
 def task_input_form():
     """Sidebar form to add a new task."""
-    with st.sidebar.expander("Add Task", expanded=True):
+    with st.sidebar.expander("Add Task", expanded=False):
         # Initialize session state for start and end time
         if "task_start_time" not in st.session_state:
             st.session_state["task_start_time"] = datetime.now().time()
@@ -122,43 +122,44 @@ def task_input_form():
                 st.success(f"Task '{TaskName}' added!")
             else:
                 st.error("Task name cannot be empty!")
+
 def shift_input_form():
     """Sidebar form to add a new shift."""
-    st.sidebar.header("Add Shift")
+    with st.sidebar.expander("Add Shift", expanded=False):
+        # Session state for shift times
+        if "shift_start_time" not in st.session_state:
+            st.session_state["shift_start_time"] = datetime.now().time()
+        if "shift_end_time" not in st.session_state:
+            st.session_state["shift_end_time"] = (datetime.now() + timedelta(hours=1)).time()
+        if "break_start_time" not in st.session_state:
+            st.session_state["break_start_time"] = (datetime.now() + timedelta(hours=2)).time()
 
-    # Session state for shift times
-    if "shift_start_time" not in st.session_state:
-        st.session_state["shift_start_time"] = datetime.now().time()
-    if "shift_end_time" not in st.session_state:
-        st.session_state["shift_end_time"] = (datetime.now() + timedelta(hours=1)).time()
-    if "break_start_time" not in st.session_state:
-        st.session_state["break_start_time"] = (datetime.now() + timedelta(hours=2)).time()
+        # Shift form inputs
+        Shift_StartTime = st.time_input("Shift Start Time", value=st.session_state["shift_start_time"])
+        Shift_EndTime = st.time_input("Shift End Time", value=st.session_state["shift_end_time"])
+        BreakTime = st.time_input("Break Start Time", value=st.session_state["break_start_time"])
+        BreakDuration_hours = st.number_input("Break Duration Hours", min_value=0, max_value=23, value=0)
+        BreakDuration_minutes = st.number_input("Break Duration Minutes", min_value=0, max_value=59, value=30)
+        Weight = st.number_input("Shift Weight", min_value=0.0, value=1.0)
 
-    Shift_StartTime = st.sidebar.time_input("Shift Start Time", value=st.session_state["shift_start_time"])
-    Shift_EndTime = st.sidebar.time_input("Shift End Time", value=st.session_state["shift_end_time"])
-    BreakTime = st.sidebar.time_input("Break Start Time", value=st.session_state["break_start_time"])
-    BreakDuration_hours = st.sidebar.number_input("Break Duration Hours", min_value=0, max_value=23, value=0)
-    BreakDuration_minutes = st.sidebar.number_input("Break Duration Minutes", min_value=0, max_value=59, value=30)
-    Weight = st.sidebar.number_input("Shift Weight", min_value=0.0, value=1.0)
+        Days = {day: st.checkbox(day, value=(day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])) for day in
+                ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]}
+        Notes = st.text_area("Additional Notes", "")
 
-    Days = {day: st.sidebar.checkbox(day, value=(day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])) for day in
-            ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]}
-    Flexibility = st.sidebar.selectbox("Flexibility", options=["High", "Moderate", "Low"])
-    Notes = st.sidebar.text_area("Additional Notes", "")
+        # Add shift button
+        if st.button("Add Shift"):
+            shift_data = (
+                f"{Shift_StartTime.hour}:{Shift_StartTime.minute}:00",
+                f"{Shift_EndTime.hour}:{Shift_EndTime.minute}:00",
+                f"{BreakTime.hour}:{BreakTime.minute}:00",
+                str(timedelta(hours=BreakDuration_hours, minutes=BreakDuration_minutes)),
+                Weight,
+                *(1 if Days[day] else 0 for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]),
+                Notes,
+            )
+            add_shift_to_db(shift_data)
+            st.success("Shift added successfully!")
 
-    if st.sidebar.button("Add Shift"):
-        shift_data = (
-            f"{Shift_StartTime.hour}:{Shift_StartTime.minute}:00",
-            f"{Shift_EndTime.hour}:{Shift_EndTime.minute}:00",
-            f"{BreakTime.hour}:{BreakTime.minute}:00",
-            str(timedelta(hours=BreakDuration_hours, minutes=BreakDuration_minutes)),
-            Weight,
-            *(1 if Days[day] else 0 for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]),
-            Flexibility,
-            Notes,
-        )
-        add_shift_to_db(shift_data)
-        st.sidebar.success("Shift added successfully!")
 
 def generate_and_fill_data(num_tasks=10, num_shifts=5):
     """Generate random tasks and shifts and populate the database."""
