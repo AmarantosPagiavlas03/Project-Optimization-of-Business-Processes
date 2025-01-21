@@ -693,8 +693,8 @@ def optimize_tasks_with_gurobi():
                     task_cost = 0
 
                 results.append({
-                    "TaskID": task_id,
-                    "ShiftID": shift_id,
+                    "TaskID": tasks_df.loc[task_id, "id"],
+                    "ShiftID": shifts_df.loc[shift_id, "id"],
                     "TaskName": tasks_df.loc[task_id, "TaskName"],
                     "TaskDay": task_day,
                     "TaskStart": tasks_df.loc[task_id, "StartTime"],
