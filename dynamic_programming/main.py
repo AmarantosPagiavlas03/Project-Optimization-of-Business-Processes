@@ -555,7 +555,7 @@ def main():
         generate_and_fill_data(num_tasks, num_shifts)
 
     # Optimization
-    if st.button("Custom Insert"):
+    if st.button("Data Example"):
         insert()
     if st.button("Optimize Task Assignment"):
         optimize_tasks_with_gurobi()
