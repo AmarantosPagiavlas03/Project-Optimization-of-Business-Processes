@@ -381,7 +381,9 @@ def optimize_tasks_with_gurobi():
                 else:
                     task_cost = 0  # No tasks assigned to this shift
 
+                workers_assigned = shift_worker_vars[shift_id].x
 
+                # Add to results
                 # Add to results
                 results.append({
                     "TaskID": task_id,
@@ -393,25 +395,29 @@ def optimize_tasks_with_gurobi():
                     "ShiftStart": shifts_df.loc[shift_id, "StartTime"],
                     "ShiftEnd": shifts_df.loc[shift_id, "EndTime"],
                     "ShiftNotes": shifts_df.loc[shift_id, "Notes"],
-                    "WorkersAssigned": shift_worker_vars[shift_id].x,
+                    "WorkersAssigned": workers_assigned,
                     "Cost": task_cost
                 })
 
+
                 # Update day summary
                 if task_day not in day_summary:
-                    day_summary[task_day] = {"TotalCost": 0, "NumTasks": 0}
+                    day_summary[task_day] = {"TotalCost": 0, "NumTasks": 0, "NumWorkers": 0}
                 day_summary[task_day]["TotalCost"] += task_cost
                 day_summary[task_day]["NumTasks"] += 1
+                day_summary[task_day]["NumWorkers"] += workers_assigned  # Sum workers
 
-        # Create a DataFrame for the results
+        # Create DataFrame for results
         results_df = pd.DataFrame(results)
         day_summary_df = pd.DataFrame.from_dict(day_summary, orient="index").reset_index()
-        day_summary_df.columns = ["Day", "TotalCost", "NumTasks"]
+        day_summary_df.columns = ["Day", "TotalCost", "NumTasks", "NumWorkers"]
 
         if not results_df.empty:
+            # Display results
             st.write("Optimal Task Assignments with Worker Counts:")
             st.dataframe(results_df)
 
+            # Download assignments as CSV
             st.download_button(
                 label="Download Assignments as CSV",
                 data=results_df.to_csv(index=False).encode("utf-8"),
@@ -420,7 +426,7 @@ def optimize_tasks_with_gurobi():
             )
 
             # Display and download the day summary table
-            st.write("Daily Summary of Costs and Assignments:")
+            st.write("Daily Summary of Costs, Tasks, and Workers:")
             st.dataframe(day_summary_df)
 
             st.download_button(
@@ -437,7 +443,6 @@ def optimize_tasks_with_gurobi():
         for constr in model.getConstrs():
             if constr.IISConstr:
                 st.write(f"Infeasible Constraint: {constr.constrName}")
-
 
 def display_tasks_and_shifts():
     """Display tasks and shifts as Gantt charts with all days and hours displayed."""
