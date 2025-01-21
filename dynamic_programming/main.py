@@ -162,7 +162,7 @@ def clear_all(table):
 
 def update_needed_workers(results_df):
     """
-    Update the NeededWorkers column in ShiftsTable1 based on the
+    Update the NeededWorkers column in ShiftsTable2 based on the
     'WorkersNeededForShift' column in results_df.
 
     :param results_df: A DataFrame that has, at minimum, the columns:
@@ -181,7 +181,7 @@ def update_needed_workers(results_df):
         shift_id = row["ShiftID"]
         needed = int(row["WorkersNeededForShift"])
         c.execute(
-            "UPDATE ShiftsTable1 SET NeededWorkers = ? WHERE id = ?",
+            "UPDATE ShiftsTable2 SET NeededWorkers = ? WHERE id = ?",
             (needed, shift_id)
         )
 
