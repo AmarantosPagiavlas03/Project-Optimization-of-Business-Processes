@@ -36,7 +36,7 @@ def init_db():
 
     # Table: Shifts
     c.execute('''
-    CREATE TABLE IF NOT EXISTS ShiftsTable2 (
+    CREATE TABLE IF NOT EXISTS ShiftsTable3 (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         StartTime TEXT NOT NULL,
         EndTime TEXT NOT NULL,
@@ -107,7 +107,7 @@ def add_shift_to_db(data):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''
-        INSERT INTO ShiftsTable2 (
+        INSERT INTO ShiftsTable3 (
             StartTime, EndTime, BreakTime, BreakDuration, Weight,
             Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday, Notes
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -174,12 +174,7 @@ def clear_all(table):
 def update_needed_workers_for_each_day(results_df):
     """
     Use the first-optimization assignments (results_df) to populate
-    MondayNeeded, TuesdayNeeded, ... columns for each ShiftID in ShiftsTable2.
-
-    Assumes results_df has columns:
-        - "ShiftID": the ID from ShiftsTable2
-        - "TaskDay": a string like "Monday", "Tuesday", ...
-        - "WorkersNeededForShift": integer count of how many workers needed
+    MondayNeeded, TuesdayNeeded, ... columns for each ShiftID in ShiftsTable3.
     """
 
     # 1. Aggregate how many workers are needed for each (ShiftID, Day).
@@ -191,7 +186,6 @@ def update_needed_workers_for_each_day(results_df):
         .max()  # or .sum()
         .reset_index()
     )
-
     # 2. Build a dictionary: shift_day_dict[shift_id][day] = needed count
     day_list = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     shift_day_dict = {}
@@ -206,14 +200,14 @@ def update_needed_workers_for_each_day(results_df):
 
         # Assign the needed count for that day
         shift_day_dict[sid][day] = needed
-
-    # 3. Update ShiftsTable2 for each shift ID
+ 
+    # 3. Update ShiftsTable3 for each shift ID
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
 
     for sid, day_map in shift_day_dict.items():
         c.execute('''
-            UPDATE ShiftsTable2
+            UPDATE ShiftsTable3
             SET
               MondayNeeded    = :mon,
               TuesdayNeeded   = :tue,
@@ -237,7 +231,7 @@ def update_needed_workers_for_each_day(results_df):
     conn.commit()
     conn.close()
 
-    st.success("Day-specific NeededWorkers columns have been updated in ShiftsTable2!")
+    st.success("Day-specific NeededWorkers columns have been updated in ShiftsTable3!")
 
 
 # ------------------------------------------------------------------
@@ -510,7 +504,7 @@ def insert():
     ''')
     conn.commit()
     c.execute('''
-        INSERT INTO ShiftsTable2 (
+        INSERT INTO ShiftsTable3 (
             StartTime,
             EndTime,
             BreakTime,
@@ -557,17 +551,110 @@ def insert2():
             NursesRequired
         )
         VALUES
-            ('Physical Therapy', 'Thursday', '07:00:00', '08:00:00', 45, 2),
-            ('Vital Signs Monitoring', 'Friday', '06:00:00', '06:30:00', 30, 5),
-            ('Vital Signs Monitoring', 'Wednesday', '05:30:00', '07:00:00', 60, 4),
-            ('Medication Administration', 'Monday', '04:00:00', '05:30:00', 45, 1),
-            ('Dressing Change', 'Saturday', '08:00:00', '10:00:00', 60, 4),
-            -- etc, truncated for brevity (yours can remain as is)
-            ('Physical Therapy', 'Friday', '20:30:00', '21:00:00', 15, 1);
+        ('Physical Therapy', 'Thursday', '07:00:00', '08:00:00', 45, 2),
+        ('Vital Signs Monitoring', 'Friday', '06:00:00', '06:30:00', 30, 5),
+        ('Vital Signs Monitoring', 'Wednesday', '05:30:00', '07:00:00', 60, 4),
+        ('Medication Administration', 'Monday', '04:00:00', '05:30:00', 45, 1),
+        ('Dressing Change', 'Saturday', '08:00:00', '10:00:00', 60, 4),
+        ('Wound Care', 'Sunday', '12:30:00', '13:00:00', 15, 3),
+        ('Vital Signs Monitoring', 'Thursday', '12:00:00', '13:00:00', 30, 5),
+        ('Physical Therapy', 'Wednesday', '20:30:00', '23:30:00', 45, 2),
+        ('Vital Signs Monitoring', 'Sunday', '21:30:00', '23:00:00', 30, 1),
+        ('Physical Therapy', 'Saturday', '18:00:00', '19:00:00', 30, 5),
+        ('Wound Care', 'Saturday', '00:00:00', '02:00:00', 60, 5),
+        ('Vital Signs Monitoring', 'Tuesday', '19:30:00', '22:00:00', 30, 4),
+        ('Wound Care', 'Monday', '19:00:00', '22:00:00', 15, 3),
+        ('Medication Administration', 'Sunday', '11:00:00', '13:00:00', 60, 4),
+        ('Physical Therapy', 'Thursday', '13:30:00', '16:30:00', 30, 1),
+        ('Wound Care', 'Wednesday', '08:30:00', '10:00:00', 15, 2),
+        ('Medication Administration', 'Tuesday', '17:00:00', '19:00:00', 60, 2),
+        ('Medication Administration', 'Saturday', '19:30:00', '22:30:00', 30, 4),
+        ('Dressing Change', 'Sunday', '15:30:00', '18:30:00', 15, 4),
+        ('Vital Signs Monitoring', 'Tuesday', '04:30:00', '06:30:00', 60, 1),
+        ('Wound Care', 'Wednesday', '22:00:00', '01:00:00', 30, 4),
+        ('Physical Therapy', 'Tuesday', '17:00:00', '18:00:00', 45, 5),
+        ('Dressing Change', 'Friday', '20:00:00', '21:30:00', 45, 3),
+        ('Physical Therapy', 'Thursday', '02:00:00', '04:00:00', 60, 5),
+        ('Dressing Change', 'Saturday', '22:00:00', '22:30:00', 30, 5),
+        ('Wound Care', 'Friday', '09:30:00', '11:00:00', 15, 3),
+        ('Vital Signs Monitoring', 'Saturday', '00:00:00', '03:00:00', 45, 3),
+        ('Medication Administration', 'Monday', '02:30:00', '03:30:00', 30, 4),
+        ('Vital Signs Monitoring', 'Monday', '12:30:00', '14:00:00', 30, 3),
+        ('Dressing Change', 'Tuesday', '17:00:00', '19:30:00', 30, 5),
+        ('Physical Therapy', 'Monday', '07:30:00', '08:00:00', 30, 4),
+        ('Dressing Change', 'Wednesday', '17:00:00', '18:00:00', 15, 1),
+        ('Physical Therapy', 'Thursday', '16:30:00', '17:00:00', 15, 2),
+        ('Wound Care', 'Friday', '00:00:00', '00:30:00', 15, 5),
+        ('Dressing Change', 'Friday', '18:30:00', '19:30:00', 45, 4),
+        ('Wound Care', 'Sunday', '20:30:00', '23:00:00', 45, 2),
+        ('Physical Therapy', 'Saturday', '09:00:00', '11:30:00', 60, 3),
+        ('Vital Signs Monitoring', 'Thursday', '14:00:00', '15:00:00', 30, 4),
+        ('Physical Therapy', 'Sunday', '13:00:00', '14:30:00', 15, 2),
+        ('Dressing Change', 'Monday', '07:00:00', '09:00:00', 30, 3),
+        ('Dressing Change', 'Sunday', '09:30:00', '10:00:00', 15, 2),
+        ('Vital Signs Monitoring', 'Monday', '12:30:00', '14:30:00', 15, 3),
+        ('Wound Care', 'Sunday', '21:00:00', '23:30:00', 15, 1),
+        ('Physical Therapy', 'Monday', '21:30:00', '22:30:00', 15, 5),
+        ('Medication Administration', 'Sunday', '15:00:00', '17:00:00', 45, 5),
+        ('Vital Signs Monitoring', 'Tuesday', '20:00:00', '21:30:00', 45, 2),
+        ('Wound Care', 'Monday', '06:30:00', '07:30:00', 15, 5),
+        ('Physical Therapy', 'Wednesday', '21:30:00', '23:00:00', 30, 1),
+        ('Physical Therapy', 'Friday', '17:30:00', '18:30:00', 60, 1),
+        ('Physical Therapy', 'Thursday', '16:00:00', '18:00:00', 30, 5),
+        ('Medication Administration', 'Thursday', '00:30:00', '02:00:00', 45, 2),
+        ('Vital Signs Monitoring', 'Sunday', '01:00:00', '02:00:00', 60, 2),
+        ('Medication Administration', 'Saturday', '14:00:00', '17:00:00', 45, 4),
+        ('Physical Therapy', 'Friday', '17:00:00', '20:00:00', 45, 4),
+        ('Physical Therapy', 'Sunday', '19:30:00', '20:30:00', 30, 4),
+        ('Wound Care', 'Thursday', '01:00:00', '04:00:00', 60, 4),
+        ('Wound Care', 'Saturday', '03:00:00', '05:00:00', 30, 5),
+        ('Vital Signs Monitoring', 'Tuesday', '08:30:00', '09:30:00', 45, 3),
+        ('Wound Care', 'Friday', '15:30:00', '16:00:00', 30, 2),
+        ('Physical Therapy', 'Wednesday', '17:00:00', '19:00:00', 30, 3),
+        ('Wound Care', 'Thursday', '06:30:00', '09:00:00', 60, 4),
+        ('Medication Administration', 'Tuesday', '13:00:00', '15:30:00', 60, 1),
+        ('Physical Therapy', 'Friday', '10:30:00', '13:30:00', 60, 5),
+        ('Dressing Change', 'Tuesday', '06:00:00', '06:30:00', 15, 3),
+        ('Physical Therapy', 'Sunday', '11:00:00', '14:00:00', 45, 2),
+        ('Physical Therapy', 'Friday', '12:00:00', '13:30:00', 45, 2),
+        ('Vital Signs Monitoring', 'Tuesday', '07:30:00', '10:00:00', 60, 1),
+        ('Dressing Change', 'Tuesday', '19:30:00', '20:30:00', 45, 4),
+        ('Wound Care', 'Thursday', '17:00:00', '17:30:00', 30, 3),
+        ('Dressing Change', 'Sunday', '04:00:00', '06:30:00', 45, 2),
+        ('Medication Administration', 'Thursday', '21:00:00', '23:00:00', 60, 3),
+        ('Medication Administration', 'Monday', '04:30:00', '07:30:00', 30, 4),
+        ('Physical Therapy', 'Friday', '21:00:00', '22:30:00', 45, 3),
+        ('Vital Signs Monitoring', 'Wednesday', '13:00:00', '15:00:00', 30, 4),
+        ('Wound Care', 'Saturday', '22:30:00', '01:00:00', 45, 1),
+        ('Physical Therapy', 'Tuesday', '08:00:00', '09:00:00', 45, 3),
+        ('Medication Administration', 'Sunday', '21:30:00', '00:30:00', 15, 3),
+        ('Physical Therapy', 'Sunday', '12:00:00', '14:30:00', 60, 3),
+        ('Physical Therapy', 'Sunday', '01:00:00', '03:00:00', 60, 3),
+        ('Medication Administration', 'Saturday', '13:30:00', '14:30:00', 15, 3),
+        ('Medication Administration', 'Tuesday', '18:00:00', '19:00:00', 15, 2),
+        ('Physical Therapy', 'Wednesday', '15:00:00', '15:30:00', 30, 2),
+        ('Wound Care', 'Sunday', '22:30:00', '01:30:00', 30, 4),
+        ('Physical Therapy', 'Friday', '03:30:00', '04:30:00', 15, 4),
+        ('Physical Therapy', 'Wednesday', '03:30:00', '04:30:00', 30, 5),
+        ('Vital Signs Monitoring', 'Friday', '06:30:00', '07:30:00', 15, 3),
+        ('Wound Care', 'Monday', '09:00:00', '10:00:00', 45, 2),
+        ('Dressing Change', 'Thursday', '12:30:00', '13:00:00', 30, 2),
+        ('Dressing Change', 'Friday', '09:30:00', '11:30:00', 30, 5),
+        ('Wound Care', 'Wednesday', '20:30:00', '22:30:00', 60, 3),
+        ('Vital Signs Monitoring', 'Saturday', '08:30:00', '09:30:00', 15, 4),
+        ('Dressing Change', 'Sunday', '20:00:00', '23:00:00', 30, 1),
+        ('Medication Administration', 'Thursday', '08:30:00', '11:00:00', 60, 2),
+        ('Vital Signs Monitoring', 'Thursday', '22:30:00', '23:30:00', 30, 3),
+        ('Physical Therapy', 'Tuesday', '21:30:00', '23:30:00', 60, 3),
+        ('Dressing Change', 'Wednesday', '04:30:00', '05:00:00', 30, 5),
+        ('Physical Therapy', 'Thursday', '15:30:00', '17:00:00', 60, 1),
+        ('Wound Care', 'Saturday', '21:30:00', '22:30:00', 45, 3),
+        ('Medication Administration', 'Saturday', '07:30:00', '09:30:00', 60, 3),
+        ('Physical Therapy', 'Friday', '20:30:00', '21:00:00', 15, 1);
     ''')
     conn.commit()
     c.execute('''
-        INSERT INTO ShiftsTable2 (
+        INSERT INTO ShiftsTable3 (
             StartTime,
             EndTime,
             BreakTime,
@@ -583,16 +670,106 @@ def insert2():
             Notes
         )
         VALUES
-            ('07:00:00', '15:00:00', '11:00:00', '0:30:00', 1200, 1, 1, 1, 1, 1, 0, 0, 'Morning shift'),
-            ('15:00:00', '23:00:00', '19:00:00', '0:30:00', 1400, 1, 1, 1, 1, 1, 1, 1, 'Evening shift'),
-            ('23:00:00', '07:00:00', '03:00:00', '0:30:00', 1600, 1, 1, 1, 1, 1, 1, 1, 'Night shift'),
-            ('08:00:00', '14:00:00', '12:00:00', '0:20:00', 1000, 1, 1, 1, 1, 1, 0, 0, 'Short morning shift'),
-            ('14:00:00', '20:00:00', '17:00:00', '0:30:00', 1100, 1, 1, 1, 1, 1, 1, 1, 'Afternoon shift'),
-            ('20:00:00', '02:00:00', '23:00:00', '0:20:00', 1300, 0, 1, 1, 1, 1, 1, 1, 'Evening/night hybrid shift'),
-            ('09:00:00', '17:00:00', '13:00:00', '0:45:00', 1500, 1, 1, 0, 1, 1, 0, 0, 'Standard day shift'),
-            ('06:00:00', '14:00:00', '10:00:00', '0:30:00', 1100, 1, 1, 1, 1, 1, 1, 0, 'Early morning shift'),
-            ('14:00:00', '22:00:00', '18:00:00', '0:30:00', 1200, 1, 1, 1, 1, 1, 1, 1, 'Full afternoon-evening shift'),
-            ('10:00:00', '18:00:00', '13:30:00', '0:30:00', 1300, 1, 1, 1, 1, 1, 0, 0, 'Midday to evening shift');
+('06:15:00', '10:30:00', '08:30:00', '0:30:00', 4.25, 0, 1, 0, 0, 1, 0, 1, 1),
+('14:15:00', '22:30:00', '16:45:00', '1:00:00', 8.25, 1, 1, 1, 0, 0, 1, 0, 1.5),
+('20:00:00', '07:00:00', '22:00:00', '1:00:00', 11, 0, 1, 0, 1, 1, 0, 0, 1.5),
+('04:00:00', '12:45:00', '06:00:00', '1:00:00', 8.75, 1, 0, 1, 0, 0, 0, 1, 2),
+('12:30:00', '22:30:00', '14:30:00', '1:00:00', 10, 0, 0, 0, 0, 1, 0, 0, 1),
+('02:00:00', '08:30:00', '04:15:00', '0:30:00', 6.5, 1, 1, 0, 1, 1, 1, 0, 2),
+('20:00:00', '00:45:00', '22:00:00', '0:30:00', 4.75, 1, 0, 0, 1, 0, 1, 1, 1.5),
+('15:30:00', '23:15:00', '17:00:00', '0:30:00', 7.75, 0, 1, 0, 1, 0, 0, 1, 1.5),
+('19:15:00', '07:30:00', '21:30:00', '1:00:00', 12.25, 0, 0, 1, 1, 1, 1, 1, 1.5),
+('18:00:00', '23:30:00', '20:15:00', '0:30:00', 5.5, 0, 0, 0, 1, 0, 0, 1, 1.5),
+('05:15:00', '17:30:00', '07:30:00', '1:00:00', 12.25, 1, 1, 0, 0, 1, 1, 1, 2),
+('08:30:00', '14:30:00', '10:45:00', '0:30:00', 6, 0, 1, 0, 1, 1, 0, 0, 1),
+('19:30:00', '23:00:00', '21:00:00', '0:30:00', 3.5, 1, 0, 0, 0, 1, 0, 0, 1.5),
+('15:15:00', '02:00:00', '17:30:00', '1:00:00', 10.75, 0, 1, 0, 1, 1, 1, 1, 1.5),
+('05:30:00', '17:15:00', '07:30:00', '1:00:00', 11.75, 0, 1, 0, 1, 1, 1, 0, 2),
+('18:00:00', '06:15:00', '20:00:00', '1:00:00', 12.25, 0, 1, 1, 1, 0, 1, 0, 1.5),
+('04:45:00', '11:30:00', '06:00:00', '0:30:00', 6.75, 1, 0, 0, 1, 0, 1, 1, 2),
+('23:30:00', '11:00:00', '01:45:00', '1:00:00', 11.5, 1, 0, 1, 1, 0, 0, 0, 2),
+('23:45:00', '08:00:00', '01:15:00', '1:00:00', 8.25, 0, 1, 0, 1, 1, 0, 1, 2),
+('03:30:00', '13:30:00', '05:30:00', '1:00:00', 10, 0, 1, 1, 0, 0, 0, 1, 2),
+('14:15:00', '01:30:00', '16:00:00', '1:00:00', 11.25, 1, 1, 1, 0, 1, 1, 0, 1.5),
+('21:00:00', '01:00:00', '23:15:00', '0:30:00', 4, 0, 1, 1, 0, 0, 1, 0, 1.5),
+('10:30:00', '16:15:00', '12:15:00', '0:30:00', 5.75, 0, 1, 1, 1, 1, 0, 0, 1),
+('20:45:00', '01:15:00', '22:30:00', '0:30:00', 4.5, 1, 1, 1, 1, 0, 0, 1, 1.5),
+('02:15:00', '13:30:00', '04:30:00', '1:00:00', 11.25, 1, 0, 0, 1, 0, 0, 1, 2),
+('08:15:00', '16:45:00', '10:45:00', '1:00:00', 8.5, 0, 0, 0, 0, 0, 0, 0, 1),
+('11:15:00', '20:30:00', '13:00:00', '1:00:00', 9.25, 0, 0, 0, 0, 1, 0, 0, 1),
+('22:00:00', '04:00:00', '00:30:00', '0:30:00', 6, 1, 1, 0, 0, 1, 1, 0, 2),
+('22:00:00', '10:00:00', '00:00:00', '1:00:00', 12, 1, 1, 0, 0, 1, 0, 0, 2),
+('09:30:00', '16:45:00', '11:00:00', '0:30:00', 7.25, 0, 0, 0, 0, 1, 1, 1, 1),
+('09:15:00', '20:15:00', '11:30:00', '1:00:00', 11, 1, 1, 1, 1, 0, 0, 1, 1),
+('04:30:00', '12:45:00', '06:30:00', '1:00:00', 8.25, 0, 1, 1, 1, 1, 0, 1, 2),
+('18:30:00', '03:30:00', '20:00:00', '1:00:00', 9, 1, 1, 1, 0, 1, 1, 0, 1.5),
+('16:30:00', '04:00:00', '18:45:00', '1:00:00', 11.5, 0, 0, 0, 1, 1, 0, 1, 1.5),
+('17:30:00', '22:00:00', '19:30:00', '0:30:00', 4.5, 0, 1, 0, 1, 0, 0, 1, 1.5),
+('19:00:00', '05:45:00', '21:00:00', '1:00:00', 10.75, 0, 1, 0, 1, 1, 0, 1, 1.5),
+('21:00:00', '07:00:00', '23:00:00', '1:00:00', 10, 1, 0, 1, 1, 0, 1, 0, 1.5),
+('23:45:00', '09:15:00', '01:15:00', '1:00:00', 9.5, 1, 0, 1, 0, 0, 1, 1, 2),
+('21:45:00', '04:45:00', '23:15:00', '0:30:00', 7, 1, 1, 1, 0, 0, 0, 1, 1.5),
+('00:30:00', '09:45:00', '02:00:00', '1:00:00', 9.25, 0, 1, 0, 1, 0, 0, 0, 2),
+('23:45:00', '09:30:00', '01:45:00', '1:00:00', 9.75, 0, 1, 1, 0, 1, 0, 1, 2),
+('22:15:00', '07:45:00', '00:45:00', '1:00:00', 9.5, 0, 1, 0, 1, 1, 1, 1, 2),
+('01:15:00', '06:00:00', '03:00:00', '0:30:00', 4.75, 1, 0, 0, 1, 0, 0, 0, 2),
+('17:15:00', '01:30:00', '19:15:00', '1:00:00', 8.25, 0, 1, 1, 1, 1, 0, 1, 1.5),
+('15:00:00', '01:30:00', '17:00:00', '1:00:00', 10.5, 0, 0, 0, 0, 0, 1, 1, 1.5),
+('23:45:00', '03:00:00', '01:30:00', '0:30:00', 3.25, 0, 1, 1, 0, 0, 1, 1, 2),
+('22:45:00', '05:15:00', '00:00:00', '0:30:00', 6.5, 0, 0, 1, 1, 0, 1, 0, 2),
+('22:15:00', '03:15:00', '00:30:00', '0:30:00', 5, 0, 0, 0, 1, 1, 1, 1, 2),
+('17:45:00', '03:30:00', '19:15:00', '1:00:00', 9.75, 1, 0, 1, 0, 1, 0, 1, 1.5),
+('04:15:00', '16:45:00', '06:30:00', '1:00:00', 12.5, 1, 0, 0, 1, 1, 0, 0, 2),
+('17:00:00', '03:30:00', '19:00:00', '1:00:00', 10.5, 1, 0, 1, 1, 1, 0, 0, 1.5),
+('06:45:00', '16:15:00', '08:45:00', '1:00:00', 9.5, 1, 0, 1, 1, 1, 0, 1, 1),
+('21:00:00', '04:15:00', '23:00:00', '0:30:00', 7.25, 0, 1, 0, 1, 0, 1, 0, 1.5),
+('11:15:00', '20:00:00', '13:15:00', '1:00:00', 8.75, 1, 1, 0, 0, 0, 1, 1, 1),
+('22:00:00', '08:30:00', '00:00:00', '1:00:00', 10.5, 1, 1, 1, 0, 1, 0, 1, 2),
+('21:15:00', '01:15:00', '23:30:00', '0:30:00', 4, 1, 1, 1, 0, 0, 0, 0, 1.5),
+('02:00:00', '09:45:00', '04:00:00', '0:30:00', 7.75, 0, 1, 1, 1, 1, 0, 0, 2),
+('08:30:00', '18:30:00', '10:45:00', '1:00:00', 10, 0, 0, 1, 1, 1, 1, 1, 1),
+('22:45:00', '05:30:00', '00:15:00', '0:30:00', 6.75, 1, 1, 1, 1, 0, 0, 1, 2),
+('23:30:00', '03:45:00', '01:45:00', '0:30:00', 4.25, 1, 0, 1, 0, 0, 0, 0, 2),
+('15:15:00', '02:30:00', '17:15:00', '1:00:00', 11.25, 0, 0, 0, 0, 1, 0, 0, 1.5),
+('20:45:00', '05:00:00', '22:00:00', '1:00:00', 8.25, 1, 0, 0, 0, 1, 0, 1, 1.5),
+('19:00:00', '04:30:00', '21:45:00', '1:00:00', 9.5, 1, 1, 1, 1, 1, 1, 1, 1.5),
+('10:30:00', '16:45:00', '12:45:00', '0:30:00', 6.25, 1, 1, 1, 1, 1, 0, 0, 1),
+('20:45:00', '03:30:00', '22:00:00', '0:30:00', 6.75, 1, 0, 0, 0, 0, 0, 1, 1.5),
+('01:45:00', '10:45:00', '03:45:00', '1:00:00', 9, 1, 1, 1, 1, 1, 1, 0, 2),
+('01:30:00', '13:30:00', '03:45:00', '1:00:00', 12, 0, 0, 0, 1, 1, 0, 1, 2),
+('19:45:00', '01:15:00', '21:30:00', '0:30:00', 5.5, 0, 0, 1, 0, 1, 0, 1, 1.5),
+('13:45:00', '01:15:00', '15:00:00', '1:00:00', 11.5, 0, 0, 1, 0, 1, 1, 1, 1),
+('19:45:00', '06:30:00', '21:00:00', '1:00:00', 10.75, 1, 0, 0, 1, 0, 1, 1, 1.5),
+('14:15:00', '19:00:00', '16:00:00', '0:30:00', 4.75, 1, 1, 0, 1, 1, 0, 0, 1.5),
+('10:30:00', '22:15:00', '12:15:00', '1:00:00', 11.75, 1, 0, 1, 0, 1, 1, 0, 1),
+('21:45:00', '05:30:00', '23:00:00', '0:30:00', 7.75, 1, 0, 1, 1, 0, 0, 0, 1.5),
+('20:45:00', '01:00:00', '22:15:00', '0:30:00', 4.25, 1, 1, 1, 0, 0, 1, 1, 1.5),
+('14:00:00', '22:00:00', '16:30:00', '0:30:00', 8, 0, 0, 1, 0, 0, 0, 0, 1.5),
+('17:30:00', '21:45:00', '19:30:00', '0:30:00', 4.25, 0, 1, 0, 1, 0, 0, 0, 1.5),
+('20:30:00', '08:00:00', '22:45:00', '1:00:00', 11.5, 0, 0, 1, 0, 0, 1, 1, 1.5),
+('15:00:00', '01:30:00', '17:00:00', '1:00:00', 10.5, 1, 0, 0, 0, 0, 1, 0, 1.5),
+('19:45:00', '02:15:00', '21:30:00', '0:30:00', 6.5, 0, 0, 0, 1, 1, 0, 1, 1.5),
+('03:00:00', '13:15:00', '05:30:00', '1:00:00', 10.25, 1, 0, 1, 0, 1, 0, 1, 2),
+('03:15:00', '13:45:00', '05:15:00', '1:00:00', 10.5, 0, 0, 1, 0, 1, 0, 1, 2),
+('03:00:00', '08:45:00', '05:30:00', '0:30:00', 5.75, 0, 0, 1, 0, 0, 1, 0, 2),
+('08:15:00', '16:15:00', '10:45:00', '0:30:00', 8, 0, 0, 1, 0, 0, 0, 1, 1),
+('04:45:00', '13:15:00', '06:00:00', '1:00:00', 8.5, 1, 1, 1, 1, 0, 0, 1, 2),
+('13:15:00', '22:00:00', '15:15:00', '1:00:00', 8.75, 1, 1, 1, 1, 1, 1, 1, 1),
+('11:15:00', '18:30:00', '13:00:00', '0:30:00', 7.25, 0, 1, 1, 0, 1, 0, 0, 1),
+('21:00:00', '04:15:00', '23:00:00', '0:30:00', 7.25, 1, 1, 0, 0, 1, 0, 0, 1.5),
+('00:00:00', '10:45:00', '02:15:00', '1:00:00', 10.75, 0, 0, 1, 1, 1, 1, 1, 2),
+('09:15:00', '20:00:00', '11:00:00', '1:00:00', 10.75, 1, 0, 1, 1, 0, 0, 1, 1),
+('12:30:00', '17:15:00', '14:30:00', '0:30:00', 4.75, 0, 0, 1, 0, 0, 0, 0, 1),
+('05:15:00', '11:45:00', '07:45:00', '0:30:00', 6.5, 0, 1, 0, 1, 1, 1, 1, 2),
+('10:00:00', '15:45:00', '12:00:00', '0:30:00', 5.75, 1, 1, 0, 1, 1, 1, 1, 1),
+('08:45:00', '20:30:00', '10:45:00', '1:00:00', 11.75, 0, 1, 0, 0, 1, 0, 1, 1),
+('01:45:00', '05:15:00', '03:15:00', '0:30:00', 3.5, 1, 0, 1, 0, 1, 1, 0, 2),
+('10:15:00', '15:00:00', '12:15:00', '0:30:00', 4.75, 0, 1, 0, 1, 1, 1, 0, 1),
+('21:30:00', '09:00:00', '23:45:00', '1:00:00', 11.5, 1, 0, 1, 0, 0, 0, 1, 1.5),
+('13:45:00', '21:00:00', '15:45:00', '0:30:00', 7.25, 1, 0, 1, 0, 1, 1, 1, 1),
+('18:00:00', '23:30:00', '20:00:00', '0:30:00', 5.5, 1, 1, 0, 0, 1, 0, 1, 1.5),
+('22:15:00', '03:45:00', '00:15:00', '0:30:00', 5.5, 1, 0, 1, 1, 0, 0, 1, 2),
+( '11:30:00', '22:45:00', '13:30:00', '1:00:00', 11.25, 1, 1, 0, 1, 0, 0, 1, 1);
     ''')
     conn.commit()
     conn.close()
@@ -607,7 +784,7 @@ def optimize_tasks_with_gurobi():
     This is the existing optimization for tasks.
     """
     tasks_df = get_all("Tasks")
-    shifts_df = get_all("ShiftsTable2")
+    shifts_df = get_all("ShiftsTable3")
 
     if tasks_df.empty or shifts_df.empty:
         st.error("Tasks or shifts data is missing. Add data and try again.")
@@ -709,8 +886,8 @@ def optimize_tasks_with_gurobi():
                     task_cost = 0
 
                 results.append({
-                    "TaskID": task_id,
-                    "ShiftID": shift_id,
+                    "TaskID": tasks_df.loc[task_id, "id"],
+                    "ShiftID": shifts_df.loc[shift_id, "id"],
                     "TaskName": tasks_df.loc[task_id, "TaskName"],
                     "TaskDay": task_day,
                     "TaskStart": tasks_df.loc[task_id, "StartTime"],
@@ -739,7 +916,7 @@ def optimize_tasks_with_gurobi():
 
         if not results_df.empty:
             st.write("**Optimal Task Assignments with Worker Counts**")
-            st.dataframe(results_df)
+            st.dataframe(results_df,hide_index=True)
 
             st.download_button(
                 label="Download Assignments as CSV",
@@ -749,7 +926,7 @@ def optimize_tasks_with_gurobi():
             )
 
             st.write("**Daily Summary of Costs, Tasks, and Workers**")
-            st.dataframe(day_summary_df)
+            st.dataframe(day_summary_df,hide_index=True)
 
             st.download_button(
                 label="Download Daily Summary as CSV",
@@ -777,23 +954,23 @@ def optimize_workers_for_shifts():
     worker goes where, based on each worker’s day/time preferences.
     """
     # 1. Read needed data
-    shifts_df = get_all("ShiftsTable2")
+    shifts_df = get_all("ShiftsTable3")
     workers_df = get_all("Workers")
 
     # The shift_worker_vars from the first optimization are not stored in DB,
     # but we do have the final integer result for each shift’s needed worker count
     # from the results CSV or from the model. Typically you'd store that in a table,
-    # or re-run in memory. For this example, let's define a new column in ShiftsTable2
+    # or re-run in memory. For this example, let's define a new column in ShiftsTable3
     # if you want (or we just pretend we have it). Instead, we will re-derive it from
     # the existing approach or just ask the user to enter "how many workers does each shift need?"
 
     # For demonstration, let's say the user manually enters a minimal coverage requirement
     # for each shift (like "1" or "2" or "3"). Alternatively, you can read the results
     # from a CSV or store them in a table. The code below checks for a column "NeededWorkers"
-    # in ShiftsTable2. If missing, we fallback to a user-provided input.
+    # in ShiftsTable3. If missing, we fallback to a user-provided input.
 
     if "NeededWorkers" not in shifts_df.columns:
-        st.info("**No 'NeededWorkers' column found in ShiftsTable2.**")
+        st.info("**No 'NeededWorkers' column found in ShiftsTable3.**")
         st.write("We will assume each shift needs coverage from the first optimization or a user input.")
         needed_workers_inputs = {}
         for i, row in shifts_df.iterrows():
@@ -805,7 +982,7 @@ def optimize_workers_for_shifts():
         # Store the results in a new column for the model usage
         shifts_df["NeededWorkers"] = shifts_df.index.map(needed_workers_inputs)
     else:
-        st.success("Found 'NeededWorkers' column in ShiftsTable2. Using existing data.")
+        st.success("Found 'NeededWorkers' column in ShiftsTable3. Using existing data.")
 
     # Prepare time fields for comparison
     # Convert day preference for each worker to time
@@ -974,7 +1151,7 @@ def display_tasks_and_shifts():
     st.header("Visualize Tasks and Shifts for the Week")
 
     tasks_df = get_all("Tasks")
-    shifts_df = get_all("ShiftsTable2")
+    shifts_df = get_all("ShiftsTable3")
 
     if tasks_df.empty and shifts_df.empty:
         st.write("Tasks and shifts data is missing. Add data and try again.")
@@ -982,7 +1159,7 @@ def display_tasks_and_shifts():
 
     if not tasks_df.empty:
         st.write("**Tasks List**")
-        st.dataframe(tasks_df)
+        st.dataframe(tasks_df,hide_index=True)
         st.download_button(
             label="Download Tasks as CSV",
             data=tasks_df.to_csv(index=False).encode("utf-8"),
@@ -992,7 +1169,7 @@ def display_tasks_and_shifts():
 
     if not shifts_df.empty:
         st.write("**Shifts List**")
-        st.dataframe(shifts_df)
+        st.dataframe(shifts_df,hide_index=True)
         st.download_button(
             label="Download Shifts as CSV",
             data=shifts_df.to_csv(index=False).encode("utf-8"),
@@ -1100,7 +1277,7 @@ def main():
 
         with col2:
             if st.button("Clear All Shifts"):
-                clear_all("ShiftsTable2")
+                clear_all("ShiftsTable3")
                 st.success("All shifts have been cleared!")
 
         if st.button("Clear All Workers"):
