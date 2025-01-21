@@ -132,7 +132,7 @@ def add_worker_to_db(
             SaturdayStart, SaturdayEnd,
             SundayStart, SundayEnd
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         worker_name,
         mon_start, mon_end,
