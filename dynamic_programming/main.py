@@ -375,6 +375,7 @@ def optimize_tasks_with_gurobi():
     # Collect results
     if model.status == GRB.OPTIMAL:
         st.success("Optimization successful!")
+        st.balloons()
         results = []
         day_summary = {}
 
