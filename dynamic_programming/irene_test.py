@@ -1,4 +1,4 @@
-# Input data simplified
+# Input data simplified with just 2 shifts, 7 tasks
 tasks = [
     {"name": "Task 1", "start_window": 9 * 60, "end_window": 23 * 60, "duration": 30, "nurses_required": 5},
     {"name": "Task 2", "start_window": 9 * 60, "end_window": 23 * 60, "duration": 120, "nurses_required": 7},

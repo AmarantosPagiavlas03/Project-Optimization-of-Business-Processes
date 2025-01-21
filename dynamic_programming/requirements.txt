@@ -4,3 +4,4 @@ numpy
 pulp
 matplotlib
 plotly
+gurobipy
