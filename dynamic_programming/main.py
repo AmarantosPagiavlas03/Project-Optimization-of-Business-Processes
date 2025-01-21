@@ -295,9 +295,14 @@ def shift_input_form():
         if "break_start_time" not in st.session_state:
             st.session_state["break_start_time"] = (datetime.now() + timedelta(hours=2)).time()
 
-        Shift_StartTime = st.time_input("Shift Start Time", value=st.session_state["shift_start_time"])
-        Shift_EndTime = st.time_input("Shift End Time", value=st.session_state["shift_end_time"])
-        BreakTime = st.time_input("Break Start Time", value=st.session_state["break_start_time"])
+        intervals = generate_time_intervals()
+        # Shift_StartTime = st.time_input("Shift Start Time", value=st.session_state["shift_start_time"])
+        # Shift_EndTime = st.time_input("Shift End Time", value=st.session_state["shift_end_time"])
+        # BreakTime = st.time_input("Break Start Time", value=st.session_state["break_start_time"])
+        Shift_StartTime = st.selectbox("Shift Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
+        Shift_EndTime = st.selectbox("Shift End Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
+        BreakTime = st.selectbox("Break Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
+        
         BreakDuration_hours = st.number_input("Break Duration Hours", min_value=0, max_value=23, value=0)
         BreakDuration_minutes = st.number_input("Break Duration Minutes", min_value=0, max_value=59, value=30)
         Weight = st.number_input("Shift Weight", min_value=0.0, value=1.0)
