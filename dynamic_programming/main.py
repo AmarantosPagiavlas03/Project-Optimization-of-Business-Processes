@@ -291,8 +291,6 @@ VALUES
     conn.close()
 
 def optimize_tasks_with_gurobi():
-       # Fetch data
-
     # Fetch data
     tasks_df = get_all("Tasks")
     shifts_df = get_all("ShiftsTable")
@@ -370,30 +368,69 @@ def optimize_tasks_with_gurobi():
     if model.status == GRB.OPTIMAL:
         st.success("Optimization successful!")
         results = []
+        day_summary = {}
+
         for (task_id, shift_id), var in task_shift_vars.items():
             if var.x > 0.5:  # Binary variable is 1
+                task_day = tasks_df.loc[task_id, "Day"]
+                # Calculate task cost
+                total_tasks_in_shift = sum(
+                    task_shift_vars[(task_id, shift_id)].x > 0.5
+                    for task_id in tasks_df.index if (task_id, shift_id) in task_shift_vars
+                )
+
+                if total_tasks_in_shift > 0:
+                    shift_cost_per_task = shifts_df.loc[shift_id, "Weight"] / total_tasks_in_shift
+                    task_cost = shift_cost_per_task * (tasks_df.loc[task_id, "NursesRequired"] / shift_worker_vars[shift_id].x)
+                else:
+                    task_cost = 0  # No tasks assigned to this shift
+
+
+                # Add to results
                 results.append({
                     "TaskID": task_id,
                     "ShiftID": shift_id,
                     "TaskName": tasks_df.loc[task_id, "TaskName"],
-                    "TaskDay": tasks_df.loc[task_id, "Day"],
+                    "TaskDay": task_day,
                     "TaskStart": tasks_df.loc[task_id, "StartTime"],
                     "TaskEnd": tasks_df.loc[task_id, "EndTime"],
                     "ShiftStart": shifts_df.loc[shift_id, "StartTime"],
                     "ShiftEnd": shifts_df.loc[shift_id, "EndTime"],
                     "ShiftNotes": shifts_df.loc[shift_id, "Notes"],
-                    "WorkersAssigned": shift_worker_vars[shift_id].x
+                    "WorkersAssigned": shift_worker_vars[shift_id].x,
+                    "Cost": task_cost
                 })
 
+                # Update day summary
+                if task_day not in day_summary:
+                    day_summary[task_day] = {"TotalCost": 0, "NumTasks": 0}
+                day_summary[task_day]["TotalCost"] += task_cost
+                day_summary[task_day]["NumTasks"] += 1
+
+        # Create a DataFrame for the results
         results_df = pd.DataFrame(results)
+        day_summary_df = pd.DataFrame.from_dict(day_summary, orient="index").reset_index()
+        day_summary_df.columns = ["Day", "TotalCost", "NumTasks"]
 
         if not results_df.empty:
             st.write("Optimal Task Assignments with Worker Counts:")
             st.dataframe(results_df)
+
             st.download_button(
                 label="Download Assignments as CSV",
                 data=results_df.to_csv(index=False).encode("utf-8"),
                 file_name="task_assignments_with_workers.csv",
+                mime="text/csv"
+            )
+
+            # Display and download the day summary table
+            st.write("Daily Summary of Costs and Assignments:")
+            st.dataframe(day_summary_df)
+
+            st.download_button(
+                label="Download Daily Summary as CSV",
+                data=day_summary_df.to_csv(index=False).encode("utf-8"),
+                file_name="daily_summary.csv",
                 mime="text/csv"
             )
         else:
@@ -404,6 +441,7 @@ def optimize_tasks_with_gurobi():
         for constr in model.getConstrs():
             if constr.IISConstr:
                 st.write(f"Infeasible Constraint: {constr.constrName}")
+
 
 def display_tasks_and_shifts():
     """Display tasks and shifts as Gantt charts with all days and hours displayed."""
