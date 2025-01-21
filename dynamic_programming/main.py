@@ -565,21 +565,6 @@ def main():
 
     init_db()
     st.header("Tools")
-    # Inject CSS for fixing the height and positioning the buttons at the bottom
-    st.markdown(
-        """
-        <style>
-        /* Set fixed height for sidebar and scroll behavior */
-        section[data-testid="stSidebar"] > div:first-child {
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
 
     # Input forms for adding tasks and shifts
     task_input_form()
@@ -587,8 +572,9 @@ def main():
     generate_and_fill_data_form()
 
 
-    # Add "Clear All Tasks" and "Clear All Shifts" buttons at the bottom of the sidebar
     with st.sidebar:
+ 
+            
         st.markdown("---")  # Add a separator line
 
         # Two columns for side-by-side buttons
