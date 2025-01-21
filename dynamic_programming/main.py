@@ -567,8 +567,6 @@ def main():
     st.header("Tools")
 
     # Input forms for adding tasks and shifts
-    with st.sidebar:
-        st.markdown("---") 
     task_input_form()
     shift_input_form()
     with st.sidebar:
@@ -607,7 +605,6 @@ def main():
                 else:
                     st.write("**Shifts List**")
                     st.dataframe(shifts_df)
-        st.markdown("---") 
 
 
  
