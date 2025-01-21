@@ -567,9 +567,12 @@ def main():
     st.header("Tools")
 
     # Input forms for adding tasks and shifts
+    with st.sidebar:
+        st.markdown("---") 
     task_input_form()
     shift_input_form()
-    st.markdown("---") 
+    with st.sidebar:
+        st.markdown("---") 
     generate_and_fill_data_form()
 
 
