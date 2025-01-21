@@ -35,7 +35,7 @@ def init_db():
 
     # Table: Shifts
     c.execute('''
-    CREATE TABLE IF NOT EXISTS ShiftsTable2 (
+    CREATE TABLE IF NOT EXISTS ShiftsTable3 (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         StartTime TEXT NOT NULL,
         EndTime TEXT NOT NULL,
@@ -106,7 +106,7 @@ def add_shift_to_db(data):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''
-        INSERT INTO ShiftsTable2 (
+        INSERT INTO ShiftsTable3 (
             StartTime, EndTime, BreakTime, BreakDuration, Weight,
             Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday, Notes
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -173,12 +173,7 @@ def clear_all(table):
 def update_needed_workers_for_each_day(results_df):
     """
     Use the first-optimization assignments (results_df) to populate
-    MondayNeeded, TuesdayNeeded, ... columns for each ShiftID in ShiftsTable2.
-
-    Assumes results_df has columns:
-        - "ShiftID": the ID from ShiftsTable2
-        - "TaskDay": a string like "Monday", "Tuesday", ...
-        - "WorkersNeededForShift": integer count of how many workers needed
+    MondayNeeded, TuesdayNeeded, ... columns for each ShiftID in ShiftsTable3.
     """
 
     # 1. Aggregate how many workers are needed for each (ShiftID, Day).
@@ -190,7 +185,7 @@ def update_needed_workers_for_each_day(results_df):
         .max()  # or .sum()
         .reset_index()
     )
-
+    st.dataframe(shift_day_needs)
     # 2. Build a dictionary: shift_day_dict[shift_id][day] = needed count
     day_list = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     shift_day_dict = {}
@@ -206,13 +201,13 @@ def update_needed_workers_for_each_day(results_df):
         # Assign the needed count for that day
         shift_day_dict[sid][day] = needed
 
-    # 3. Update ShiftsTable2 for each shift ID
+    # 3. Update ShiftsTable3 for each shift ID
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
 
     for sid, day_map in shift_day_dict.items():
         c.execute('''
-            UPDATE ShiftsTable2
+            UPDATE ShiftsTable3
             SET
               MondayNeeded    = :mon,
               TuesdayNeeded   = :tue,
@@ -236,7 +231,7 @@ def update_needed_workers_for_each_day(results_df):
     conn.commit()
     conn.close()
 
-    st.success("Day-specific NeededWorkers columns have been updated in ShiftsTable2!")
+    st.success("Day-specific NeededWorkers columns have been updated in ShiftsTable3!")
 
 
 # ------------------------------------------------------------------
@@ -499,7 +494,7 @@ def insert():
     ''')
     conn.commit()
     c.execute('''
-        INSERT INTO ShiftsTable2 (
+        INSERT INTO ShiftsTable3 (
             StartTime,
             EndTime,
             BreakTime,
@@ -556,7 +551,7 @@ def insert2():
     ''')
     conn.commit()
     c.execute('''
-        INSERT INTO ShiftsTable2 (
+        INSERT INTO ShiftsTable3 (
             StartTime,
             EndTime,
             BreakTime,
@@ -596,7 +591,7 @@ def optimize_tasks_with_gurobi():
     This is the existing optimization for tasks.
     """
     tasks_df = get_all("Tasks")
-    shifts_df = get_all("ShiftsTable2")
+    shifts_df = get_all("ShiftsTable3")
 
     if tasks_df.empty or shifts_df.empty:
         st.error("Tasks or shifts data is missing. Add data and try again.")
@@ -766,23 +761,23 @@ def optimize_workers_for_shifts():
     worker goes where, based on each worker’s day/time preferences.
     """
     # 1. Read needed data
-    shifts_df = get_all("ShiftsTable2")
+    shifts_df = get_all("ShiftsTable3")
     workers_df = get_all("Workers")
 
     # The shift_worker_vars from the first optimization are not stored in DB,
     # but we do have the final integer result for each shift’s needed worker count
     # from the results CSV or from the model. Typically you'd store that in a table,
-    # or re-run in memory. For this example, let's define a new column in ShiftsTable2
+    # or re-run in memory. For this example, let's define a new column in ShiftsTable3
     # if you want (or we just pretend we have it). Instead, we will re-derive it from
     # the existing approach or just ask the user to enter "how many workers does each shift need?"
 
     # For demonstration, let's say the user manually enters a minimal coverage requirement
     # for each shift (like "1" or "2" or "3"). Alternatively, you can read the results
     # from a CSV or store them in a table. The code below checks for a column "NeededWorkers"
-    # in ShiftsTable2. If missing, we fallback to a user-provided input.
+    # in ShiftsTable3. If missing, we fallback to a user-provided input.
 
     if "NeededWorkers" not in shifts_df.columns:
-        st.info("**No 'NeededWorkers' column found in ShiftsTable2.**")
+        st.info("**No 'NeededWorkers' column found in ShiftsTable3.**")
         st.write("We will assume each shift needs coverage from the first optimization or a user input.")
         needed_workers_inputs = {}
         for i, row in shifts_df.iterrows():
@@ -794,7 +789,7 @@ def optimize_workers_for_shifts():
         # Store the results in a new column for the model usage
         shifts_df["NeededWorkers"] = shifts_df.index.map(needed_workers_inputs)
     else:
-        st.success("Found 'NeededWorkers' column in ShiftsTable2. Using existing data.")
+        st.success("Found 'NeededWorkers' column in ShiftsTable3. Using existing data.")
 
     # Prepare time fields for comparison
     # Convert day preference for each worker to time
@@ -963,7 +958,7 @@ def display_tasks_and_shifts():
     st.header("Visualize Tasks and Shifts for the Week")
 
     tasks_df = get_all("Tasks")
-    shifts_df = get_all("ShiftsTable2")
+    shifts_df = get_all("ShiftsTable3")
 
     if tasks_df.empty and shifts_df.empty:
         st.write("Tasks and shifts data is missing. Add data and try again.")
@@ -1089,7 +1084,7 @@ def main():
 
         with col2:
             if st.button("Clear All Shifts"):
-                clear_all("ShiftsTable2")
+                clear_all("ShiftsTable3")
                 st.success("All shifts have been cleared!")
 
         if st.button("Clear All Workers"):
