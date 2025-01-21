@@ -161,11 +161,26 @@ def shift_input_form():
             st.success("Shift added successfully!")
 
 
+def generate_and_fill_data_form():
+    """Sidebar form to generate and fill random data."""
+    with st.sidebar.expander("Generate Random Data", expanded=False):
+        st.write("Generate random tasks and shifts to populate the database.")
+
+        # Input fields for number of tasks and shifts
+        num_tasks = st.number_input("Number of Tasks", min_value=1, value=10, step=1)
+        num_shifts = st.number_input("Number of Shifts", min_value=1, value=5, step=1)
+
+        # Button to trigger data generation
+        if st.button("Generate Data"):
+            # Call the data generation function
+            generate_and_fill_data(num_tasks=int(num_tasks), num_shifts=int(num_shifts))
+            st.success(f"Generated {num_tasks} tasks and {num_shifts} shifts successfully!")
+
 def generate_and_fill_data(num_tasks=10, num_shifts=5):
     """Generate random tasks and shifts and populate the database."""
     # Initialize the database
     init_db()
-    
+
     # Generate random tasks
     for _ in range(num_tasks):
         task_name = f"Task_{random.randint(1, 100)}"
@@ -204,7 +219,6 @@ def generate_and_fill_data(num_tasks=10, num_shifts=5):
         )
         add_shift_to_db(shift_data)
 
-    st.success(f"Generated {num_tasks} tasks and {num_shifts} shifts successfully!")
 
 def insert():
     
