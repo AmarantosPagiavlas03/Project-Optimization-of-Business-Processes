@@ -570,34 +570,37 @@ def main():
     task_input_form()
     shift_input_form()
 
-    # Create two columns for side-by-side buttons
-    col1, col2 = st.columns(2)
+    with st.sidebar:
+        st.markdown("---")  # Add a separator line
 
-    # Clear All Tasks button in the first column
-    with col1:
-        if st.button("Clear All Tasks"):
-            clear_all("Tasks")
-            st.success("All tasks have been cleared!")
-            # Refresh tasks display
-            tasks_df = get_all("Tasks")
-            if tasks_df.empty:
-                st.write("No tasks added yet.")
-            else:
-                st.write("**Tasks List**")
-                st.dataframe(tasks_df)
+        # Two columns for side-by-side buttons
+        col1, col2 = st.columns(2)
 
-    # Clear All Shifts button in the second column
-    with col2:
-        if st.button("Clear All Shifts"):
-            clear_all("ShiftsTable1")
-            st.success("All shifts have been cleared!")
-            # Refresh shifts display
-            shifts_df = get_all("ShiftsTable1")
-            if shifts_df.empty:
-                st.write("No shifts added yet.")
-            else:
-                st.write("**Shifts List**")
-                st.dataframe(shifts_df)
+        # Clear All Tasks button
+        with col1:
+            if st.button("Clear All Tasks"):
+                clear_all("Tasks")
+                st.success("All tasks have been cleared!")
+                # Refresh tasks display
+                tasks_df = get_all("Tasks")
+                if tasks_df.empty:
+                    st.write("No tasks added yet.")
+                else:
+                    st.write("**Tasks List**")
+                    st.dataframe(tasks_df)
+
+        # Clear All Shifts button
+        with col2:
+            if st.button("Clear All Shifts"):
+                clear_all("ShiftsTable1")
+                st.success("All shifts have been cleared!")
+                # Refresh shifts display
+                shifts_df = get_all("ShiftsTable1")
+                if shifts_df.empty:
+                    st.write("No shifts added yet.")
+                else:
+                    st.write("**Shifts List**")
+                    st.dataframe(shifts_df)
 
 
  
