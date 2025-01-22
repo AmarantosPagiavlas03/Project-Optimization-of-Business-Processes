@@ -1289,7 +1289,7 @@ def main():
 
         with col1:
             if st.button("Clear All Tasks"):
-                clear_all("Tasks")
+                clear_all("TasksTable1")
                 st.success("All tasks have been cleared!")
 
         with col2:
