@@ -1009,7 +1009,6 @@ def optimize_tasks_with_gurobi():
     #      Only if the task's day == shift's active day AND times align
     task_shift_vars = {}
     for task_id, task_row in tasks_df.iterrows():
-        st.write(f"task_id: {task_id}")
         t_day = task_row["Day"]   # e.g. "Monday"
         t_s   = task_row["StartTime"]
         t_e   = task_row["EndTime"]
