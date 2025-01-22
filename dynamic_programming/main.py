@@ -23,7 +23,7 @@ def init_db():
 
     # Table: Tasks
     c.execute('''
-        CREATE TABLE IF NOT EXISTS Tasks (
+        CREATE TABLE IF NOT EXISTS TasksTable1 (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             TaskName TEXT NOT NULL,
             Day TEXT NOT NULL,
@@ -96,7 +96,7 @@ def add_task_to_db(TaskName, Day, StartTime, EndTime, Duration, NursesRequired):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''
-        INSERT INTO Tasks (TaskName, Day, StartTime, EndTime, Duration, NursesRequired)
+        INSERT INTO TasksTable1 (TaskName, Day, StartTime, EndTime, Duration, NursesRequired)
         VALUES (?, ?, ?, ?, ?, ?)
     ''', (TaskName, Day, StartTime, EndTime, Duration, NursesRequired))
     conn.commit()
@@ -486,7 +486,7 @@ def insert():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''
-        INSERT INTO Tasks (
+        INSERT INTO TasksTable1 (
             TaskName,
             Day,
             StartTime,
@@ -558,7 +558,7 @@ def insert2():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''
-        INSERT INTO Tasks (
+        INSERT INTO TasksTable1 (
             TaskName,
             Day,
             StartTime,
@@ -1167,7 +1167,7 @@ def display_tasks_and_shifts():
     """Display tasks and shifts as Gantt charts for the week."""
     st.header("Visualize Tasks and Shifts for the Week")
 
-    tasks_df = get_all("Tasks")
+    tasks_df = get_all("TasksTable1")
     shifts_df = get_all("ShiftsTable3")
 
     if tasks_df.empty and shifts_df.empty:
