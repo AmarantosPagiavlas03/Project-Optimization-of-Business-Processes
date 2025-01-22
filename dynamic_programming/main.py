@@ -1088,13 +1088,14 @@ def optimize_tasks_with_gurobi():
                 )
                 shift_weight = shifts_df.loc[shift_id, "Weight"]
                 if total_assigned_tasks > 0 and workers_assigned > 0:
-                    cost_per_task = shift_weight / total_assigned_tasks
-                    task_duration = (t_e - t_s).total_seconds()
-                    shift_duration = (shift_e - shift_s).total_seconds()
-                    duration_ratio = task_duration / shift_duration
-                    task_cost = cost_per_task * duration_ratio * (
-                        tasks_df.loc[task_id, "NursesRequired"] / workers_assigned
-                    )
+                    # cost_per_task = shift_weight / total_assigned_tasks
+                    # task_duration = (t_e - t_s).total_seconds()
+                    # shift_duration = (shift_e - shift_s).total_seconds()
+                    # duration_ratio = task_duration / shift_duration
+                    # task_cost = cost_per_task * duration_ratio * (
+                    #     tasks_df.loc[task_id, "NursesRequired"] / workers_assigned
+                    # )
+                    task_cost = 0
 
                 else:
                     task_cost = 0
