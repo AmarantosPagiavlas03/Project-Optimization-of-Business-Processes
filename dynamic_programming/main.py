@@ -1277,7 +1277,7 @@ def main():
     # Input forms
     task_input_form()
     shift_input_form()
-    worker_input_form()
+    # worker_input_form()
 
     with st.sidebar:
         st.markdown("---") 
@@ -1297,9 +1297,9 @@ def main():
                 clear_all("ShiftsTable3")
                 st.success("All shifts have been cleared!")
 
-        if st.button("Clear All Workers"):
-            clear_all("Workers")
-            st.success("All workers have been cleared!")
+        # if st.button("Clear All Workers"):
+        #     clear_all("Workers")
+        #     st.success("All workers have been cleared!")
 
 
     # Buttons for example data
