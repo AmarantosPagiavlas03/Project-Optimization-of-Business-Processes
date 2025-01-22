@@ -1079,6 +1079,8 @@ def optimize_tasks_with_gurobi():
         day_summary = {}
 
         for (task_id, shift_id, d), assign_var in task_shift_vars.items():
+            st.write(f"taskid: {task_id} shiftid: {shift_id} day: {d}")
+        for (task_id, shift_id, d), assign_var in task_shift_vars.items():
             if assign_var.x > 0.5:
                 workers_assigned = shift_worker_vars.get((shift_id, d), 0).x
                 st.write(task_id)
