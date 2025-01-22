@@ -977,6 +977,17 @@ def optimize_tasks_with_gurobi():
     shifts_df["StartTime"] = pd.to_datetime(shifts_df["StartTime"], format="%H:%M:%S").dt.time
     shifts_df["EndTime"] = pd.to_datetime(shifts_df["EndTime"], format="%H:%M:%S").dt.time
 
+    # Map task days to shift availability columns
+    day_columns = {
+        "Monday": "Monday",
+        "Tuesday": "Tuesday",
+        "Wednesday": "Wednesday",
+        "Thursday": "Thursday",
+        "Friday": "Friday",
+        "Saturday": "Saturday",
+        "Sunday": "Sunday"
+    }
+
     # Create Gurobi Model
     model = Model("Task_Assignment_By_Day")
 
@@ -985,29 +996,35 @@ def optimize_tasks_with_gurobi():
     shift_worker_vars = {}
 
     for task_id, task in tasks_df.iterrows():
+        task_day = task["Day"]
+        shift_day_column = day_columns[task_day]
+
         for shift_id, shift in shifts_df.iterrows():
-            # Check if shift can cover the task (matching day and time range)
+            # Check if shift is available on the task's day and can cover the task time range
             if (
-                task["Day"] == shift["Day"] and
+                shift[shift_day_column] == 1 and
                 shift["StartTime"] <= task["StartTime"] and
                 shift["EndTime"] >= task["EndTime"]
             ):
-                var_name = f"Task_{task_id}_Shift_{shift_id}_Day_{task['Day']}"
-                task_shift_vars[(task_id, shift_id, task["Day"])] = model.addVar(
+                var_name = f"Task_{task_id}_Shift_{shift_id}_Day_{task_day}"
+                task_shift_vars[(task_id, shift_id, task_day)] = model.addVar(
                     vtype=GRB.BINARY, name=var_name
                 )
 
     # Number of workers assigned to each shift per day
     for shift_id, shift in shifts_df.iterrows():
-        shift_worker_vars[(shift_id, shift["Day"])] = model.addVar(
-            vtype=GRB.INTEGER, lb=0, name=f"Workers_Shift_{shift_id}_Day_{shift['Day']}"
-        )
+        for day, day_column in day_columns.items():
+            if shift[day_column] == 1:  # Only create variables for days the shift is available
+                shift_worker_vars[(shift_id, day)] = model.addVar(
+                    vtype=GRB.INTEGER, lb=0, name=f"Workers_Shift_{shift_id}_Day_{day}"
+                )
 
     # Objective: minimize total cost = sum(shift_workers * shift_weight)
     model.setObjective(
         quicksum(
-            shift_worker_vars[(shift_id, shift["Day"])] * shifts_df.loc[shift_id, "Weight"]
+            shift_worker_vars[(shift_id, day)] * shifts_df.loc[shift_id, "Weight"]
             for shift_id, shift in shifts_df.iterrows()
+            for day, day_column in day_columns.items() if shift[day_column] == 1
         ),
         GRB.MINIMIZE
     )
@@ -1015,10 +1032,11 @@ def optimize_tasks_with_gurobi():
     # Constraints
     # 1. Each task must be assigned to at least one shift on the correct day
     for task_id, task in tasks_df.iterrows():
+        task_day = task["Day"]
         feasible_shifts = [
-            task_shift_vars[(task_id, s_id, task["Day"])]
+            task_shift_vars[(task_id, s_id, task_day)]
             for s_id in shifts_df.index
-            if (task_id, s_id, task["Day"]) in task_shift_vars
+            if (task_id, s_id, task_day) in task_shift_vars
         ]
         if feasible_shifts:
             model.addConstr(
@@ -1028,14 +1046,15 @@ def optimize_tasks_with_gurobi():
 
     # 2. Workers assigned to a shift must cover all tasks' nurse requirements for the specific day
     for shift_id, shift in shifts_df.iterrows():
-        day = shift["Day"]
-        model.addConstr(
-            quicksum(
-                task_shift_vars[(task_id, shift_id, day)] * tasks_df.loc[task_id, "NursesRequired"]
-                for task_id in tasks_df.index if (task_id, shift_id, day) in task_shift_vars
-            ) <= shift_worker_vars[(shift_id, day)],
-            name=f"Shift_{shift_id}_Day_{day}_Workers"
-        )
+        for day, day_column in day_columns.items():
+            if shift[day_column] == 1:  # Only add constraints for days the shift is available
+                model.addConstr(
+                    quicksum(
+                        task_shift_vars[(task_id, shift_id, day)] * tasks_df.loc[task_id, "NursesRequired"]
+                        for task_id in tasks_df.index if (task_id, shift_id, day) in task_shift_vars
+                    ) <= shift_worker_vars[(shift_id, day)],
+                    name=f"Shift_{shift_id}_Day_{day}_Workers"
+                )
 
     with st.spinner("Optimizing tasks and shifts by day. Please wait..."):
         model.optimize()
@@ -1086,15 +1105,19 @@ def optimize_tasks_with_gurobi():
                 day_summary[task_day]["NumTasks"] += 1
                 day_summary[task_day]["NumWorkers"] += workers_assigned
 
-        # Create DataFrames
+        # Create DataFrames and display results...
+        # Create DataFrames for results
         results_df = pd.DataFrame(results)
 
         if not results_df.empty:
             st.success("Task-shift optimization successful!")
             st.balloons()
-            day_summary_df = pd.DataFrame.from_dict(day_summary, orient="index").reset_index()
 
+            # Daily summary of costs, tasks, and workers
+            day_summary_df = pd.DataFrame.from_dict(day_summary, orient="index").reset_index()
             day_summary_df.columns = ["Day", "TotalCost", "NumTasks", "NumWorkers"]
+
+            # Display and download the detailed results
             st.write("**Optimal Task Assignments with Worker Counts**")
             st.dataframe(results_df, hide_index=True)
 
@@ -1105,6 +1128,7 @@ def optimize_tasks_with_gurobi():
                 mime="text/csv"
             )
 
+            # Display and download the daily summary
             st.write("**Daily Summary of Costs, Tasks, and Workers**")
             st.dataframe(day_summary_df, hide_index=True)
 
@@ -1117,6 +1141,7 @@ def optimize_tasks_with_gurobi():
         else:
             st.error("No tasks were assigned (results empty).")
     else:
+        # Handle optimization failures
         st.error(f"Optimization failed with status: {model.status}")
         model.computeIIS()
         for constr in model.getConstrs():
