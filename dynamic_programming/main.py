@@ -7,6 +7,7 @@ from pulp import LpProblem, LpMinimize, LpVariable, lpSum, LpStatus
 import plotly.express as px
 from gurobipy import Model, GRB, quicksum
 from datetime import time
+import io  
 
 DB_FILE = "tasksv2.db"
 
@@ -473,6 +474,76 @@ def generate_and_fill_data(num_tasks=10, num_shifts=5, num_workers=5):
             # Sunday
             f"{day_prefs[6][0]}:00:00", f"{day_prefs[6][1]}:00:00",
         )
+
+def task_template_download():
+    """
+    Provide a button to download a Task template.
+    """
+    template_df = pd.DataFrame({
+        "TaskName": [],
+        "Day": [],
+        "StartTime": [],
+        "EndTime": [],
+        "Duration": [],
+        "NursesRequired": []
+    })
+    
+    # Convert to CSV in-memory
+    csv_data = template_df.to_csv(index=False)
+    
+    st.download_button(
+        label="Download Task Template (CSV)",
+        data=csv_data.encode("utf-8"),
+        file_name="task_template.csv",
+        mime="text/csv"
+    )
+
+    # Optional: If you want an Excel download
+    excel_buffer = io.BytesIO()
+    with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
+        template_df.to_excel(writer, index=False, sheet_name='TasksTemplate')
+    st.download_button(
+        label="Download Task Template (Excel)",
+        data=excel_buffer.getvalue(),
+        file_name="task_template.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+def upload_tasks_excel():
+    """
+    Let the user upload a Task Excel file and insert into DB.
+    """
+    uploaded_file = st.file_uploader("Upload Task Excel", type=["xlsx", "xls", "csv"])
+    if uploaded_file is not None:
+        try:
+            # Read either CSV or Excel automatically:
+            if uploaded_file.name.endswith(".csv"):
+                df = pd.read_csv(uploaded_file)
+            else:
+                df = pd.read_excel(uploaded_file)
+
+            # Validate that columns are present:
+            required_cols = {"TaskName", "Day", "StartTime", "EndTime", "Duration", "NursesRequired"}
+            missing = required_cols - set(df.columns)
+            if missing:
+                st.error(f"Your file is missing columns: {missing}")
+                return
+            
+            # Insert each row into DB
+            for _, row in df.iterrows():
+                add_task_to_db(
+                    row["TaskName"],
+                    row["Day"],
+                    str(row["StartTime"]),      # "HH:MM:SS" format
+                    str(row["EndTime"]),        # "HH:MM:SS" format
+                    str(row["Duration"]),       # e.g. "0:15:00"
+                    int(row["NursesRequired"])
+                )
+
+            st.success("Tasks successfully uploaded and inserted into the database!")
+        
+        except Exception as e:
+            st.error(f"Error reading file: {e}")
 
 
 # ------------------------------------------------------------------
@@ -1086,7 +1157,7 @@ def optimize_tasks_with_gurobi():
                     for tid in tasks_df.index
                     if (tid, shift_id, d) in task_shift_vars
                 )
-                shift_weight = shifts_df.loc[shift_id, "Weight"]
+                # shift_weight = shifts_df.loc[shift_id, "Weight"]
                 if total_assigned_tasks > 0 and workers_assigned > 0:
                     # cost_per_task = shift_weight / total_assigned_tasks
                     # task_duration = (t_e - t_s).total_seconds()
@@ -1496,6 +1567,17 @@ def main():
             if st.button("Clear All Shifts"):
                 clear_all("ShiftsTable3")
                 st.success("All shifts have been cleared!")
+                
+    with st.sidebar.expander("Task Data Import/Export"):
+        # 1. Download Template
+        st.subheader("Download Template")
+        task_template_download()
+
+        st.markdown("---")
+
+        # 2. Upload user file
+        st.subheader("Upload Your Tasks")
+        upload_tasks_excel()
 
         # if st.button("Clear All Workers"):
         #     clear_all("Workers")
