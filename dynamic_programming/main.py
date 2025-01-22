@@ -926,14 +926,14 @@ def optimize_tasks_with_gurobi():
 
         # Create DataFrames
         results_df = pd.DataFrame(results)
-        # update_needed_workers_for_each_day(results_df)
-        day_summary_df = pd.DataFrame.from_dict(day_summary, orient="index").reset_index()
-        st.write(day_summary_df.columns)
-        st.write(day_summary_df.shape)  # This will show the number of rows and columns
-
-        day_summary_df.columns = ["Day", "TotalCost", "NumTasks", "NumWorkers"]
 
         if not results_df.empty:
+            # update_needed_workers_for_each_day(results_df)
+            day_summary_df = pd.DataFrame.from_dict(day_summary, orient="index").reset_index()
+            st.write(day_summary_df.columns)
+            st.write(day_summary_df.shape)  # This will show the number of rows and columns
+
+            day_summary_df.columns = ["Day", "TotalCost", "NumTasks", "NumWorkers"]
             st.write("**Optimal Task Assignments with Worker Counts**")
             st.dataframe(results_df,hide_index=True)
 
