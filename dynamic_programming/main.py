@@ -876,8 +876,6 @@ def optimize_tasks_with_gurobi():
 
     # Collect results
     if model.status == GRB.OPTIMAL:
-        st.success("Task-shift optimization successful!")
-        st.balloons()
         results = []
         day_summary = {}
 
@@ -928,6 +926,8 @@ def optimize_tasks_with_gurobi():
         results_df = pd.DataFrame(results)
 
         if not results_df.empty:
+            st.success("Task-shift optimization successful!")
+            st.balloons()
             # update_needed_workers_for_each_day(results_df)
             day_summary_df = pd.DataFrame.from_dict(day_summary, orient="index").reset_index()
             st.write(day_summary_df.columns)
