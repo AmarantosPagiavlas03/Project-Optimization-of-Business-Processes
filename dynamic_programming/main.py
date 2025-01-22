@@ -974,6 +974,7 @@ def optimize_tasks_with_gurobi():
     # --- 1. Load Data ---
     tasks_df = get_all("Tasks")
     shifts_df = get_all("ShiftsTable3")
+    st.dataframe(tasks_df)
 
     # Basic check for empty data
     if tasks_df.empty or shifts_df.empty:
@@ -995,7 +996,7 @@ def optimize_tasks_with_gurobi():
     model = Model("Task_Assignment")
 
     # --- 4. Decision Variables ---
-
+    st.dataframe(tasks_df)
     # 4.1. Worker variables: (shift, day) -> integer # of workers
     shift_worker_vars = {}
     for shift_id, shift_row in shifts_df.iterrows():
