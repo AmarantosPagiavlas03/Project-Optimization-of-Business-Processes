@@ -1111,7 +1111,7 @@ def optimize_tasks_with_gurobi():
                     "ShiftEnd": shifts_df.loc[shift_id, "EndTime"],
                     "WorkersNeededForShiftDay": workers_assigned,
                     "TaskCost": task_cost,
-                    "VariableAssign": assign_var
+                    "VariableAssign": assign_var.x
                 })
 
                 # Update daily summary
