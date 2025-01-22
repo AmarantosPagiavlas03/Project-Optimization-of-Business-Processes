@@ -926,7 +926,7 @@ def optimize_tasks_with_gurobi():
 
         # Create DataFrames
         results_df = pd.DataFrame(results)
-        update_needed_workers_for_each_day(results_df)
+        # update_needed_workers_for_each_day(results_df)
         day_summary_df = pd.DataFrame.from_dict(day_summary, orient="index").reset_index()
         day_summary_df.columns = ["Day", "TotalCost", "NumTasks", "NumWorkers"]
 
