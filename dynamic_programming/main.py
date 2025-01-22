@@ -972,7 +972,7 @@ def optimize_tasks_with_gurobi():
     """
 
     # --- 1. Load Data ---
-    tasks_df = get_all("Tasks")
+    tasks_df = get_all("TasksTable1")
     shifts_df = get_all("ShiftsTable3")
     st.dataframe(tasks_df)
 
