@@ -484,7 +484,7 @@ def task_template_download():
     # Here, we include a couple of example tasks
     # showing how times and durations should be formatted.
     template_df = pd.DataFrame({
-        "TaskName": ["Medication Administration", "Vital Signs Monitoring"],
+        "TaskName": ["Example Task", "Example Task"],
         "Day": ["Monday", "Tuesday"],                  # Must match "Monday"/"Tuesday"/... 
         "StartTime": ["07:30:00", "09:00:00"],         # "HH:MM:SS" format
         "EndTime": ["08:00:00", "09:30:00"],           # "HH:MM:SS" format
@@ -545,6 +545,97 @@ def upload_tasks_excel():
                 )
 
             st.success("Tasks successfully uploaded and inserted into the database!")
+        
+        except Exception as e:
+            st.error(f"Error reading file: {e}")
+
+ 
+def shift_template_download():
+    """
+    Provide a button to download a Shifts template *with example rows*,
+    so users see the expected format and data types.
+    """
+    # Include a couple of example shifts
+    # showing how times and day-activation columns should be formatted.
+    template_df = pd.DataFrame({
+        "StartTime": ["07:00:00", "15:00:00"],      # "HH:MM:SS" format
+        "EndTime": ["15:00:00", "23:00:00"],        # "HH:MM:SS" format
+        "BreakTime": ["11:00:00", "19:00:00"],      # "HH:MM:SS"
+        "BreakDuration": ["0:30:00", "1:00:00"],    # "HH:MM:SS"
+        "Weight": [1200, 1400],                     # Float or int
+        "Monday": [1, 1],    # 1 means shift is active that day, 0 means not active
+        "Tuesday": [1, 1],
+        "Wednesday": [1, 1],
+        "Thursday": [1, 1],
+        "Friday": [1, 1],
+        "Saturday": [0, 1],
+        "Sunday": [0, 1],
+        "Notes": ["Morning shift", "Evening shift"]
+    })
+
+    # --- CSV version ---
+    csv_data = template_df.to_csv(index=False)
+    st.download_button(
+        label="Download Shift Template (CSV)",
+        data=csv_data.encode("utf-8"),
+        file_name="shift_template.csv",
+        mime="text/csv"
+    )
+
+    # --- Excel version ---
+    excel_buffer = io.BytesIO()
+    with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
+        template_df.to_excel(writer, index=False, sheet_name='ShiftTemplate')
+    st.download_button(
+        label="Download Shift Template (Excel)",
+        data=excel_buffer.getvalue(),
+        file_name="shift_template.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+def upload_shifts_excel():
+    """
+    Let the user upload a Shifts Excel file (or CSV) to populate the DB.
+    """
+    uploaded_file = st.file_uploader("Upload Shifts File", type=["xlsx", "xls", "csv"])
+    if uploaded_file is not None:
+        try:
+            # Read CSV or Excel automatically:
+            if uploaded_file.name.endswith(".csv"):
+                df = pd.read_csv(uploaded_file)
+            else:
+                df = pd.read_excel(uploaded_file)
+
+            # Validate that columns are present:
+            required_cols = {
+                "StartTime", "EndTime", "BreakTime", "BreakDuration", "Weight",
+                "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday", "Notes"
+            }
+            missing = required_cols - set(df.columns)
+            if missing:
+                st.error(f"Your file is missing columns: {missing}")
+                return
+
+            # Insert each row into DB
+            for _, row in df.iterrows():
+                shift_data = (
+                    str(row["StartTime"]),      # e.g. "07:00:00"
+                    str(row["EndTime"]),        # e.g. "15:00:00"
+                    str(row["BreakTime"]),      # e.g. "11:00:00"
+                    str(row["BreakDuration"]),  # e.g. "0:30:00"
+                    float(row["Weight"]),
+                    int(row["Monday"]),
+                    int(row["Tuesday"]),
+                    int(row["Wednesday"]),
+                    int(row["Thursday"]),
+                    int(row["Friday"]),
+                    int(row["Saturday"]),
+                    int(row["Sunday"]),
+                    str(row["Notes"])
+                )
+                add_shift_to_db(shift_data)
+
+            st.success("Shifts successfully uploaded and inserted into the database!")
         
         except Exception as e:
             st.error(f"Error reading file: {e}")
@@ -1587,6 +1678,14 @@ def main():
         #     clear_all("Workers")
         #     st.success("All workers have been cleared!")
 
+    with st.sidebar.expander("Shift Data Import/Export"):
+        st.subheader("Download Example Shift Template")
+        shift_template_download()
+
+        st.markdown("---")
+        
+        st.subheader("Upload Your Shifts File")
+        upload_shifts_excel()
 
     # Buttons for example data
     colA, colB = st.columns(2)
