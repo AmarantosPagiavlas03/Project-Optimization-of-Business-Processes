@@ -1525,6 +1525,33 @@ def optimize_workers_for_shifts():
     else:
         st.error(f"Worker assignment optimization failed with status: {model.status}")
 
+def display_and_delete_tasks():
+    tasks_df = get_all("TasksTable1")
+    
+    if tasks_df.empty:
+        st.write("No tasks available.")
+        return
+    
+    st.write("### Current Tasks")
+    for index, row in tasks_df.iterrows():
+        task_info = f"{row['TaskName']} ({row['Day']} {row['StartTime']} - {row['EndTime']})"
+        col1, col2 = st.columns([4, 1])
+        with col1:
+            st.write(task_info)
+        with col2:
+            if st.button(f"Delete Task {row['id']}", key=f"delete_task_{row['id']}"):
+                delete_task(row['id'])
+                st.experimental_rerun()
+
+def delete_task(task_id):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute("DELETE FROM TasksTable1 WHERE id = ?", (task_id,))
+    conn.commit()
+    conn.close()
+    st.success(f"Task ID {task_id} deleted.")
+
+
 
 # ------------------------------------------------------------------
 #                          Visualization
@@ -1643,6 +1670,12 @@ def main():
     # Input forms
     task_input_form()
     shift_input_form()
+
+    st.markdown("---")
+
+    display_and_delete_tasks()
+
+    st.markdown("---")
     # worker_input_form()
 
     # with st.sidebar:
