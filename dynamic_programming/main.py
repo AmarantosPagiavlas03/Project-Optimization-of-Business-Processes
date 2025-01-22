@@ -1279,9 +1279,9 @@ def main():
     shift_input_form()
     # worker_input_form()
 
-    with st.sidebar:
-        st.markdown("---") 
-    generate_and_fill_data_form()
+    # with st.sidebar:
+    #     st.markdown("---") 
+    # generate_and_fill_data_form()
 
     with st.sidebar:
         st.markdown("---")  # Add a separator line
