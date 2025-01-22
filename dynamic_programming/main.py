@@ -1316,9 +1316,10 @@ def main():
     if st.button("Optimize Task Assignment"):
         optimize_tasks_with_gurobi()
 
-    # Second optimization: Assign workers to shifts
-    if st.button("Assign Workers to Shifts"):
-        optimize_workers_for_shifts()
+    ## Second optimization: Assign workers to shifts
+    # if st.button("Assign Workers to Shifts"):
+    #     optimize_workers_for_shifts()
+
 
     # Visualization
     display_tasks_and_shifts()
