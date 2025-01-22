@@ -5,4 +5,4 @@ pulp
 matplotlib
 plotly
 gurobipy
-xlswriter
+xlsxwriter
