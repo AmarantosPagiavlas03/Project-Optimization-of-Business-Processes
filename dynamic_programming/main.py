@@ -1026,7 +1026,6 @@ def optimize_tasks_with_gurobi():
                     task_shift_vars[(task_id, shift_id, t_day)] = model.addVar(
                         vtype=GRB.BINARY, name=var_name
                     )
-                    st.write(f"Variable created: {var_name}")
 
     # --- 5. Objective: Minimize total cost = sum(workers * weight) across (shift, day) ---
     model.setObjective(
