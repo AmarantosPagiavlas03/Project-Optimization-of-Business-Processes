@@ -475,22 +475,25 @@ def generate_and_fill_data(num_tasks=10, num_shifts=5, num_workers=5):
             f"{day_prefs[6][0]}:00:00", f"{day_prefs[6][1]}:00:00",
         )
 
+
 def task_template_download():
     """
-    Provide a button to download a Task template.
+    Provide a button to download a Task template *with example rows*,
+    so users see the expected format and data types.
     """
+    # Here, we include a couple of example tasks
+    # showing how times and durations should be formatted.
     template_df = pd.DataFrame({
-        "TaskName": [],
-        "Day": [],
-        "StartTime": [],
-        "EndTime": [],
-        "Duration": [],
-        "NursesRequired": []
+        "TaskName": ["Medication Administration", "Vital Signs Monitoring"],
+        "Day": ["Monday", "Tuesday"],                  # Must match "Monday"/"Tuesday"/... 
+        "StartTime": ["07:30:00", "09:00:00"],         # "HH:MM:SS" format
+        "EndTime": ["08:00:00", "09:30:00"],           # "HH:MM:SS" format
+        "Duration": ["0:30:00", "0:30:00"],            # "HH:MM:SS" total duration
+        "NursesRequired": [2, 1]                       # Integer
     })
-    
-    # Convert to CSV in-memory
+
+    # --- CSV version ---
     csv_data = template_df.to_csv(index=False)
-    
     st.download_button(
         label="Download Task Template (CSV)",
         data=csv_data.encode("utf-8"),
@@ -498,16 +501,17 @@ def task_template_download():
         mime="text/csv"
     )
 
-    # Optional: If you want an Excel download
+    # --- Excel version ---
     excel_buffer = io.BytesIO()
     with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
-        template_df.to_excel(writer, index=False, sheet_name='TasksTemplate')
+        template_df.to_excel(writer, index=False, sheet_name='TaskTemplate')
     st.download_button(
         label="Download Task Template (Excel)",
         data=excel_buffer.getvalue(),
         file_name="task_template.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+
 
 def upload_tasks_excel():
     """
@@ -1567,7 +1571,7 @@ def main():
             if st.button("Clear All Shifts"):
                 clear_all("ShiftsTable3")
                 st.success("All shifts have been cleared!")
-                
+
     with st.sidebar.expander("Task Data Import/Export"):
         # 1. Download Template
         st.subheader("Download Template")
