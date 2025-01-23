@@ -271,17 +271,14 @@ def task_input_form():
                 TaskName = st.text_input("Task Name", key="task_name")
             with col2:
                 Day = st.selectbox("Day of the Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], key="day_of_week")
-            
             with col3:
                 StartTime = st.selectbox("Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"), key="start_time")
             with col4:
                 EndTime = st.selectbox("End Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"), key="end_time")
-            
             with col5:
                 duration_hours = st.number_input("Duration Hours", min_value=0, max_value=23, value=1, step=1, key="duration_hours")
             with col6:
                 duration_minutes = st.number_input("Duration Minutes", min_value=0, max_value=59, value=0, step=1, key="duration_minutes")
-            
             with col7:
                 NursesRequired = st.number_input("Nurses Required", min_value=1, value=1, step=1, key="nurses_required")
             with col8:
@@ -301,6 +298,7 @@ def task_input_form():
                         st.success(f"Task '{TaskName}' added!")
                     else:
                         st.error("Task name cannot be empty!")
+
 def shift_input_form():
     """Sidebar form to add a new shift."""
     if "shift_start_time" not in st.session_state:
@@ -313,7 +311,7 @@ def shift_input_form():
     intervals = generate_time_intervals()
     
     with st.expander("Add Shift"):
-        col1, col2, col3, col4, col5, col6, col7  = st.columns(7, gap="small")
+        col1, col2, col3, col4, col5, col6, col7,col8  = st.columns(8, gap="small")
         with st.form("shift_form"):
             with col1:
                 Shift_StartTime = st.selectbox("Shift Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
@@ -334,7 +332,7 @@ def shift_input_form():
             days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
             Days = {day: col_days[i].checkbox(day, value=(day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])) for i, day in enumerate(days_of_week)}
             
-            col7, col8 = st.columns(2, gap="small")
+             
             with col8:
                 if st.form_submit_button("Add Shift"):
                     shift_data = (
