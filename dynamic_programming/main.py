@@ -3,7 +3,6 @@ import pandas as pd
 import sqlite3
 from datetime import datetime, timedelta
 import random
-from pulp import LpProblem, LpMinimize, LpVariable, lpSum, LpStatus
 import plotly.express as px
 from gurobipy import Model, GRB, quicksum
 from datetime import time
@@ -296,7 +295,6 @@ def task_input_form():
             else:
                 st.error("Task name cannot be empty!")
 
-
 def shift_input_form():
     """Sidebar form to add a new shift."""
     with st.sidebar.expander("Add Shift", expanded=False):
@@ -337,7 +335,6 @@ def shift_input_form():
             )
             add_shift_to_db(shift_data)
             st.success("Shift added successfully!")
-
 
 def worker_input_form():
     """Sidebar form to add a new worker with day-of-week preferences."""
@@ -384,7 +381,6 @@ def worker_input_form():
                 )
                 st.success(f"Worker '{worker_name}' added!")
 
-
 def generate_and_fill_data_form():
     """Sidebar form to generate and fill random data."""
     with st.sidebar.expander("Generate Random Data", expanded=False):
@@ -401,7 +397,6 @@ def generate_and_fill_data_form():
                 num_workers=int(num_workers)
             )
             st.success(f"Generated {num_tasks} tasks, {num_shifts} shifts, and {num_workers} workers successfully!")
-
 
 def generate_and_fill_data(num_tasks=10, num_shifts=5, num_workers=5):
     """Generate random tasks, shifts, and workers and populate the database."""
@@ -475,7 +470,6 @@ def generate_and_fill_data(num_tasks=10, num_shifts=5, num_workers=5):
             f"{day_prefs[6][0]}:00:00", f"{day_prefs[6][1]}:00:00",
         )
 
-
 def task_template_download():
     """
     Provide a button to download a Task template *with example rows*,
@@ -511,7 +505,6 @@ def task_template_download():
         file_name="task_template.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-
 
 def upload_tasks_excel():
     """
@@ -549,7 +542,6 @@ def upload_tasks_excel():
         except Exception as e:
             st.error(f"Error reading file: {e}")
 
- 
 def shift_template_download():
     """
     Provide a button to download a Shifts template *with example rows*,
@@ -715,7 +707,6 @@ def insert():
     ''')
     conn.commit()
     conn.close()
-
 
 def insert2():
     """
@@ -956,178 +947,9 @@ def insert2():
     conn.commit()
     conn.close()
 
-
 # ------------------------------------------------------------------
 #                     First Optimizer: Tasks-Shifts
 # ------------------------------------------------------------------
-def optimize_tasks_with_gurobi():
-    """
-    Assign tasks to shifts, and determine how many workers are needed per shift.
-    This is the existing optimization for tasks.
-    """
-    tasks_df = get_all("Tasks")
-    shifts_df = get_all("ShiftsTable4")
-
-    if tasks_df.empty or shifts_df.empty:
-        st.error("Tasks or shifts data is missing. Add data and try again.")
-        return
-
-    # Convert times
-    tasks_df["StartTime"] = pd.to_datetime(tasks_df["StartTime"], format="%H:%M:%S").dt.time
-    tasks_df["EndTime"] = pd.to_datetime(tasks_df["EndTime"], format="%H:%M:%S").dt.time
-    shifts_df["StartTime"] = pd.to_datetime(shifts_df["StartTime"], format="%H:%M:%S").dt.time
-    shifts_df["EndTime"] = pd.to_datetime(shifts_df["EndTime"], format="%H:%M:%S").dt.time
-
-    # Create Gurobi Model
-    model = Model("Task_Assignment")
-
-    # Decision variables
-    task_shift_vars = {}
-    shift_worker_vars = {}
-
-    for task_id, task in tasks_df.iterrows():
-        for shift_id, shift in shifts_df.iterrows():
-            # Check if shift can cover the task (matching day and time range)
-            if (
-                shift[task["Day"]] == 1 and
-                shift["StartTime"] <= task["StartTime"] and
-                shift["EndTime"] >= task["EndTime"]
-            ):
-                var_name = f"Task_{task_id}_Shift_{shift_id}"
-                task_shift_vars[(task_id, shift_id)] = model.addVar(
-                    vtype=GRB.BINARY, name=var_name
-                )
-
-    # Number of workers assigned to each shift
-    for shift_id in shifts_df.index:
-        shift_worker_vars[shift_id] = model.addVar(
-            vtype=GRB.INTEGER, lb=0, name=f"Workers_Shift_{shift_id}"
-        )
-
-    # Objective: minimize total cost = sum(shift_workers * shift_weight)
-    model.setObjective(
-        quicksum(
-            shift_worker_vars[shift_id] * shifts_df.loc[shift_id, "Weight"]
-            for shift_id in shifts_df.index
-        ),
-        GRB.MINIMIZE
-    )
-
-    # Constraints
-    # 1. Each task must be assigned to at least one shift that can cover it
-    for task_id in tasks_df.index:
-        feasible_shifts = [
-            task_shift_vars[(task_id, s_id)]
-            for s_id in shifts_df.index
-            if (task_id, s_id) in task_shift_vars
-        ]
-        if feasible_shifts:
-            model.addConstr(
-                quicksum(feasible_shifts) >= 1,
-                name=f"Task_{task_id}_Coverage"
-            )
-
-    # 2. Workers assigned to a shift must cover all tasks' nurse requirements
-    for shift_id in shifts_df.index:
-        model.addConstr(
-            quicksum(
-                task_shift_vars[(task_id, shift_id)] * tasks_df.loc[task_id, "NursesRequired"]
-                for task_id in tasks_df.index if (task_id, shift_id) in task_shift_vars
-            ) <= shift_worker_vars[shift_id],
-            name=f"Shift_{shift_id}_Workers"
-        )
-
-    with st.spinner("Optimizing tasks and shifts. Please wait..."):
-        model.optimize()
-
-    # Collect results
-    if model.status == GRB.OPTIMAL:
-        results = []
-        day_summary = {}
-
-        for (task_id, shift_id), var in task_shift_vars.items():
-            if var.x > 0.5:  # assigned
-                task_day = tasks_df.loc[task_id, "Day"]
-                workers_assigned = shift_worker_vars[shift_id].x
-
-                # For reference, a simple “cost” can be computed, though the objective was total cost.
-                # We'll distribute shift cost proportionally if multiple tasks are in the same shift:
-                # This is not strictly necessary for the second optimization, but it’s illustrative.
-                total_tasks_in_shift = sum(
-                    task_shift_vars[(t_id, shift_id)].x > 0.5
-                    for t_id in tasks_df.index if (t_id, shift_id) in task_shift_vars
-                )
-                if total_tasks_in_shift > 0 and workers_assigned > 0:
-                    shift_cost_per_task = shifts_df.loc[shift_id, "Weight"] / total_tasks_in_shift
-                    task_cost = shift_cost_per_task * (
-                        tasks_df.loc[task_id, "NursesRequired"] / workers_assigned
-                    )
-                else:
-                    task_cost = 0
-
-                results.append({
-                    "TaskID": tasks_df.loc[task_id, "id"],
-                    "ShiftID": shifts_df.loc[shift_id, "id"],
-                    "TaskName": tasks_df.loc[task_id, "TaskName"],
-                    "TaskDay": task_day,
-                    "TaskStart": tasks_df.loc[task_id, "StartTime"],
-                    "TaskEnd": tasks_df.loc[task_id, "EndTime"],
-                    "ShiftStart": shifts_df.loc[shift_id, "StartTime"],
-                    "ShiftEnd": shifts_df.loc[shift_id, "EndTime"],
-                    "ShiftNotes": shifts_df.loc[shift_id, "Notes"],
-                    "WorkersNeededForShift": shift_worker_vars[shift_id].x,
-                    "TaskCost": task_cost
-                })
-
-                # Update day summary
-                if task_day not in day_summary:
-                    day_summary[task_day] = {
-                        "TotalCost": 0, "NumTasks": 0, "NumWorkers": 0
-                    }
-                day_summary[task_day]["TotalCost"] += task_cost
-                day_summary[task_day]["NumTasks"] += 1
-                day_summary[task_day]["NumWorkers"] += workers_assigned
-
-        # Create DataFrames
-        results_df = pd.DataFrame(results)
-
-        if not results_df.empty:
-            st.success("Task-shift optimization successful!")
-            st.balloons()
-            # update_needed_workers_for_each_day(results_df)
-            day_summary_df = pd.DataFrame.from_dict(day_summary, orient="index").reset_index()
-
-            day_summary_df.columns = ["Day", "TotalCost", "NumTasks", "NumWorkers"]
-
-            st.write("**Optimal Task Assignments with Worker Counts**")
-            st.dataframe(results_df,hide_index=True)
-
-            st.download_button(
-                label="Download Assignments as CSV",
-                data=results_df.to_csv(index=False).encode("utf-8"),
-                file_name="task_assignments_with_workers.csv",
-                mime="text/csv"
-            )
-
-            st.write("**Daily Summary of Costs, Tasks, and Workers**")
-            st.dataframe(day_summary_df,hide_index=True)
-
-            st.download_button(
-                label="Download Daily Summary as CSV",
-                data=day_summary_df.to_csv(index=False).encode("utf-8"),
-                file_name="daily_summary.csv",
-                mime="text/csv"
-            )
-        else:
-            st.error("No tasks were assigned (results empty).")
-    else:
-        st.error(f"Optimization failed with status: {model.status}")
-        model.computeIIS()
-        for constr in model.getConstrs():
-            if constr.IISConstr:
-                st.write(f"Infeasible Constraint: {constr.constrName}")
-
-
 
 def optimize_tasks_with_gurobi():
     """
