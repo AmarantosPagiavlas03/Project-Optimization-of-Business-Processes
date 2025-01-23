@@ -8,6 +8,8 @@ from gurobipy import Model, GRB, quicksum
 from datetime import time
 import io  
 import base64
+import os
+
 
 DB_FILE = "tasksv2.db"
 
@@ -1477,7 +1479,7 @@ def display_tasks_and_shifts():
 # ------------------------------------------------------------------
 def main():
     st.set_page_config(page_title="Hospital Scheduler", layout="wide")
-
+    st.write(os.getcwd())
     # Read the local file and encode it
     with open("vu_mc_logo.png", "rb") as file:
         encoded_image = base64.b64encode(file.read()).decode()
