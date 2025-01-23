@@ -311,7 +311,7 @@ def shift_input_form():
     intervals = generate_time_intervals()
     
     with st.expander("Add Shift"):
-        col1, col2, col3, col4, col5, col6, col7  = st.columns(7, gap="small")
+        col1, col2, col3, col4, col5, col6  = st.columns(6, gap="small")
         with st.form("shift_form"):
             with col1:
                 Shift_StartTime = st.selectbox("Shift Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
