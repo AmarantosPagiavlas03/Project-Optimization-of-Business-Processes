@@ -7,6 +7,7 @@ import plotly.express as px
 from gurobipy import Model, GRB, quicksum
 from datetime import time
 import io  
+import base64
 
 DB_FILE = "tasksv2.db"
 
