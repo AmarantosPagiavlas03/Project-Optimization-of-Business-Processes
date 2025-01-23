@@ -265,7 +265,7 @@ def task_input_form():
             intervals = generate_time_intervals()
 
             # Create columns for horizontal layout within the expander
-            col1, col2, col3, col4,col5,col6,col7,col8 = st.columns(8, gap="small")
+            col1, col2, col3, col4,col5,col6,col7 = st.columns(7, gap="small")
 
             with col1:
                 TaskName = st.text_input("Task Name", key="task_name")
@@ -281,22 +281,22 @@ def task_input_form():
                 duration_minutes = st.number_input("Duration Minutes", min_value=0, max_value=59, value=0, step=1, key="duration_minutes")
             with col7:
                 NursesRequired = st.number_input("Nurses Required", min_value=1, value=1, step=1, key="nurses_required")
-            with col8:
-                # Add task button
-                if st.form_submit_button("Add Task"):
-                    if TaskName:
-                        duration_delta = timedelta(hours=duration_hours, minutes=duration_minutes)
-                        add_task_to_db(
-                            TaskName,
-                            Day,
-                            f"{StartTime.hour}:{StartTime.minute}:00",
-                            f"{EndTime.hour}:{EndTime.minute}:00",
-                            str(duration_delta),
-                            NursesRequired
-                        )
-                        st.success(f"Task '{TaskName}' added!")
-                    else:
-                        st.error("Task name cannot be empty!")
+
+            # Add task button
+            if st.form_submit_button("Add Task"):
+                if TaskName:
+                    duration_delta = timedelta(hours=duration_hours, minutes=duration_minutes)
+                    add_task_to_db(
+                        TaskName,
+                        Day,
+                        f"{StartTime.hour}:{StartTime.minute}:00",
+                        f"{EndTime.hour}:{EndTime.minute}:00",
+                        str(duration_delta),
+                        NursesRequired
+                    )
+                    st.success(f"Task '{TaskName}' added!")
+                else:
+                    st.error("Task name cannot be empty!")
                             
 def shift_input_form():
     """Sidebar form to add a new shift."""
