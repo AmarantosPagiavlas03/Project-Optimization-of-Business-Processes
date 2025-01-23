@@ -303,51 +303,52 @@ def task_input_form():
                         st.success(f"Task '{TaskName}' added!")
                     else:
                         st.error("Task name cannot be empty!")
-
 def shift_input_form():
     """Sidebar form to add a new shift."""
-    with st.sidebar.expander("Add Shift", expanded=False):
-        if "shift_start_time" not in st.session_state:
-            st.session_state["shift_start_time"] = datetime.now().time()
-        if "shift_end_time" not in st.session_state:
-            st.session_state["shift_end_time"] = (datetime.now() + timedelta(hours=1)).time()
-        if "break_start_time" not in st.session_state:
-            st.session_state["break_start_time"] = (datetime.now() + timedelta(hours=2)).time()
+    if "shift_start_time" not in st.session_state:
+        st.session_state["shift_start_time"] = datetime.now().time()
+    if "shift_end_time" not in st.session_state:
+        st.session_state["shift_end_time"] = (datetime.now() + timedelta(hours=1)).time()
+    if "break_start_time" not in st.session_state:
+        st.session_state["break_start_time"] = (datetime.now() + timedelta(hours=2)).time()
 
-        intervals = generate_time_intervals()
-        col1, col2, col3, col4,col5,col6,col7,col8 = st.columns(8, gap="small")
-        with st.form("shift_form"):
-            with col1:
-                Shift_StartTime = st.selectbox("Shift Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
-            with col2:
-                Shift_EndTime = st.selectbox("Shift End Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
-            with col3:
-                BreakTime = st.selectbox("Break Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
-            with col4:
-                BreakDuration_hours = st.number_input("Break Duration Hours", min_value=0, max_value=23, value=0)
-            with col5:
-                BreakDuration_minutes = st.number_input("Break Duration Minutes", min_value=0, max_value=59, value=30)
-            with col6:
-                Weight = st.number_input("Shift Weight", min_value=0.0, value=1.0) 
+    intervals = generate_time_intervals()
+    col1, col2, col3, col4, col5, col6, col7, col8,col9 = st.columns(9, gap="small")
+    with st.form("shift_form"):
+        with col1:
+            Shift_StartTime = st.selectbox("Shift Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
+        with col2:
+            Shift_EndTime = st.selectbox("Shift End Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
+        with col3:
+            BreakTime = st.selectbox("Break Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
+        with col4:
+            BreakDuration_hours = st.number_input("Break Duration Hours", min_value=0, max_value=23, value=0)
+        with col5:
+            BreakDuration_minutes = st.number_input("Break Duration Minutes", min_value=0, max_value=59, value=30)
+        with col6:
+            Weight = st.number_input("Shift Weight", min_value=0.0, value=1.0)
+        
+        col_days = st.columns(7, gap="small")
+        days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        Days = {day: col_days[i].checkbox(day, value=(day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])) for i, day in enumerate(days_of_week)}
+        
+        with col8:
+            Notes = st.text_area("Additional Notes", "")
+        
+        with col9:
+            if st.form_submit_button("Add Shift"):
+                shift_data = (
+                    f"{Shift_StartTime.hour}:{Shift_StartTime.minute}:00",
+                    f"{Shift_EndTime.hour}:{Shift_EndTime.minute}:00",
+                    f"{BreakTime.hour}:{BreakTime.minute}:00",
+                    str(timedelta(hours=BreakDuration_hours, minutes=BreakDuration_minutes)),
+                    Weight,
+                    *(1 if Days[day] else 0 for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]),
+                    Notes,
+                )
+                add_shift_to_db(shift_data)
+                st.success("Shift added successfully!")
 
-            col_days = st.columns(7, gap="small")
-            days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-            Days = {day: col_days[i].checkbox(day, value=(day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])) for i, day in enumerate(days_of_week)}
-            with col8:
-                Notes = st.text_area("Additional Notes", "")
-
-        if st.button("Add Shift"):
-            shift_data = (
-                f"{Shift_StartTime.hour}:{Shift_StartTime.minute}:00",
-                f"{Shift_EndTime.hour}:{Shift_EndTime.minute}:00",
-                f"{BreakTime.hour}:{BreakTime.minute}:00",
-                str(timedelta(hours=BreakDuration_hours, minutes=BreakDuration_minutes)),
-                Weight,
-                *(1 if Days[day] else 0 for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]),
-                Notes,
-            )
-            add_shift_to_db(shift_data)
-            st.success("Shift added successfully!")
 
 def worker_input_form():
     """Sidebar form to add a new worker with day-of-week preferences."""
