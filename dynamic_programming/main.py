@@ -1481,7 +1481,7 @@ def main():
     st.set_page_config(page_title="Hospital Scheduler", layout="wide")
     st.write(os.getcwd())
     # Read the local file and encode it
-    with open("vu_mc_logo.png", "rb") as file:
+    with open("/mount/src/project-optimization-of-business-processes/vu_mc_logo.png", "rb") as file:
         encoded_image = base64.b64encode(file.read()).decode()
 
     banner_html = f"""
