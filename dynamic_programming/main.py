@@ -283,13 +283,11 @@ def task_input_form():
             
             with col4:
                 he = st.number_input("Nurses Required", min_value=1, value=1, step=1, key="nurses_required")
-                submit_button = st.form_submit_button("Add Task")
+                submit_button = st.button("Add Task")
             
         # Task form inputs
         TaskName = st.text_input("Task Name", "")
         Day = st.selectbox("Day of the Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
-        # StartTime = st.time_input("Start Time", value=st.session_state["task_start_time"])
-        # EndTime = st.time_input("End Time", value=st.session_state["task_end_time"])
         intervals = generate_time_intervals()
         StartTime = st.selectbox("Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
         EndTime = st.selectbox("End Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
