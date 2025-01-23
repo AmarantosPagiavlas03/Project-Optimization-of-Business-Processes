@@ -1475,11 +1475,34 @@ def display_tasks_and_shifts():
 #                            Main App
 # ------------------------------------------------------------------
 def main():
+    # 1. Set layout
+    st.set_page_config(page_title="My App", layout="wide")
+
+    # 2. Add the banner
+    banner_html = """
+        <div style="position: sticky; top: 0; z-index: 9999; 
+                    background-color: #f5f5f5; padding: 10px; text-align: center;
+                    border-bottom: 2px solid #ccc;">
+            <img src="https://via.placeholder.com/400x80.png?text=My+Custom+Banner" 
+                 style="max-width: 100%; height: auto;" />
+            <h2 style="margin-top: 10px;">Welcome to My Scheduler App</h2>
+        </div>
+    """
+    st.markdown(banner_html, unsafe_allow_html=True)
+
+    # 3. Optionally add some top padding so content isn't covered by sticky banner
+    st.markdown(
+        """
+        <style>
+        .main .block-container {
+            padding-top: 120px; /* Adjust to match banner height */
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
     init_db()
     st.set_page_config(layout="wide")
-    st.title("Nursing ward planning")
-
-    st.header("Tools")
 
     # Input forms
     task_input_form()
