@@ -330,7 +330,7 @@ def shift_input_form():
             with col6:
                 Weight = st.number_input("Shift Weight", min_value=0.0, value=1.0)
             with col7:
-                Notes = st.text_area("Additional Notes", "", height=100)
+                Notes = st.text_area("Additional Notes", "", height=50)
             
             st.markdown("### Select Days")
             col_days = st.columns(7, gap="small")
