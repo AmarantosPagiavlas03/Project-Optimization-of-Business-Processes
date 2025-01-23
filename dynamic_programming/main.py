@@ -369,7 +369,35 @@ def shift_input_form():
             )
             add_shift_to_db(shift_data)
             st.success("Shift added successfully!")
+    with st.expander("Add Shift"):
+        with st.form("shift_form"):
+            # -- 1) Start the box:
+            st.markdown(
+                """
+                <div style="
+                    border: 2px solid green; 
+                    padding: 1rem; 
+                    border-radius: 5px;
+                    margin-bottom: 1.5rem;
+                ">
+                """,
+                unsafe_allow_html=True
+            )
 
+            # -- 2) Columns (or any other widgets) go here:
+            col1, col2 = st.columns(2)
+            with col1:
+                st.write("Column 1 content inside the box")
+            with col2:
+                st.write("Column 2 content inside the box")
+
+            # -- 3) Close the div
+            st.markdown("</div>", unsafe_allow_html=True)
+
+            # -- 4) Now the submit button is visually below the box
+            submitted = st.form_submit_button("Add Shift")
+            if submitted:
+                st.success("Shift added successfully!")
 def worker_input_form():
     """Sidebar form to add a new worker with day-of-week preferences."""
     with st.sidebar.expander("Add Worker", expanded=False):
