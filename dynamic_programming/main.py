@@ -311,30 +311,30 @@ def shift_input_form():
     intervals = generate_time_intervals()
     
     with st.expander("Add Shift"):
-        cols  = st.columns(6, gap="small")
-        with cols[0]:
-            Shift_StartTime = st.selectbox("Shift Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
-        with cols[1]:
-            Shift_EndTime = st.selectbox("Shift End Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
-        with cols[2]:
-            BreakTime = st.selectbox("Break Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
-        with cols[3]:
-            BreakDuration_hours = st.number_input("Break Duration Hours", min_value=0, max_value=23, value=0)
-        with cols[4]:
-            BreakDuration_minutes = st.number_input("Break Duration Minutes", min_value=0, max_value=59, value=30)
-        with cols[5]:
-            Weight = st.number_input("Shift Weight", min_value=0.0, value=1.0)
+        with st.form("shift_form"):
+            cols  = st.columns(6, gap="small")
+            with cols[0]:
+                Shift_StartTime = st.selectbox("Shift Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
+            with cols[1]:
+                Shift_EndTime = st.selectbox("Shift End Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
+            with cols[2]:
+                BreakTime = st.selectbox("Break Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
+            with cols[3]:
+                BreakDuration_hours = st.number_input("Break Duration Hours", min_value=0, max_value=23, value=0)
+            with cols[4]:
+                BreakDuration_minutes = st.number_input("Break Duration Minutes", min_value=0, max_value=59, value=30)
+            with cols[5]:
+                Weight = st.number_input("Shift Weight", min_value=0.0, value=1.0)
 
-            
-         
-        # st.markdown("### Select Days")
-        col_days = st.columns(7, gap="small")
-        days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-        Days = {day: col_days[i].checkbox(day, value=(day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])) for i, day in enumerate(days_of_week)}
-        
-        col7, col8 = st.columns(2, gap="small")
+                
+                # st.markdown("### Select Days")
+                col_days = st.columns(7, gap="small")
+                days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+                Days = {day: col_days[i].checkbox(day, value=(day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])) for i, day in enumerate(days_of_week)}
+                
+                col7, col8 = st.columns(2, gap="small")
         with col8:
-            if st.button("Add Shift"):
+            if st.form_submit_button("Add Shift"):
                 shift_data = (
                     f"{Shift_StartTime.hour}:{Shift_StartTime.minute}:00",
                     f"{Shift_EndTime.hour}:{Shift_EndTime.minute}:00",
