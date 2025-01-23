@@ -332,7 +332,7 @@ def shift_input_form():
             days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
             Days = {day: col_days[i].checkbox(day, value=(day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])) for i, day in enumerate(days_of_week)}
             
-            col8 = st.columns(1, gap="small")
+            col7, col8 = st.columns(2, gap="small")
             with col8:
                 if st.form_submit_button("Add Shift"):
                     shift_data = (
