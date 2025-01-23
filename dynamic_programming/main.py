@@ -284,7 +284,7 @@ def task_input_form():
             with col4:
                 he = st.number_input("Nurses Required", min_value=1, value=1, step=1, key="nurses_required")
                 submit_button = st.button("Add Task")
-            
+    with st.sidebar.expander("Add Task", expanded=False):    
         # Task form inputs
         TaskName = st.text_input("Task Name", "")
         Day = st.selectbox("Day of the Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
