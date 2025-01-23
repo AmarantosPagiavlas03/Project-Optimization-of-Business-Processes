@@ -260,49 +260,47 @@ def task_input_form():
         if "task_end_time" not in st.session_state:
             st.session_state["task_end_time"] = (datetime.now() + timedelta(hours=1)).time()
 
-        with st.expander("gdsag", expanded=False):
-            # Generate time intervals for select boxes
-            intervals = generate_time_intervals()
+         # Generate time intervals for select boxes
+        intervals = generate_time_intervals()
 
-            # Create columns for horizontal layout within the expander
-            col1, col2, col3, col4,col5,col6,col7,col8 = st.columns(8, gap="small")
+        # Create columns for horizontal layout within the expander
+        col1, col2, col3, col4,col5,col6,col7,col8 = st.columns(8, gap="small")
 
-            with st.form("task_form"):
-                with col1:
-                    TaskName = st.text_input("Task Name", key="task_name")
-                with col2:
-                    Day = st.selectbox("Day of the Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], key="day_of_week")
-                
-                with col3:
-                    StartTime = st.selectbox("Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"), key="start_time")
-                with col4:
-                    EndTime = st.selectbox("End Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"), key="end_time")
-                
-                with col5:
-                    duration_hours = st.number_input("Duration Hours", min_value=0, max_value=23, value=1, step=1, key="duration_hours")
-                with col6:
-                    duration_minutes = st.number_input("Duration Minutes", min_value=0, max_value=59, value=0, step=1, key="duration_minutes")
-                
-                with col7:
-                    NursesRequired = st.number_input("Nurses Required", min_value=1, value=1, step=1, key="nurses_required")
-                with col8:
-                    st.markdown("<div style='margin-top:1.9em;'></div>", unsafe_allow_html=True)
-                    # Add task button
-                    if st.button("Add Task"):
-                        if TaskName:
-                            duration_delta = timedelta(hours=duration_hours, minutes=duration_minutes)
-                            add_task_to_db(
-                                TaskName,
-                                Day,
-                                f"{StartTime.hour}:{StartTime.minute}:00",
-                                f"{EndTime.hour}:{EndTime.minute}:00",
-                                str(duration_delta),
-                                NursesRequired
-                            )
-                            st.success(f"Task '{TaskName}' added!")
-                        else:
-                            st.error("Task name cannot be empty!")
-
+        with st.form("task_form"):
+            with col1:
+                TaskName = st.text_input("Task Name", key="task_name")
+            with col2:
+                Day = st.selectbox("Day of the Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], key="day_of_week")
+            
+            with col3:
+                StartTime = st.selectbox("Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"), key="start_time")
+            with col4:
+                EndTime = st.selectbox("End Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"), key="end_time")
+            
+            with col5:
+                duration_hours = st.number_input("Duration Hours", min_value=0, max_value=23, value=1, step=1, key="duration_hours")
+            with col6:
+                duration_minutes = st.number_input("Duration Minutes", min_value=0, max_value=59, value=0, step=1, key="duration_minutes")
+            
+            with col7:
+                NursesRequired = st.number_input("Nurses Required", min_value=1, value=1, step=1, key="nurses_required")
+            with col8:
+                st.markdown("<div style='margin-top:1.9em;'></div>", unsafe_allow_html=True)
+                # Add task button
+                if st.button("Add Task"):
+                    if TaskName:
+                        duration_delta = timedelta(hours=duration_hours, minutes=duration_minutes)
+                        add_task_to_db(
+                            TaskName,
+                            Day,
+                            f"{StartTime.hour}:{StartTime.minute}:00",
+                            f"{EndTime.hour}:{EndTime.minute}:00",
+                            str(duration_delta),
+                            NursesRequired
+                        )
+                        st.success(f"Task '{TaskName}' added!")
+                    else:
+                        st.error("Task name cannot be empty!")
 def shift_input_form():
     """Sidebar form to add a new shift."""
     if "shift_start_time" not in st.session_state:
