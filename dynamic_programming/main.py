@@ -1484,6 +1484,7 @@ def display_tasks_and_shifts():
 # ------------------------------------------------------------------
 def main():
     init_db()
+    st.set_page_config(layout="wide")
     st.title("Nursing ward planning")
 
     st.header("Tools")
