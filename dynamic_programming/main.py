@@ -284,37 +284,37 @@ def task_input_form():
             with col4:
                 he = st.number_input("Nurses Required", min_value=1, value=1, step=1, key="nurses_required")
                 submit_button = st.button("Add Task")
-    with st.sidebar.expander("Add Task", expanded=False):    
-        # Task form inputs
-        TaskName = st.text_input("Task Name", "")
-        Day = st.selectbox("Day of the Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
-        intervals = generate_time_intervals()
-        StartTime = st.selectbox("Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
-        EndTime = st.selectbox("End Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
+    # with st.sidebar.expander("Add Task", expanded=False):    
+    #     # Task form inputs
+    #     TaskName = st.text_input("Task Name", "")
+    #     Day = st.selectbox("Day of the Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
+    #     intervals = generate_time_intervals()
+    #     StartTime = st.selectbox("Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
+    #     EndTime = st.selectbox("End Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
 
-        duration_hours = st.number_input("Duration Hours", min_value=0, max_value=23, value=1)
-        duration_minutes = st.number_input("Duration Minutes", min_value=0, max_value=59, value=0)
-        NursesRequired = st.number_input("Nurses Required", min_value=1, value=1)
+    #     duration_hours = st.number_input("Duration Hours", min_value=0, max_value=23, value=1)
+    #     duration_minutes = st.number_input("Duration Minutes", min_value=0, max_value=59, value=0)
+    #     NursesRequired = st.number_input("Nurses Required", min_value=1, value=1)
 
-        # Update session state
-        st.session_state["task_start_time"] = StartTime
-        st.session_state["task_end_time"] = EndTime
+    #     # Update session state
+    #     st.session_state["task_start_time"] = StartTime
+    #     st.session_state["task_end_time"] = EndTime
 
-        # Add task button
-        if st.button("Add Task"):
-            if TaskName:
-                duration_delta = timedelta(hours=duration_hours, minutes=duration_minutes)
-                add_task_to_db(
-                    TaskName,
-                    Day,
-                    f"{StartTime.hour}:{StartTime.minute}:00",
-                    f"{EndTime.hour}:{EndTime.minute}:00",
-                    str(duration_delta),
-                    NursesRequired
-                )
-                st.success(f"Task '{TaskName}' added!")
-            else:
-                st.error("Task name cannot be empty!")
+    #     # Add task button
+    #     if st.button("Add Task"):
+    #         if TaskName:
+    #             duration_delta = timedelta(hours=duration_hours, minutes=duration_minutes)
+    #             add_task_to_db(
+    #                 TaskName,
+    #                 Day,
+    #                 f"{StartTime.hour}:{StartTime.minute}:00",
+    #                 f"{EndTime.hour}:{EndTime.minute}:00",
+    #                 str(duration_delta),
+    #                 NursesRequired
+    #             )
+    #             st.success(f"Task '{TaskName}' added!")
+    #         else:
+    #             st.error("Task name cannot be empty!")
 
 def shift_input_form():
     """Sidebar form to add a new shift."""
