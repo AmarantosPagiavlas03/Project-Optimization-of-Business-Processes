@@ -266,7 +266,7 @@ def task_input_form():
         intervals = generate_time_intervals()
 
         # Create columns for horizontal layout within the expander
-        col1, col2, col3, col4,col5,col6,col7,col8 = st.columns(4, gap="small")
+        col1, col2, col3, col4,col5,col6,col7,col8 = st.columns(8, gap="small")
 
         with st.form("task_form"):
             with col1:
