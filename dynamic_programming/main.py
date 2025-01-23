@@ -263,6 +263,7 @@ def task_input_form():
             st.session_state["task_end_time"] = (datetime.now() + timedelta(hours=1)).time()
 
         col1, col2, col3, col4, col5, col6, col7 = st.columns(7, gap="small")
+        intervals = generate_time_intervals()
         with st.form("task_form"):
             with col1:
                 st.text_input("Task Name", "")
