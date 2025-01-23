@@ -311,19 +311,19 @@ def shift_input_form():
     intervals = generate_time_intervals()
     
     with st.expander("Add Shift"):
-        col1, col2, col3, col4, col5, col6  = st.columns(6, gap="small")
+        cols  = st.columns(6, gap="small")
         with st.form("shift_form"):
-            with col1:
+            with cols[0]:
                 Shift_StartTime = st.selectbox("Shift Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
-            with col2:
+            with cols[1]:
                 Shift_EndTime = st.selectbox("Shift End Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
-            with col3:
+            with cols[2]:
                 BreakTime = st.selectbox("Break Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
-            with col4:
+            with cols[3]:
                 BreakDuration_hours = st.number_input("Break Duration Hours", min_value=0, max_value=23, value=0)
-            with col5:
+            with cols[4]:
                 BreakDuration_minutes = st.number_input("Break Duration Minutes", min_value=0, max_value=59, value=30)
-            with col6:
+            with cols[5]:
                 Weight = st.number_input("Shift Weight", min_value=0.0, value=1.0)
 
             
