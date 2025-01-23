@@ -256,12 +256,34 @@ def generate_time_intervals():
 
 def task_input_form():
     """Sidebar form to add a new task."""
-    with st.sidebar.expander("Add Task", expanded=False):
+    with st.expander("Add Task", expanded=False):
         if "task_start_time" not in st.session_state:
             st.session_state["task_start_time"] = datetime.now().time()
         if "task_end_time" not in st.session_state:
             st.session_state["task_end_time"] = (datetime.now() + timedelta(hours=1)).time()
 
+        col1, col2, col3, col4, col5, col6, col7 = st.columns(7, gap="small")
+        with st.form("task_form"):
+            with col1:
+                st.text_input("Task Name", "")
+            with col2:
+                st.selectbox("Day of the Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
+            
+            with col3:
+                st.selectbox("Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
+            with col4:
+                st.selectbox("End Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
+            
+            with col5:
+                duration_hours = st.number_input("Duration Hours", min_value=0, max_value=23, value=1, step=1)
+            with col6:
+                duration_minutes = st.number_input("Duration Minutes", min_value=0, max_value=59, value=0, step=1)
+            
+            with col4:
+                st.number_input("Nurses Required", min_value=1, value=1, step=1)
+            with col7:
+                st.form_submit_button("Add Task")
+            
         # Task form inputs
         TaskName = st.text_input("Task Name", "")
         Day = st.selectbox("Day of the Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
