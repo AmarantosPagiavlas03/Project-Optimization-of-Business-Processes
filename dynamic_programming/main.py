@@ -282,21 +282,23 @@ def task_input_form():
             with col7:
                 NursesRequired = st.number_input("Nurses Required", min_value=1, value=1, step=1, key="nurses_required")
 
+            col8, col9 = st.columns(2, gap="small")
             # Add task button
-            if st.form_submit_button("Add Task"):
-                if TaskName:
-                    duration_delta = timedelta(hours=duration_hours, minutes=duration_minutes)
-                    add_task_to_db(
-                        TaskName,
-                        Day,
-                        f"{StartTime.hour}:{StartTime.minute}:00",
-                        f"{EndTime.hour}:{EndTime.minute}:00",
-                        str(duration_delta),
-                        NursesRequired
-                    )
-                    st.success(f"Task '{TaskName}' added!")
-                else:
-                    st.error("Task name cannot be empty!")
+            with col8:
+                if st.form_submit_button("Add Task"):
+                    if TaskName:
+                        duration_delta = timedelta(hours=duration_hours, minutes=duration_minutes)
+                        add_task_to_db(
+                            TaskName,
+                            Day,
+                            f"{StartTime.hour}:{StartTime.minute}:00",
+                            f"{EndTime.hour}:{EndTime.minute}:00",
+                            str(duration_delta),
+                            NursesRequired
+                        )
+                        st.success(f"Task '{TaskName}' added!")
+                    else:
+                        st.error("Task name cannot be empty!")
                             
 def shift_input_form():
     """Sidebar form to add a new shift."""
