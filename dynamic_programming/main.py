@@ -311,7 +311,7 @@ def shift_input_form():
     intervals = generate_time_intervals()
     
     with st.expander("Add Shift"):
-        cols  = st.columns(6, gap="small")
+        cols  = st.columns(13, gap="small")
         with st.form("shift_form"):
             with cols[0]:
                 Shift_StartTime = st.selectbox("Shift Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
@@ -328,9 +328,8 @@ def shift_input_form():
 
             
             # st.markdown("### Select Days")
-            col_days = st.columns(7, gap="small")
             days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-            Days = {day: col_days[i].checkbox(day, value=(day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])) for i, day in enumerate(days_of_week)}
+            Days = {day: cols[i+5].checkbox(day, value=(day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])) for i, day in enumerate(days_of_week)}
             
             col7, col8 = st.columns(2, gap="small")
             with col8:
