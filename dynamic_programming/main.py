@@ -1475,34 +1475,41 @@ def display_tasks_and_shifts():
 #                            Main App
 # ------------------------------------------------------------------
 def main():
-    # 1. Set layout
-    st.set_page_config(page_title="My App", layout="wide")
+    st.set_page_config(page_title="Hospital Scheduler", layout="wide")
 
-    # 2. Add the banner
-    banner_html = """
-        <div style="position: sticky; top: 0; z-index: 9999; 
-                    background-color: #f5f5f5; padding: 10px; text-align: center;
-                    border-bottom: 2px solid #ccc;">
-            <img src="https://via.placeholder.com/400x80.png?text=My+Custom+Banner" 
+    # Read the local file and encode it
+    with open("vu_mc_logo.png", "rb") as file:
+        encoded_image = base64.b64encode(file.read()).decode()
+
+    banner_html = f"""
+        <div style="
+            position: sticky; 
+            top: 0; 
+            z-index: 9999;
+            background-color: #f5f5f5;
+            padding: 10px;
+            text-align: center; 
+            border-bottom: 2px solid #ccc;
+        ">
+            <img src="data:image/png;base64,{encoded_image}" 
                  style="max-width: 100%; height: auto;" />
-            <h2 style="margin-top: 10px;">Welcome to My Scheduler App</h2>
+            <h2 style="margin-top: 10px;">VU MC Hospital Scheduler</h2>
         </div>
     """
     st.markdown(banner_html, unsafe_allow_html=True)
 
-    # 3. Optionally add some top padding so content isn't covered by sticky banner
+    # (Optional) Ensure content isn’t hidden behind the banner
     st.markdown(
         """
         <style>
         .main .block-container {
-            padding-top: 120px; /* Adjust to match banner height */
+            padding-top: 150px;
         }
         </style>
         """,
         unsafe_allow_html=True
     )
     init_db()
-    st.set_page_config(layout="wide")
 
     # Input forms
     task_input_form()
