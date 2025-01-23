@@ -336,7 +336,7 @@ def shift_input_form():
             Notes = st.text_area("Additional Notes", "")
         
         with col9:
-            if st.form_submit_button("Add Shift"):
+            if st.button("Add Shift"):
                 shift_data = (
                     f"{Shift_StartTime.hour}:{Shift_StartTime.minute}:00",
                     f"{Shift_EndTime.hour}:{Shift_EndTime.minute}:00",
