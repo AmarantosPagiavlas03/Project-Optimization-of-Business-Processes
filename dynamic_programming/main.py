@@ -255,51 +255,39 @@ def generate_time_intervals():
     return intervals
 
 def task_input_form():
-    """Main page form to add a new task, arranged horizontally."""
-    
-    st.header("Add a New Task")
-    
-    # Initialize session state for start and end times if not already set
-    if "task_start_time" not in st.session_state:
-        st.session_state["task_start_time"] = datetime.now().time()
-    if "task_end_time" not in st.session_state:
-        st.session_state["task_end_time"] = (datetime.now() + timedelta(hours=1)).time()
+    """Sidebar form to add a new task."""
+    with st.sidebar.expander("Add Task", expanded=False):
+        if "task_start_time" not in st.session_state:
+            st.session_state["task_start_time"] = datetime.now().time()
+        if "task_end_time" not in st.session_state:
+            st.session_state["task_end_time"] = (datetime.now() + timedelta(hours=1)).time()
 
-    # Generate time intervals for select boxes
-    intervals = generate_time_intervals()
+        # Task form inputs
+        TaskName = st.text_input("Task Name", "")
+        Day = st.selectbox("Day of the Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
+        # StartTime = st.time_input("Start Time", value=st.session_state["task_start_time"])
+        # EndTime = st.time_input("End Time", value=st.session_state["task_end_time"])
+        intervals = generate_time_intervals()
+        StartTime = st.selectbox("Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
+        EndTime = st.selectbox("End Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
 
-    # Create columns for horizontal layout
-    col1, col2, col3, col4 = st.columns(4, gap="small")
+        duration_hours = st.number_input("Duration Hours", min_value=0, max_value=23, value=1)
+        duration_minutes = st.number_input("Duration Minutes", min_value=0, max_value=59, value=0)
+        NursesRequired = st.number_input("Nurses Required", min_value=1, value=1)
 
-    with st.form("task_form"):
-        with col1:
-            TaskName = st.text_input("Task Name", "")
-            Day = st.selectbox("Day of the Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
-        
-        with col2:
-            StartTime = st.selectbox("Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
-            EndTime = st.selectbox("End Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
-        
-        with col3:
-            duration_hours = st.number_input("Duration Hours", min_value=0, max_value=23, value=1)
-            duration_minutes = st.number_input("Duration Minutes", min_value=0, max_value=59, value=0)
-        
-        with col4:
-            NursesRequired = st.number_input("Nurses Required", min_value=1, value=1)
-            submit_button = st.form_submit_button("Add Task")
-        
         # Update session state
         st.session_state["task_start_time"] = StartTime
         st.session_state["task_end_time"] = EndTime
 
-        if submit_button:
+        # Add task button
+        if st.button("Add Task"):
             if TaskName:
                 duration_delta = timedelta(hours=duration_hours, minutes=duration_minutes)
                 add_task_to_db(
                     TaskName,
                     Day,
-                    f"{StartTime.hour:02d}:{StartTime.minute:02d}:00",
-                    f"{EndTime.hour:02d}:{EndTime.minute:02d}:00",
+                    f"{StartTime.hour}:{StartTime.minute}:00",
+                    f"{EndTime.hour}:{EndTime.minute}:00",
                     str(duration_delta),
                     NursesRequired
                 )
