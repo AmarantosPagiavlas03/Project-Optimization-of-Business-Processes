@@ -327,10 +327,10 @@ def shift_input_form():
                 Weight = st.number_input("Shift Weight", min_value=0.0, value=1.0)
 
                 
-                # st.markdown("### Select Days")
-                col_days = st.columns(7, gap="small")
-                days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-                Days = {day: col_days[i].checkbox(day, value=(day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])) for i, day in enumerate(days_of_week)}
+            # st.markdown("### Select Days")
+            col_days = st.columns(7, gap="small")
+            days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+            Days = {day: col_days[i].checkbox(day, value=(day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])) for i, day in enumerate(days_of_week)}
 
             col7, col8 = st.columns(2, gap="small")
             with col8:
