@@ -1099,11 +1099,8 @@ def optimize_tasks_with_gurobi():
 
             day_summary_df.columns = ["Day", "TotalCost", "NumTasks", "NumWorkers"]
 
-            filtered_results_df = results_df[["Day", "NumTasks", "NumWorkers"]]
-            st.dataframe(filtered_results_df, hide_index=True)
-            
-            # st.write("**Optimal Task Assignments with Worker Counts**")
-            # st.dataframe(results_df,hide_index=True)
+            st.write("**Optimal Task Assignments with Worker Counts**")
+            st.dataframe(results_df,hide_index=True)
 
             st.download_button(
                 label="Download Assignments as CSV",
