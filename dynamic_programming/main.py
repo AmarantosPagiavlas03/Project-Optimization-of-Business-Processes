@@ -326,25 +326,25 @@ def shift_input_form():
             Weight = st.number_input("Shift Weight", min_value=0.0, value=1.0)
 
             
-        with st.form("shift_form"):
-            # st.markdown("### Select Days")
-            col_days = st.columns(7, gap="small")
-            days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-            Days = {day: col_days[i].checkbox(day, value=(day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])) for i, day in enumerate(days_of_week)}
-            
-            col7, col8 = st.columns(2, gap="small")
-            with col8:
-                if st.form_submit_button("Add Shift"):
-                    shift_data = (
-                        f"{Shift_StartTime.hour}:{Shift_StartTime.minute}:00",
-                        f"{Shift_EndTime.hour}:{Shift_EndTime.minute}:00",
-                        f"{BreakTime.hour}:{BreakTime.minute}:00",
-                        str(timedelta(hours=BreakDuration_hours, minutes=BreakDuration_minutes)),
-                        Weight,
-                        *(1 if Days[day] else 0 for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
-                    )
-                    add_shift_to_db(shift_data)
-                    st.success("Shift added successfully!")
+         
+        # st.markdown("### Select Days")
+        col_days = st.columns(7, gap="small")
+        days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        Days = {day: col_days[i].checkbox(day, value=(day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])) for i, day in enumerate(days_of_week)}
+        
+        col7, col8 = st.columns(2, gap="small")
+        with col8:
+            if st.button("Add Shift"):
+                shift_data = (
+                    f"{Shift_StartTime.hour}:{Shift_StartTime.minute}:00",
+                    f"{Shift_EndTime.hour}:{Shift_EndTime.minute}:00",
+                    f"{BreakTime.hour}:{BreakTime.minute}:00",
+                    str(timedelta(hours=BreakDuration_hours, minutes=BreakDuration_minutes)),
+                    Weight,
+                    *(1 if Days[day] else 0 for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
+                )
+                add_shift_to_db(shift_data)
+                st.success("Shift added successfully!")
 
 def worker_input_form():
     """Sidebar form to add a new worker with day-of-week preferences."""
