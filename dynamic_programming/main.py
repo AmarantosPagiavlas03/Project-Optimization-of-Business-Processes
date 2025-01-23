@@ -315,22 +315,26 @@ def shift_input_form():
             st.session_state["break_start_time"] = (datetime.now() + timedelta(hours=2)).time()
 
         intervals = generate_time_intervals()
-        # Shift_StartTime = st.time_input("Shift Start Time", value=st.session_state["shift_start_time"])
-        # Shift_EndTime = st.time_input("Shift End Time", value=st.session_state["shift_end_time"])
-        # BreakTime = st.time_input("Break Start Time", value=st.session_state["break_start_time"])
-        Shift_StartTime = st.selectbox("Shift Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
-        Shift_EndTime = st.selectbox("Shift End Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
-        BreakTime = st.selectbox("Break Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
+        col1, col2, col3, col4,col5,col6,col7,col8 = st.columns(8, gap="small")
+        with st.form("shift_form"):
+            with col1:
+                Shift_StartTime = st.selectbox("Shift Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
+            with col2:
+                Shift_EndTime = st.selectbox("Shift End Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
+            with col3:
+                BreakTime = st.selectbox("Break Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
+            with col4:
+                BreakDuration_hours = st.number_input("Break Duration Hours", min_value=0, max_value=23, value=0)
+            with col5:
+                BreakDuration_minutes = st.number_input("Break Duration Minutes", min_value=0, max_value=59, value=30)
+            with col6:
+                Weight = st.number_input("Shift Weight", min_value=0.0, value=1.0) 
 
-        BreakDuration_hours = st.number_input("Break Duration Hours", min_value=0, max_value=23, value=0)
-        BreakDuration_minutes = st.number_input("Break Duration Minutes", min_value=0, max_value=59, value=30)
-        Weight = st.number_input("Shift Weight", min_value=0.0, value=1.0)
-
-        Days = {
-            day: st.checkbox(day, value=(day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]))
-            for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-        }
-        Notes = st.text_area("Additional Notes", "")
+            col_days = st.columns(7, gap="small")
+            days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+            Days = {day: col_days[i].checkbox(day, value=(day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])) for i, day in enumerate(days_of_week)}
+            with col8:
+                Notes = st.text_area("Additional Notes", "")
 
         if st.button("Add Shift"):
             shift_data = (
@@ -1063,6 +1067,18 @@ def optimize_tasks_with_gurobi():
                 if s_id == shift_id and d == day_str
             ) <= shift_worker_vars[(shift_id, day_str)],
             name=f"Shift_{shift_id}_{day_str}_WorkerCap"
+        )
+
+    # 6.2. Worker capacity: for each (shift, day), total nurses required
+    #     by tasks assigned cannot exceed the # of workers assigned
+    for (shift_id, day_str) in shift_worker_vars:
+        model.addConstr(
+            quicksum(
+                task_shift_vars[(t_id-1, shift_id, day_str)] + task_shift_vars[(t_id, shift_id, day_str)]
+                for (t_id, s_id, d) in task_shift_vars
+                if s_id == shift_id and d == day_str and tasks_df.loc[t_id-1, "EndTime"] <= tasks_df.loc[t_id, "StartTime"]
+            ) <= 1,
+            name=f"Shift_{shift_id}_{day_str}"
         )
 
     # --- 7. Solve the model ---
