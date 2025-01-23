@@ -298,7 +298,7 @@ def task_input_form():
                         st.success(f"Task '{TaskName}' added!")
                     else:
                         st.error("Task name cannot be empty!")
-
+                        
 def shift_input_form():
     """Sidebar form to add a new shift."""
     if "shift_start_time" not in st.session_state:
@@ -311,7 +311,7 @@ def shift_input_form():
     intervals = generate_time_intervals()
     
     with st.expander("Add Shift"):
-        col1, col2, col3, col4, col5, col6, col7,col8  = st.columns(8, gap="small")
+        col1, col2, col3, col4, col5, col6, col7  = st.columns(7, gap="small")
         with st.form("shift_form"):
             with col1:
                 Shift_StartTime = st.selectbox("Shift Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
@@ -332,7 +332,7 @@ def shift_input_form():
             days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
             Days = {day: col_days[i].checkbox(day, value=(day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])) for i, day in enumerate(days_of_week)}
             
-             
+            col8 = st.columns(1, gap="small")
             with col8:
                 if st.form_submit_button("Add Shift"):
                     shift_data = (
