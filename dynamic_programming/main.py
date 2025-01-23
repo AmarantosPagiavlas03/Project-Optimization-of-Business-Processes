@@ -288,6 +288,7 @@ def task_input_form():
                 he = st.number_input("Nurses Required", min_value=1, value=1, step=1, key="nurses_required")
             with col8:
                 st.write("")
+                st.write("")
                 submit_button = st.button("Add Task")
     # with st.sidebar.expander("Add Task", expanded=False):    
     #     # Task form inputs
