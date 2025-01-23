@@ -284,7 +284,7 @@ def task_input_form():
 
             col8, col9 = st.columns(2, gap="small")
             # Add task button
-            with col8:
+            with col9:
                 if st.form_submit_button("Add Task"):
                     if TaskName:
                         duration_delta = timedelta(hours=duration_hours, minutes=duration_minutes)
