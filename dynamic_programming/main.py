@@ -262,7 +262,7 @@ def task_input_form():
         if "task_end_time" not in st.session_state:
             st.session_state["task_end_time"] = (datetime.now() + timedelta(hours=1)).time()
 
-        col1, col2, col3, col4, col5, col6, col7 = st.columns(7, gap="small")
+        col1, col2, col3, col4, col5, col6, col7, col7 = st.columns(8, gap="small")
         intervals = generate_time_intervals()
         with st.form("task_form"):
             with col1:
@@ -280,9 +280,9 @@ def task_input_form():
             with col6:
                 duration_minutes = st.number_input("Duration Minutes", min_value=0, max_value=59, value=0, step=1)
             
-            with col4:
-                st.number_input("Nurses Required", min_value=1, value=1, step=1)
             with col7:
+                st.number_input("Nurses Required", min_value=1, value=1, step=1)
+            with col8:
                 st.form_submit_button("Add Task")
             
         # Task form inputs
