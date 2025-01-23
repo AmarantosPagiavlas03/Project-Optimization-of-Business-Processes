@@ -309,16 +309,30 @@ def shift_input_form():
         st.session_state["break_start_time"] = (datetime.now() + timedelta(hours=2)).time()
 
     intervals = generate_time_intervals()
-    
+        
     with st.expander("Add Shift"):
         with st.form("shift_form"):
-            cols  = st.columns(6, gap="small")
+            # -- Start a bordered container in HTML --
+            st.markdown(
+                """
+                <div style="
+                    border: 1px solid #CCC; 
+                    padding: 1rem; 
+                    border-radius: 5px;
+                    margin-bottom: 1rem; 
+                ">
+                """,
+                unsafe_allow_html=True
+            )
+            
+            # -- Put your inputs inside this container --
+            cols = st.columns(6, gap="small")
             with cols[0]:
-                Shift_StartTime = st.selectbox("Shift Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
+                Shift_StartTime = st.selectbox("Shift Start Time", options=intervals)
             with cols[1]:
-                Shift_EndTime = st.selectbox("Shift End Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
+                Shift_EndTime = st.selectbox("Shift End Time", options=intervals)
             with cols[2]:
-                BreakTime = st.selectbox("Break Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
+                BreakTime = st.selectbox("Break Start Time", options=intervals)
             with cols[3]:
                 BreakDuration_hours = st.number_input("Break Duration Hours", min_value=0, max_value=23, value=0)
             with cols[4]:
@@ -326,25 +340,35 @@ def shift_input_form():
             with cols[5]:
                 Weight = st.number_input("Shift Weight", min_value=0.0, value=1.0)
 
-                
-            # st.markdown("### Select Days")
             col_days = st.columns(7, gap="small")
             days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-            Days = {day: col_days[i].checkbox(day, value=(day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])) for i, day in enumerate(days_of_week)}
+            Days = {
+                day: col_days[i].checkbox(
+                    day, 
+                    value=(day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])
+                )
+                for i, day in enumerate(days_of_week)
+            }
 
-            col7, col8 = st.columns(2, gap="small")
-            with col8:
-                if st.form_submit_button("Add Shift"):
-                    shift_data = (
-                        f"{Shift_StartTime.hour}:{Shift_StartTime.minute}:00",
-                        f"{Shift_EndTime.hour}:{Shift_EndTime.minute}:00",
-                        f"{BreakTime.hour}:{BreakTime.minute}:00",
-                        str(timedelta(hours=BreakDuration_hours, minutes=BreakDuration_minutes)),
-                        Weight,
-                        *(1 if Days[day] else 0 for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
+            # -- End the bordered container --
+            st.markdown("</div>", unsafe_allow_html=True)
+
+            # -- Now place the submit button AFTER that container --
+            if st.form_submit_button("Add Shift"):
+                shift_data = (
+                    # This is just to demonstrate reading your variables
+                    str(Shift_StartTime),
+                    str(Shift_EndTime),
+                    str(BreakTime),
+                    str(timedelta(hours=BreakDuration_hours, minutes=BreakDuration_minutes)),
+                    Weight,
+                    *(
+                        1 if Days[day] else 0 
+                        for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
                     )
-                    add_shift_to_db(shift_data)
-                    st.success("Shift added successfully!")
+                )
+                add_shift_to_db(shift_data)
+                st.success("Shift added successfully!")
 
 def worker_input_form():
     """Sidebar form to add a new worker with day-of-week preferences."""
