@@ -266,23 +266,27 @@ def task_input_form():
         intervals = generate_time_intervals()
 
         # Create columns for horizontal layout within the expander
-        col1, col2, col3, col4 = st.columns(4, gap="small")
+        col1, col2, col3, col4,col5,col6,col7,col8 = st.columns(4, gap="small")
 
         with st.form("task_form"):
             with col1:
                 tds = st.text_input("Task Name", key="task_name")
+            with col2:
                 dgb = st.selectbox("Day of the Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], key="day_of_week")
             
-            with col2:
+            with col3:
                 StaerrtTime = st.selectbox("Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"), key="start_time")
+            with col4:
                 dsg = st.selectbox("End Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"), key="end_time")
             
-            with col3:
+            with col5:
                 erh = st.number_input("Duration Hours", min_value=0, max_value=23, value=1, step=1, key="duration_hours")
+            with col6:
                 ht = st.number_input("Duration Minutes", min_value=0, max_value=59, value=0, step=1, key="duration_minutes")
             
-            with col4:
+            with col7:
                 he = st.number_input("Nurses Required", min_value=1, value=1, step=1, key="nurses_required")
+            with col8:
                 submit_button = st.button("Add Task")
     # with st.sidebar.expander("Add Task", expanded=False):    
     #     # Task form inputs
