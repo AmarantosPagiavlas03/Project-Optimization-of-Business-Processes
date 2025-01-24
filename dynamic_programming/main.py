@@ -9,13 +9,8 @@ from datetime import time
 import io  
 import base64
 import os
-from htbuilder import HtmlElement, div, ul, li, br, hr, a, p, img, styles, classes, fonts
-from htbuilder.units import percent, px
-from htbuilder.funcs import rgba, rgb
 import datetime as dt
-from streamlit_option_menu import option_menu
-from streamlit_extras.switch_page_button import switch_page
-
+from streamlit_navigation_bar import st_navbar
 
 
 DB_FILE = "tasksv2.db"
@@ -1558,8 +1553,9 @@ def contact_page():
 
 def main():
     st.set_page_config(page_title="Hospital Scheduler", layout="wide")
-    # header()
- 
+    pages = ["Home", "Library", "Tutorials", "Development", "Download"]
+    page = st_navbar(pages)
+    st.write(page)
         
     init_db()
  
@@ -1628,8 +1624,6 @@ def main():
 
     # Visualization
     display_tasks_and_shifts()
-    # footer()
-
 
 
 
