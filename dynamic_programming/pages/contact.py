@@ -2,7 +2,7 @@ import streamlit as st
 
 
 def show_contact():
-    st.title("Contact Us")
+    st.title("Contact Us1")
 
     # Add a description or introductory text
     st.write("We'd love to hear from you! Please use the form below to get in touch with us.")
