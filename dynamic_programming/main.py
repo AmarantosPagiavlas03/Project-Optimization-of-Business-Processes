@@ -1532,14 +1532,14 @@ COMMON_STYLE = """
 
   /* Push main app content down so the fixed header doesn't overlap it. */
   .stApp {
-      margin-top: 70px; 
+      margin-top: 70px !important; 
       margin-bottom: 60px; 
   }
 
   /* Also push down the sidebar to clear the fixed header */
   [data-testid="stSidebar"] {
-      margin-top: 70px;
-      z-index: 9999; /* ensures sidebar is on top if it overlaps header */
+      margin-top: 70px !important;
+      z-index: 9999 !important; /* ensures sidebar is on top if it overlaps header */
   }
 
   /* Remove any default border/line from hr */
