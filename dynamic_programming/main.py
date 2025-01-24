@@ -1188,12 +1188,12 @@ def display_tasks_and_shifts():
         st.metric("⏳ Avg Task Duration", f"{avg_duration:.1f} hours")
 
     # Tabs for different views
-    tab1, tab2 = st.tabs(["📊 Gantt Charts", "📁 Raw Data"])
+    tab1, tab2 = st.tabs(["📊 Enhanced Gantt Charts", "📁 Raw Data"])
 
     with tab1:
         try:
             import plotly.express as px
-            from streamlit.components.v1 import html
+            import numpy as np
 
             day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", 
                         "Friday", "Saturday", "Sunday"]
@@ -1205,8 +1205,9 @@ def display_tasks_and_shifts():
                 tasks_df = tasks_df.assign(
                     Start=lambda df: pd.to_datetime("2023-01-01 " + df['StartTime']),
                     End=lambda df: pd.to_datetime("2023-01-01 " + df['EndTime']),
-                    Day=lambda df: pd.Categorical(df['Day'], categories=day_order, ordered=True)
-                )
+                    Day=lambda df: pd.Categorical(df['Day'], categories=day_order, ordered=True),
+                    DurationHours=lambda df: (df['End'] - df['Start']).dt.total_seconds()/3600
+                ).sort_values(by=['Day', 'Start'])
 
                 fig_tasks = px.timeline(
                     tasks_df,
@@ -1215,17 +1216,24 @@ def display_tasks_and_shifts():
                     y="Day",
                     color="TaskName",
                     color_discrete_sequence=px.colors.qualitative.Pastel,
-                    hover_data={"NursesRequired": True, "Duration": True},
+                    hover_data={
+                        "TaskName": True,
+                        "NursesRequired": True,
+                        "DurationHours": ":.1f hours",
+                        "Start": "|%H:%M",
+                        "End": "|%H:%M"
+                    },
                     title="<b>Task Distribution by Day</b>",
                     template="plotly_white"
                 )
                 fig_tasks.update_layout(
                     height=600,
                     hovermode="y unified",
-                    xaxis_title="Time",
-                    yaxis_title="Day",
+                    xaxis_title="Time of Day",
+                    yaxis_title="",
                     legend_title="Tasks",
-                    font=dict(family="Arial", size=12)
+                    font=dict(family="Arial", size=12),
+                    margin=dict(l=100, r=20, t=60, b=20)
                 )
                 fig_tasks.update_xaxes(
                     tickformat="%H:%M",
@@ -1238,11 +1246,10 @@ def display_tasks_and_shifts():
             # Interactive shift visualization
             if not shifts_df.empty:
                 st.subheader("👥 Shift Schedule", divider="green")
+                shifts_df["Start"] = pd.to_datetime("2023-01-01 " + shifts_df["StartTime"])
+                shifts_df["End"] = pd.to_datetime("2023-01-01 " + shifts_df["EndTime"])
 
-                shifts_df["Start"] = pd.to_datetime("2023-01-01 " + shifts_df["StartTime"], format="%Y-%m-%d %H:%M:%S")
-                shifts_df["End"]   = pd.to_datetime("2023-01-01 " + shifts_df["EndTime"],   format="%Y-%m-%d %H:%M:%S")
-
-                # Expand shifts for days they are active
+                # Expand shifts with weight information
                 shift_expanded = []
                 for _, row in shifts_df.iterrows():
                     for day in day_order:
@@ -1251,28 +1258,48 @@ def display_tasks_and_shifts():
                                 "ShiftID": row["id"],
                                 "Day": day,
                                 "Start": row["Start"],
-                                "End": row["End"]
+                                "End": row["End"],
+                                "Weight": row["Weight"],
+                                "NursesAllocated": row.get("NursesAllocated", "N/A")
                             })
                 shifts_expanded_df = pd.DataFrame(shift_expanded)
-                shifts_expanded_df["Day"] = pd.Categorical(shifts_expanded_df["Day"], categories=day_order, ordered=True)
-                full_day_range = ["2023-01-01 00:00:00", "2023-01-01 23:59:59"]
-                st.subheader("Shifts Schedule")
+                shifts_expanded_df["Day"] = pd.Categorical(
+                    shifts_expanded_df["Day"], 
+                    categories=day_order, 
+                    ordered=True
+                ).sort_values()
+
                 fig_shifts = px.timeline(
                     shifts_expanded_df,
                     x_start="Start",
                     x_end="End",
                     y="Day",
-                    color="ShiftID",
-                    title="Shifts Gantt Chart",
-                    labels={"Start": "Start Time", "End": "End Time", "Day": "Day of the Week", "ShiftID": "Shift"}
+                    color="Weight",
+                    color_continuous_scale=px.colors.sequential.Viridis,
+                    hover_data={
+                        "ShiftID": True,
+                        "NursesAllocated": True,
+                        "Weight": ":.1f",
+                        "Start": "|%H:%M",
+                        "End": "|%H:%M"
+                    },
+                    title="<b>Shift Schedule by Weight</b>",
+                    template="plotly_white"
                 )
-                fig_shifts.update_yaxes(categoryorder="array", categoryarray=day_order)
+                fig_shifts.update_layout(
+                    height=600,
+                    xaxis_title="Time of Day",
+                    yaxis_title="",
+                    font=dict(family="Arial", size=12),
+                    coloraxis_colorbar=dict(title="Shift Weight"),
+                    margin=dict(l=100, r=20, t=60, b=20)
+                )
                 fig_shifts.update_xaxes(
                     tickformat="%H:%M",
                     dtick=3600000,
-                    range=full_day_range
+                    range=time_range
                 )
-                st.plotly_chart(fig_shifts)
+                st.plotly_chart(fig_shifts, use_container_width=True)
 
         except Exception as e:
             st.error(f"🚨 Visualization error: {str(e)}")
@@ -1317,6 +1344,7 @@ def display_tasks_and_shifts():
     # Visual divider
     st.markdown("---")
     st.caption("💡 Tip: Hover over charts for detailed information. Click legend items to filter categories.")
+
 def header():
         st.markdown("""
         <style>
