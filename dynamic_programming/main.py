@@ -1171,37 +1171,47 @@ def optimize_tasks_with_gurobi():
             st.warning("No results to visualize")
         # Add this after your existing visualizations but before the detailed tables
         if not results_df.empty:
+            from streamlit import session_state as ss
+            # Initialize session state variables
+            if 'selected_shift' not in ss:
+                ss.selected_shift = results_df["Shift ID"].iloc[0]
+            if 'selected_day' not in ss:
+                ss.selected_day = results_df["Day"].iloc[0]
+
             st.subheader("🔍 Detailed Task Cost Breakdown by Shift & Day")
             
-            # Create two columns for selectors
+            # Get unique shifts and days only once
+            unique_shifts = results_df["Shift ID"].unique()
+            all_days = results_df["Day"].unique()
+
+            # Selection columns
             col1, col2 = st.columns(2)
-            
             with col1:
-                # Get unique shifts with tasks
-                unique_shifts = results_df["Shift ID"].unique()
-                selected_shift = st.selectbox(
+                # Shift selector with session state preservation
+                new_shift = st.selectbox(
                     "Select Shift ID", 
                     options=unique_shifts,
-                    index=0  # Default to first option
+                    index=np.where(unique_shifts == ss.selected_shift)[0][0],
+                    key="shift_selector"
                 )
-            
+                ss.selected_shift = new_shift
+
             with col2:
-                # Get days available for selected shift
-                shift_days = results_df[results_df["Shift ID"] == selected_shift]["Day"].unique()
-                selected_day = st.selectbox(
+                # Filter days for selected shift
+                shift_days = results_df[results_df["Shift ID"] == ss.selected_shift]["Day"].unique()
+                
+                # Day selector with session state preservation
+                new_day = st.selectbox(
                     "Select Day", 
                     options=shift_days,
-                    index=0
+                    index=0 if ss.selected_day not in shift_days else np.where(shift_days == ss.selected_day)[0][0],
+                    key="day_selector"
                 )
-            
-            # Filter data for selected shift/day
-            shift_day_df = results_df[
-                (results_df["Shift ID"] == selected_shift) & 
-                (results_df["Day"] == selected_day)
-            ]
-            
-            # Create container for visualization
+                ss.selected_day = new_day
+
+            # Always show the chart container
             chart_container = st.container()
+ 
             
             if not shift_day_df.empty:
                 with chart_container:
