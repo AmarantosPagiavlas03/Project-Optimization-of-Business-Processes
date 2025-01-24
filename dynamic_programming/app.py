@@ -62,7 +62,7 @@ styles = {
         "font-weight": "600",
         "padding": "14px 14px 18px 14px",  # Extra bottom padding
         "border-radius": "0",
-        "border-bottom": "3px solid #e6000f"
+        "border-bottom": "3px solid #FFFFFF"
     }
 }
 
@@ -78,7 +78,7 @@ page = st_navbar(
 st.markdown("""
 <style>
     [data-testid="stNavigationBar"] .active {
-        border-bottom: 3px solid #e6000f !important;
+        border-bottom: 3px solid #FFFFFF !important;
         box-sizing: border-box !important;
         margin-bottom: -3px !important;
     }
