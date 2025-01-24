@@ -1070,6 +1070,91 @@ def optimize_tasks_with_gurobi():
     with st.spinner("Optimizing tasks and shifts. Please wait..."):
         model.optimize()
 
+    if model.status == GRB.OPTIMAL:
+        # Phase 1: Collect raw assignment data and calculate contributions
+        from collections import defaultdict
+        temp_results = []
+        shift_day_cost = defaultdict(float)        # Total cost per (shift, day)
+        shift_day_contributions = defaultdict(float)  # Sum of contributions
+        
+        for (task_id, shift_id, d), assign_var in task_shift_vars.items():
+            if assign_var.x > 0.5:
+                # Get basic assignment info
+                workers = shift_worker_vars[(shift_id, d)].x
+                shift_weight = shifts_df.loc[shift_id, "Weight"]
+                task_row = tasks_df.loc[task_id]
+                
+                # Calculate task duration in hours
+                t_start = task_row["StartTime"]
+                t_end = task_row["EndTime"]
+                duration = (datetime.datetime.combine(datetime.date.min, t_end) -
+                            datetime.datetime.combine(datetime.date.min, t_start)).seconds / 3600
+                
+                # Calculate contribution metric (nurses × hours)
+                contribution = task_row["NursesRequired"] * duration
+                
+                # Store temporary data
+                temp_results.append({
+                    "task_id": task_id,
+                    "shift_id": shift_id,
+                    "day": d,
+                    "workers": workers,
+                    "shift_weight": shift_weight,
+                    "contribution": contribution
+                })
+                
+                # Update aggregates
+                shift_day_cost[(shift_id, d)] = workers * shift_weight
+                shift_day_contributions[(shift_id, d)] += contribution
+
+        # Phase 2: Calculate proportional costs
+        results = []
+        for entry in temp_results:
+            key = (entry["shift_id"], entry["day"])
+            total_contribution = shift_day_contributions[key]
+            task_cost = (entry["contribution"] / total_contribution) * shift_day_cost[key] if total_contribution > 0 else 0
+            
+            # Format results
+            task_row = tasks_df.loc[entry["task_id"]]
+            shift_row = shifts_df.loc[entry["shift_id"]]
+            results.append({
+                "Task ID": task_row["id"],
+                "Task Name": task_row["TaskName"],
+                "Day": entry["day"],
+                "Task Start": task_row["StartTime"].strftime("%H:%M"),
+                "Task End": task_row["EndTime"].strftime("%H:%M"),
+                "Shift ID": shift_row["id"],
+                "Shift Start": shift_row["StartTime"].strftime("%H:%M"),
+                "Shift End": shift_row["EndTime"].strftime("%H:%M"),
+                "Workers Assigned": entry["workers"],
+                "Hourly Rate ($)": entry["shift_weight"],
+                "Task Cost ($)": round(task_cost, 2),
+                "Cost %": round((task_cost / shift_day_cost[key]) * 100, 1) if shift_day_cost[key] > 0 else 0
+            })
+
+        # --- Enhanced Display ---
+        results_df = pd.DataFrame(results)
+        
+        # 1. Cost Validation Check
+        validation = results_df.groupby(["Shift ID", "Day"]).agg(
+            Total_Cost=("Task Cost ($)", "sum"),
+            Expected_Cost=("Hourly Rate ($)", lambda x: x.iloc[0] * results_df["Workers Assigned"].iloc[0])
+        ).reset_index()
+        validation["Valid"] = validation["Total_Cost"].round(2) == validation["Expected_Cost"].round(2)
+        
+        # 2. New Visualizations
+        col1, col2 = st.columns(2)
+        with col1:
+            fig = px.pie(results_df, names='Day', values='Task Cost ($)', 
+                        title='Cost Distribution by Day')
+            st.plotly_chart(fig, use_container_width=True)
+            
+        with col2:
+            shift_cost = results_df.groupby("Shift ID")["Task Cost ($)"].sum().reset_index()
+            fig = px.bar(shift_cost, x='Shift ID', y='Task Cost ($)', 
+                        title='Total Cost by Shift')
+            st.plotly_chart(fig, use_container_width=True)
+
     # --- 8. Collect and Display Results ---
     if model.status == GRB.OPTIMAL:
         results = []
@@ -1088,7 +1173,7 @@ def optimize_tasks_with_gurobi():
                     "Shift End": shifts_df.loc[shift_id, "EndTime"].strftime("%H:%M"),
                     "Workers Assigned": workers_assigned
                 })
-
+ 
         # Calculate daily summaries
         daily_costs = {day: 0 for day in day_names}
         daily_workers = {day: 0 for day in day_names}
