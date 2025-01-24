@@ -23,16 +23,16 @@ st.set_page_config(
     page_icon="⚙️"
 )
 
-# Set theme config
-theme_config = {
-    "primaryColor": "#f07814",
-    "backgroundColor": "#FFFFFF",
-    "secondaryBackgroundColor": "#F5F5F5",
-    "textColor": "#000000",
-    "font": "sans serif"
-}
-for key, value in theme_config.items():
-    st._config.set_option(f"theme.{key}", value)
+# # Set theme config
+# theme_config = {
+#     "primaryColor": "#f07814",
+#     "backgroundColor": "#FFFFFF",
+#     "secondaryBackgroundColor": "#F5F5F5",
+#     "textColor": "#000000",
+#     "font": "sans serif"
+# }
+# for key, value in theme_config.items():
+#     st._config.set_option(f"theme.{key}", value)
 
 
 # Verify logo exists
