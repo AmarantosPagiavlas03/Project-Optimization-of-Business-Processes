@@ -1072,93 +1072,102 @@ def optimize_tasks_with_gurobi():
 
     # --- 8. Collect and Display Results ---
     if model.status == GRB.OPTIMAL:
-        # Build a list of assignment results
         results = []
-        day_summary = {}
-
+        # Collect task assignments
         for (task_id, shift_id, d), assign_var in task_shift_vars.items():
             if assign_var.x > 0.5:
                 workers_assigned = shift_worker_vars.get((shift_id, d), 0).x
-                # Optional cost breakdown
-                total_assigned_tasks = sum(
-                    task_shift_vars[(tid, shift_id, d)].x > 0.5
-                    for tid in tasks_df.index
-                    if (tid, shift_id, d) in task_shift_vars
-                )
-                # shift_weight = shifts_df.loc[shift_id, "Weight"]
-                if total_assigned_tasks > 0 and workers_assigned > 0:
-                    # cost_per_task = shift_weight / total_assigned_tasks
-                    # task_duration = (t_e - t_s).total_seconds()
-                    # shift_duration = (shift_e - shift_s).total_seconds()
-                    # duration_ratio = task_duration / shift_duration
-                    # task_cost = cost_per_task * duration_ratio * (
-                    #     tasks_df.loc[task_id, "NursesRequired"] / workers_assigned
-                    # )
-                    task_cost = 0
-
-                else:
-                    task_cost = 0
-
                 results.append({
-                    "TaskID": tasks_df.loc[task_id, "id"],
-                    "ShiftID": shifts_df.loc[shift_id, "id"],
+                    "Task ID": tasks_df.loc[task_id, "id"],
+                    "Task Name": tasks_df.loc[task_id, "TaskName"],
                     "Day": d,
-                    "TaskName": tasks_df.loc[task_id, "TaskName"],
-                    "TaskStart": tasks_df.loc[task_id, "StartTime"],
-                    "TaskEnd": tasks_df.loc[task_id, "EndTime"],
-                    "ShiftStart": shifts_df.loc[shift_id, "StartTime"],
-                    "ShiftEnd": shifts_df.loc[shift_id, "EndTime"],
-                    "WorkersNeededForShiftDay": workers_assigned,
-                    "TaskCost": task_cost,
-                    "VariableAssign": assign_var.x
+                    "Task Start": tasks_df.loc[task_id, "StartTime"].strftime("%H:%M"),
+                    "Task End": tasks_df.loc[task_id, "EndTime"].strftime("%H:%M"),
+                    "Shift ID": shifts_df.loc[shift_id, "id"],
+                    "Shift Start": shifts_df.loc[shift_id, "StartTime"].strftime("%H:%M"),
+                    "Shift End": shifts_df.loc[shift_id, "EndTime"].strftime("%H:%M"),
+                    "Workers Assigned": workers_assigned
                 })
 
-                # Update daily summary
-                if d not in day_summary:
-                    day_summary[d] = {"TotalCost": 0, "NumTasks": 0, "NumWorkers": 0}
-                day_summary[d]["TotalCost"]  += task_cost
-                day_summary[d]["NumTasks"]   += 1
-                day_summary[d]["NumWorkers"] += workers_assigned
+        # Calculate daily summaries
+        daily_costs = {day: 0 for day in day_names}
+        daily_workers = {day: 0 for day in day_names}
+        daily_tasks = {day: 0 for day in day_names}
 
-        # Convert to DataFrame
+        for (shift_id, day_str), var in shift_worker_vars.items():
+            workers = var.x
+            daily_workers[day_str] += workers
+            daily_costs[day_str] += workers * shifts_df.loc[shift_id, "Weight"]
+
+        for (task_id, shift_id, d), var in task_shift_vars.items():
+            if var.x > 0.5:
+                daily_tasks[d] += 1
+
+        day_summary = []
+        for day in day_names:
+            day_summary.append({
+                "Day": day,
+                "Total Cost ($)": daily_costs[day],
+                "Tasks Assigned": daily_tasks[day],
+                "Workers Assigned": daily_workers[day]
+            })
+
         results_df = pd.DataFrame(results)
+        day_summary_df = pd.DataFrame(day_summary)
 
-        if not results_df.empty:
-            st.success("Task-shift-day optimization successful!")
-            st.balloons()
+        # --- Display Results ---
+        st.success("✅ Task-shift optimization successful!")
+        st.balloons()
 
-            day_summary_df = pd.DataFrame.from_dict(day_summary, orient="index").reset_index()
-            day_summary_df.columns = ["Day", "TotalCost", "NumTasks", "NumWorkers"]
+        # Overall Metrics
+        total_cost = model.ObjVal
+        total_workers = sum(daily_workers.values())
+        total_tasks = len(results_df)
 
-            st.write("**Optimal Task Assignments with Worker Counts**")
-            st.dataframe(results_df, hide_index=True)
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Total Cost", f"${total_cost:,.2f}")
+        col2.metric("Total Workers Assigned", total_workers)
+        col3.metric("Total Tasks Assigned", total_tasks)
 
-            st.download_button(
-                label="Download Assignments as CSV",
-                data=results_df.to_csv(index=False).encode("utf-8"),
-                file_name="task_assignments_with_workers.csv",
-                mime="text/csv"
-            )
+        # Detailed Assignments
+        with st.expander("📋 View Detailed Task Assignments", expanded=True):
+            if not results_df.empty:
+                st.dataframe(
+                    results_df,
+                    column_order=("Task ID", "Task Name", "Day", "Task Start", "Task End",
+                                  "Shift ID", "Shift Start", "Shift End", "Workers Assigned"),
+                    hide_index=True
+                )
+                st.download_button(
+                    label="Download Assignments as CSV",
+                    data=results_df.to_csv(index=False).encode("utf-8"),
+                    file_name="task_assignments.csv",
+                    mime="text/csv"
+                )
+            else:
+                st.warning("No tasks were assigned.")
 
-            st.write("**Daily Summary of Costs, Tasks, and Workers**")
-            st.dataframe(day_summary_df, hide_index=True)
-
-            st.download_button(
-                label="Download Daily Summary as CSV",
-                data=day_summary_df.to_csv(index=False).encode("utf-8"),
-                file_name="daily_summary.csv",
-                mime="text/csv"
-            )
-        else:
-            st.error("No tasks were assigned (results empty).")
+        # Daily Summary
+        st.subheader("📅 Daily Summary")
+        st.dataframe(
+            day_summary_df,
+            column_order=("Day", "Total Cost ($)", "Tasks Assigned", "Workers Assigned"),
+            hide_index=True
+        )
+        st.download_button(
+            label="Download Daily Summary as CSV",
+            data=day_summary_df.to_csv(index=False).encode("utf-8"),
+            file_name="daily_summary.csv",
+            mime="text/csv"
+        )
 
     else:
         st.error(f"Optimization failed with status: {model.status}")
-        # Diagnose infeasibility, if needed
+        # Optional: Add infeasibility diagnostics
         model.computeIIS()
         for constr in model.getConstrs():
             if constr.IISConstr:
-                st.write(f"Infeasible Constraint: {constr.constrName}")
+                st.write(f"⚠️ Infeasible constraint: {constr.constrName}")
 
 
 
