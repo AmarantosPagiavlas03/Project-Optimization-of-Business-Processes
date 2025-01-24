@@ -25,29 +25,29 @@ def show_home():
                 clear_all("ShiftsTable5")
                 st.success("All shifts have been cleared!")
 
-    with st.sidebar.expander("Task Data Import/Export"):
-        # 1. Download Template
-        st.subheader("Download Template")
-        task_template_download()
+ 
+    # 1. Download Template
+    st.subheader("Download Template")
+    task_template_download()
 
-        st.markdown("---")
+    st.markdown("---")
 
-        # 2. Upload user file
-        st.subheader("Upload Your Tasks")
-        upload_tasks_excel()
+    # 2. Upload user file
+    st.subheader("Upload Your Tasks")
+    upload_tasks_excel()
 
-        # if st.button("Clear All Workers"):
-        #     clear_all("Workers")
-        #     st.success("All workers have been cleared!")
+    # if st.button("Clear All Workers"):
+    #     clear_all("Workers")
+    #     st.success("All workers have been cleared!")
 
-    with st.sidebar.expander("Shift Data Import/Export"):
-        st.subheader("Download Example Shift Template")
-        shift_template_download()
+ 
+    st.subheader("Download Example Shift Template")
+    shift_template_download()
 
-        st.markdown("---")
-        
-        st.subheader("Upload Your Shifts File")
-        upload_shifts_excel()
+    st.markdown("---")
+    
+    st.subheader("Upload Your Shifts File")
+    upload_shifts_excel()
 
     # Buttons for example data
     colA, colB = st.columns(2)

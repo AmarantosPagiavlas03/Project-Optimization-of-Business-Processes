@@ -56,7 +56,7 @@ styles = {
         "font-size": "1.1rem",
         "font-weight": "500",
         "position": "relative",
-        "transition": "none"  # Disable default transitions
+        "transition": "none" 
     },
     "active": {
         "background-color": "transparent",
@@ -73,7 +73,6 @@ page = st_navbar(
     styles=styles
 )
 
-# Add subtle shadow to nav bar
- 
+
 # Route pages
 {"Home": home.show_home, "Contact": contact.show_contact}.get(page)()
