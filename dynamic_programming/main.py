@@ -1568,7 +1568,7 @@ def main():
     init_db()
     home_tab , contact_tab = st.tabs(["Home", "Contact"])
     with home_tab:
-        with st.expander("Insert Data", expanded=False):
+        with st.container(border=True):
             # Simulate tabs using buttons/radio
             selected_subtab = st.radio(
                 "Choose Mode:",
