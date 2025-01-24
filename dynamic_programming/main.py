@@ -50,8 +50,6 @@ def contact_page():
     st.write("🌐 Website: [Visit our website](https://example.com)")
     st.write("📍 Address: 123 Business Street, City, Country")
 
-    # Embed a map (optional)
-    st.map({"latitude": 37.7749, "longitude": -122.4194}, zoom=10)
 
 def navigation_bar():
     with st.container():
