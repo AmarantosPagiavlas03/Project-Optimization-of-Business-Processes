@@ -1552,7 +1552,7 @@ def contact_page():
  
 
 def main():
-    st.set_page_config(page_title="Hospital Scheduler", layout="wide")
+    # st.set_page_config(page_title="Hospital Scheduler", layout="wide")
     pages = ["Contact"]
     page = st_navbar(
     pages
