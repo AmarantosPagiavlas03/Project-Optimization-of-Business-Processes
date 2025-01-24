@@ -2,36 +2,52 @@ import sys
 import os
 import streamlit as st
 from streamlit_navigation_bar import st_navbar
-from pages.database import init_db
-import time
-from pages import home, contact
+from dynamic_programming.pages import home, contact
+from database import init_db
 
-# Configure paths FIRST to ensure proper imports
-current_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.dirname(current_dir)
+# Configure paths
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, project_root)
+parent_dir = os.path.dirname(os.path.abspath(__file__))
+logo_path = os.path.join(parent_dir, "vu_mc_logo_text.svg")
 
+# Initialize app
+st.set_page_config(
+    initial_sidebar_state="collapsed",
+    layout="centered",
+    page_title="Business Process Optimizer",
+    page_icon="⚙️"
+)
 
-
-
-# Constant configurations
-THEME_CONFIG = {
+# Set theme config
+theme_config = {
     "primaryColor": "#f07814",
     "backgroundColor": "#FFFFFF",
     "secondaryBackgroundColor": "#F5F5F5",
     "textColor": "#000000",
     "font": "sans serif"
 }
+for key, value in theme_config.items():
+    st._config.set_option(f"theme.{key}", value)
 
-NAV_STYLES = {
+init_db()
+
+# Logo handling
+if not os.path.exists(logo_path):
+    st.error(f"⚠️ Missing logo at: {logo_path}")
+    logo_path = None
+
+# Simplified styles focusing on logo spacing
+styles = {
     "nav": {
         "justify-content": "left",
         "padding-left": "2rem",
         "gap": "4rem",
-        "background-color": THEME_CONFIG["primaryColor"],
+        "background-color": theme_config["primaryColor"]
     },
     "img": {
-        "width": "200px",
-        "max-width": "100%",
+        "width": "200px",  # Reduced base size
+        "max-width": "100%",  # Add responsive constraint
         "min-width": "120px",
         "padding-right": "3rem",
         "margin-left": "-1rem"
@@ -39,57 +55,38 @@ NAV_STYLES = {
     "span": {
         "color": "white",
         "font-size": "1.1rem",
-        "font-weight": "500",
-        "position": "relative",
-        "transition": "none" 
+        "font-weight": "500"
     },
     "active": {
         "background-color": "transparent",
         "color": "#e6000f",
-        "font-weight": "500",
-        "transform": "none", 
+        "font-weight": "800",
+        "margin": "0 8px",       
+        "transform": "scale(1.1)" 
+    },
+    "hover": {
+        "background-color": "transparent",
+        "color": "#e6000f",
+        "font-weight": "800",
     }
 }
 
-def main():
-    """Main application entry point"""
-    # Initialize app configuration
-    st.set_page_config(
-        initial_sidebar_state="collapsed",
-        layout="wide",
-        page_title="Business Process Optimizer",
-        page_icon="⚙️"
-    )
-    
-    # Apply theme configuration
-    for key, value in THEME_CONFIG.items():
-        st._config.set_option(f"theme.{key}", value)
-    
-    # Initialize database
-    init_db()
-    
-    # Handle logo
-    logo_path = os.path.join(current_dir, "vu_mc_logo_text.svg")
-    if not os.path.exists(logo_path):
-        st.error(f"⚠️ Missing logo at: {logo_path}")
-        logo_path = None
-    
-    # Setup navigation
-    page = st_navbar(
-        ["Home", "Contact"],
-        options={"show_menu": False, "show_sidebar": False},
-        logo_path=logo_path,
-        styles=NAV_STYLES
-    )
-    
-    functions = {
-        "Home": home.show_home,
-        "Contact": contact.show_contact
-    }
-    go_to = functions.get(page)
-    if go_to:
-        go_to()
+# Navigation setup
+page = st_navbar(
+    ["Home", "Contact"],
+    options={"show_menu": False, "show_sidebar": False},
+    logo_path=logo_path,
+    styles=styles
+)
 
-if __name__ == "__main__":
-    # Add development reloading
-    main()
+# Add subtle shadow to nav bar
+st.markdown("""
+<style>
+    [data-testid="stNavigationBar"] {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Route pages
+{"Home": home.show_home, "Contact": contact.show_contact}.get(page)()

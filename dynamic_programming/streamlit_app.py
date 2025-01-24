@@ -1,9 +1,10 @@
 import os
 import streamlit as st
 from streamlit_navigation_bar import st_navbar
-from pages.database import init_db
+from dynamic_programming.database import init_db
 import time
-from pages import home, contact
+from dynamic_programming.pages import home
+from pages import contact
 
 # Configure paths FIRST to ensure proper imports
 current_dir = os.path.dirname(os.path.abspath(__file__))

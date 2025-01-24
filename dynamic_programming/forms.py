@@ -5,7 +5,7 @@ import random
 from datetime import time
 import io  
 import datetime as dt
-from .database import add_task_to_db, add_shift_to_db, add_worker_to_db, init_db
+from dynamic_programming.database import add_task_to_db, add_shift_to_db, add_worker_to_db, init_db
 
 
 
