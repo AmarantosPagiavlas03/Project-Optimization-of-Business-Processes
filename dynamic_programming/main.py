@@ -1554,50 +1554,51 @@ def main():
     with home_tab:
         
         manual , upload = st.tabs(["manual", "upload"])
-        with manual:
-            # Input forms
-            with st.expander("Add Task", expanded=False):
-                task_input_form()
-            with st.expander("Add Task", expanded=False):
-                shift_input_form()
-            # worker_input_form()
-    
-        # with st.sidebar:
-        #     st.markdown("---")  # Add a separator line
-        #     col1, col2 = st.columns(2)
+        with st.expander("Add", expanded=False):
+            with manual:
+                # Input forms
+                with st.expander("Add Task", expanded=False):
+                    task_input_form()
+                with st.expander("Add Task", expanded=False):
+                    shift_input_form()
+                # worker_input_form()
+        
+            # with st.sidebar:
+            #     st.markdown("---")  # Add a separator line
+            #     col1, col2 = st.columns(2)
 
-        #     with col1:
-        #         if st.button("Clear All Tasks"):
-        #             clear_all("TasksTable2")
-        #             st.success("All tasks have been cleared!")
+            #     with col1:
+            #         if st.button("Clear All Tasks"):
+            #             clear_all("TasksTable2")
+            #             st.success("All tasks have been cleared!")
 
-        #     with col2:
-        #         if st.button("Clear All Shifts"):
-        #             clear_all("ShiftsTable5")
-        #             st.success("All shifts have been cleared!")
+            #     with col2:
+            #         if st.button("Clear All Shifts"):
+            #             clear_all("ShiftsTable5")
+            #             st.success("All shifts have been cleared!")
 
-        with upload:
-            # 1. Download Template
-            st.subheader("Download Template")
-            task_template_download()
+            with upload:
+                # 1. Download Template
+                st.subheader("Download Template")
+                task_template_download()
 
-            st.markdown("---")
+                st.markdown("---")
 
-            # 2. Upload user file
-            st.subheader("Upload Your Tasks")
-            upload_tasks_excel()
+                # 2. Upload user file
+                st.subheader("Upload Your Tasks")
+                upload_tasks_excel()
 
-            # if st.button("Clear All Workers"):
-            #     clear_all("Workers")
-            #     st.success("All workers have been cleared!")
+                # if st.button("Clear All Workers"):
+                #     clear_all("Workers")
+                #     st.success("All workers have been cleared!")
 
-            st.subheader("Download Example Shift Template")
-            shift_template_download()
+                st.subheader("Download Example Shift Template")
+                shift_template_download()
 
-            st.markdown("---")
-            
-            st.subheader("Upload Your Shifts File")
-            upload_shifts_excel()
+                st.markdown("---")
+                
+                st.subheader("Upload Your Shifts File")
+                upload_shifts_excel()
 
         # Buttons for example data
         colA, colB = st.columns(2)
