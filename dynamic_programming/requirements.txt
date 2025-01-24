@@ -1,10 +1,8 @@
 streamlit==1.33.0
-# pandas
-# numpy
-# matplotlib
-# plotly
-# gurobipy
-# xlsxwriter
-# streamlit_option_menu
-# streamlit_extras
+pandas
+numpy
+matplotlib
+plotly
+gurobipy
+xlsxwriter
 streamlit-navigation-bar==3.3.0
