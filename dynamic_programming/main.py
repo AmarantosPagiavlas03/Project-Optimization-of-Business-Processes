@@ -281,7 +281,7 @@ def task_input_form():
 
             # Suppose you want the default to be 'current time + 1 hour'
             now_plus_1h = (dt.datetime.now() + dt.timedelta(hours=1)).time()
-            now_plus_2h = (dt.datetime.now() + dt.timedelta(hours=1)).time()
+            now_plus_2h = (dt.datetime.now() + dt.timedelta(hours=2)).time()
 
             # Round to nearest 15 minutes (optional)
             nearest_15_1h = (now_plus_1h.minute // 15) * 15
