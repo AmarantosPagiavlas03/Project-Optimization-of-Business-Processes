@@ -15,7 +15,7 @@ from htbuilder.funcs import rgba, rgb
 import datetime as dt
 from streamlit_option_menu import option_menu
 from streamlit_extras.switch_page_button import switch_page
-
+from 1_Analytics import analytics_page
 
 
 DB_FILE = "tasksv2.db"
@@ -1596,7 +1596,7 @@ def navigation_bar():
             }
         )
         if selected == "Analytics":
-            switch_page("Analytics")
+            analytics_page() 
         if selected == "Contact":
             contact_page() 
 
