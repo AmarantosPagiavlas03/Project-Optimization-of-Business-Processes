@@ -1532,14 +1532,8 @@ COMMON_STYLE = """
 
   /* Push main app content down so the fixed header doesn't overlap it. */
   .stApp {
-      margin-top: 70px !important; 
+      margin-top: 70px; 
       margin-bottom: 60px; 
-  }
-
-  /* Also push down the sidebar to clear the fixed header */
-  [data-testid="stSidebar"] {
-      margin-top: 70px !important;
-      z-index: 9999 !important; /* ensures sidebar is on top if it overlaps header */
   }
 
   /* Remove any default border/line from hr */
@@ -1677,7 +1671,8 @@ def footer():
 # ------------------------------------------------------------------
 def main():
     st.set_page_config(page_title="Hospital Scheduler", layout="wide")
-    header()
+    # header()
+    st.header("These headers have rotating dividers", divider=True)
     
     init_db()
 
