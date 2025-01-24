@@ -9,17 +9,17 @@ from database import init_db
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, project_root)
 parent_dir = os.path.dirname(os.path.abspath(__file__))
-logo_path = os.path.join(parent_dir, "vu_mc_logo.png")
+logo_path = "/mount/src/project-optimization-of-business-processes/dynamic_programming/vu_mc_logo.png"
 
 # Initialize app
 st.set_page_config(initial_sidebar_state="collapsed", layout="wide")
 init_db()
 
-# Verify logo exists
-if not os.path.exists(logo_path):
-    st.error(f"⚠️ Missing logo at: {logo_path}")
-    logo_path = None  # Will render without logo
-st.write(f"Logo path: {logo_path}") 
+# # Verify logo exists
+# if not os.path.exists(logo_path):
+#     st.error(f"⚠️ Missing logo at: {logo_path}")
+#     logo_path = None  # Will render without logo
+# st.write(f"Logo path: {logo_path}") 
 # Setup navigation
 page = st_navbar(
     ["Home", "Contact"],
