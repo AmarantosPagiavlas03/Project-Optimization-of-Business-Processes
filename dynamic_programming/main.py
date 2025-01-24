@@ -1378,32 +1378,6 @@ def main():
             with opt_tab:
                 st.markdown("### Task-Shift Assignment Optimization")
                 st.info("Assign tasks to shifts considering time windows and nurse requirements")
-                st.markdown("""
-                <style>
-                    div[data-testid="stButton"] > button[kind="primary"] {
-                        background-color: #FF0000 !important;
-                        border-color: #FF0000 !important;
-                        color: white !important;
-                        font-size: 20px !important;
-                        padding: 15px 30px !important;
-                        border-radius: 8px !important;
-                        font-weight: bold !important;
-                        transition: all 0.3s ease;
-                    }
-                    
-                    div[data-testid="stButton"] > button[kind="primary"]:hover {
-                        background-color: #CC0000 !important;
-                        border-color: #CC0000 !important;
-                        transform: scale(1.02);
-                        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-                    }
-                    
-                    div[data-testid="stButton"] > button[kind="primary"]:focus {
-                        outline: none !important;
-                        box-shadow: 0 0 0 3px rgba(255,0,0,0.4) !important;
-                    }
-                </style>
-                """, unsafe_allow_html=True)
                 if st.button("🚀 Run Task Optimization", use_container_width=True):
                     optimize_tasks_with_gurobi()
                 
