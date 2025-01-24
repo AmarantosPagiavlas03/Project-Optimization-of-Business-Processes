@@ -1331,12 +1331,12 @@ def main():
         
         with left_col:
             # Manual Input Section
-            with st.expander("➕ Add Tasks/Shifts Manually", expanded=True):
+            with st.expander("➕ Add Tasks/Shifts Manually"):
                 task_input_form()
                 shift_input_form()
             
             # Bulk Upload Section
-            with st.expander("📤 Bulk Upload Data"):
+            with st.expander("📤 Bulk Upload Data", expanded=True):
                 upload_tasks_excel()
                 upload_shifts_excel()
                 st.markdown("---")
