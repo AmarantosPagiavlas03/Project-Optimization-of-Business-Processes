@@ -1375,7 +1375,23 @@ def main():
             
             with viz_tab:
                 display_tasks_and_shifts()
-            
+            st.markdown("""
+            <style>
+                div[data-testid="stButton"] > button[kind="primary"] {
+                    background-color: #ff4444 !important;
+                    border-color: #ff5555 !important;
+                    color: white !important;
+                    font-size: 18px !important;
+                    padding: 12px 24px !important;
+                    transition: all 0.3s ease;
+                }
+                
+                div[data-testid="stButton"] > button[kind="primary"]:hover {
+                    background-color: #cc0000 !important;
+                    transform: scale(1.05);
+                }
+            </style>
+            """, unsafe_allow_html=True)
             with opt_tab:
                 st.markdown("### Task-Shift Assignment Optimization")
                 st.info("Assign tasks to shifts considering time windows and nurse requirements")
