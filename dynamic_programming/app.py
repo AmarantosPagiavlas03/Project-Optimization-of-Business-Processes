@@ -45,7 +45,7 @@ styles = {
         "justify-content": "left",
         "padding-left": "2rem",
         "gap": "4rem",
-        "background-color": theme_config["primaryColor"],
+        "background-color": "#f07814",
     },
     "img": {
         "width": "200px",
