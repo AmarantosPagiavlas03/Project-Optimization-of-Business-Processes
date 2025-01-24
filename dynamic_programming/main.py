@@ -1073,6 +1073,7 @@ def optimize_tasks_with_gurobi():
     if model.status == GRB.OPTIMAL:
         # Phase 1: Collect raw assignment data and calculate contributions
         from collections import defaultdict
+        from datetime import datetime, date
         temp_results = []
         shift_day_cost = defaultdict(float)        # Total cost per (shift, day)
         shift_day_contributions = defaultdict(float)  # Sum of contributions
@@ -1087,8 +1088,9 @@ def optimize_tasks_with_gurobi():
                 # Calculate task duration in hours
                 t_start = task_row["StartTime"]
                 t_end = task_row["EndTime"]
-                duration = ( datetime.combine(datetime.date.min, t_end) -
-                             datetime.combine(datetime.date.min, t_start)).seconds / 3600
+                start_dt = datetime.combine(date.min, t_start)
+                end_dt = datetime.combine(date.min, t_end)
+                duration = (end_dt - start_dt).total_seconds() / 3600
                 
                 # Calculate contribution metric (nurses × hours)
                 contribution = task_row["NursesRequired"] * duration
