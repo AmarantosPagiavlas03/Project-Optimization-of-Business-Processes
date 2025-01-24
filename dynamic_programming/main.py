@@ -1143,19 +1143,30 @@ def optimize_tasks_with_gurobi():
             Expected_Cost=("Hourly Rate ($)", lambda x: x.iloc[0] * results_df["Workers Assigned"].iloc[0])
         ).reset_index()
         validation["Valid"] = validation["Total_Cost"].round(2) == validation["Expected_Cost"].round(2)
-        
+
         # 2. New Visualizations
-        col1, col2 = st.columns(2)
-        with col1:
-            fig = px.pie(results_df, names='Day', values='Task Cost ($)', 
-                        title='Cost Distribution by Day')
-            st.plotly_chart(fig, use_container_width=True)
-            
-        with col2:
-            shift_cost = results_df.groupby("Shift ID")["Task Cost ($)"].sum().reset_index()
-            fig = px.bar(shift_cost, x='Shift ID', y='Task Cost ($)', 
-                        title='Total Cost by Shift')
-            st.plotly_chart(fig, use_container_width=True)
+        if not results_df.empty:
+            col1, col2 = st.columns(2)
+            with col1:
+                # Ensure we have data to plot
+                if not results_df.empty:
+                    fig = px.pie(results_df, names='Day', values='Task Cost ($)', 
+                                title='<b>Cost Distribution by Day</b>')
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.warning("No data available for pie chart")
+
+            with col2:
+                # Ensure we have data to plot
+                if not results_df.empty:
+                    shift_cost = results_df.groupby("Shift ID")["Task Cost ($)"].sum().reset_index()
+                    fig = px.bar(shift_cost, x='Shift ID', y='Task Cost ($)', 
+                                title='<b>Total Cost by Shift</b>')
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.warning("No data available for bar chart")
+        else:
+            st.warning("No results to visualize")
 
     # --- 8. Collect and Display Results ---
     if model.status == GRB.OPTIMAL:
