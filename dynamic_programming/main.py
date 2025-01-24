@@ -1564,7 +1564,7 @@ def footer():
     myargs = [
         "This app was made for the VU Amsterdam Hospital.",
         br(),
-        image('https://github.com/AmarantosPagiavlas03/Project-Optimization-of-Business-Processes/blob/main/dynamic_programming/vu_mc_logo.png',
+        image('https://raw.githubusercontent.com/AmarantosPagiavlas03/Project-Optimization-of-Business-Processes/main/dynamic_programming/vu_mc_logo.png',
         width=px(25), height=px(25)),
     ]
     layout(*myargs)
