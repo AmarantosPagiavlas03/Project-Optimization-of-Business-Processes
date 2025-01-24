@@ -21,7 +21,7 @@ st.set_page_config(
 
 # Set theme config
 theme_config = {
-    "primaryColor": "#E53935",
+    "primaryColor": "#f07814",
     "backgroundColor": "#FFFFFF",
     "secondaryBackgroundColor": "#F5F5F5",
     "textColor": "#000000",
