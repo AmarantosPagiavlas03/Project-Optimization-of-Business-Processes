@@ -12,20 +12,17 @@ def show_home():
     # worker_input_form()
  
     # Buttons for example data
-    colA, colB = st.columns(2)
-    with colA:
-        if st.button("Clear All Tasks"):
-            clear_all("TasksTable2")
-            st.success("All tasks have been cleared!")
-
-    with colB:
-
-        if st.button("Clear All Shifts"):
-            clear_all("ShiftsTable5")
-            st.success("All shifts have been cleared!")
-
-
  
+    if st.button("Clear All Tasks"):
+        clear_all("TasksTable2")
+        st.success("All tasks have been cleared!")
+ 
+    if st.button("Clear All Shifts"):
+        clear_all("ShiftsTable5")
+        st.success("All shifts have been cleared!")
+
+
+
     # 1. Download Template
     st.subheader("Download Template")
     task_template_download()
