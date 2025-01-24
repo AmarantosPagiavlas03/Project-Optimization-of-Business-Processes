@@ -613,7 +613,7 @@ def shift_template_download():
         "Saturday": [0, 1],
         "Sunday": [0, 1]
     })
-    colA, colB = st.columns(2,vertical_alignment = "center")
+    colA, colB = st.columns(2,vertical_alignment = "center",gap="medium")
     with colA:
         # --- CSV version ---
         csv_data = template_df.to_csv(index=False)
