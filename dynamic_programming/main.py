@@ -1160,6 +1160,58 @@ def optimize_tasks_with_gurobi():
             file_name="daily_summary.csv",
             mime="text/csv"
         )
+        import plotly.express as px
+
+        # Daily Cost Chart
+        fig_cost = px.bar(day_summary_df, x='Day', y='Total Cost ($)', 
+                        title='<b>Daily Cost Distribution</b>',
+                        color='Day', text_auto='.2s')
+        fig_cost.update_layout(showlegend=False)
+        st.plotly_chart(fig_cost, use_container_width=True)
+
+        # Daily Workers Chart
+        fig_workers = px.bar(day_summary_df, x='Day', y='Workers Assigned',
+                            title='<b>Daily Workforce Distribution</b>',
+                            color='Day', text_auto='.2s')
+        fig_workers.update_layout(showlegend=False)
+        st.plotly_chart(fig_workers, use_container_width=True)
+
+        # Calculate shift contributions
+        shift_cost = []
+        for (shift_id, day_str), var in shift_worker_vars.items():
+            shift_cost.append({
+                "Shift ID": shifts_df.loc[shift_id, "id"],
+                "Shift Name": shifts_df.loc[shift_id, "ShiftName"],
+                "Day": day_str,
+                "Cost Contribution": var.x * shifts_df.loc[shift_id, "Weight"]
+            })
+            
+        shift_cost_df = pd.DataFrame(shift_cost)
+        if not shift_cost_df.empty:
+            fig = px.treemap(shift_cost_df, path=['Shift Name', 'Day'], 
+                            values='Cost Contribution',
+                            title='<b>Cost Contribution by Shift</b>')
+            st.plotly_chart(fig, use_container_width=True)
+
+        # Add capacity data if available in shifts_df
+        utilization = []
+        for shift_id in shifts_df.index:
+            shift_days = [day for day in day_names if shifts_df.loc[shift_id, day] == 1]
+            total_workers = sum(
+                shift_worker_vars[(shift_id, day)].x
+                for day in shift_days
+                if (shift_id, day) in shift_worker_vars
+            )
+            utilization.append({
+                "Shift ID": shifts_df.loc[shift_id, "id"],
+                "Shift Name": shifts_df.loc[shift_id, "ShiftName"],
+                "Total Workers Used": total_workers,
+                "Days Active": ", ".join(shift_days)
+            })
+
+        utilization_df = pd.DataFrame(utilization)
+        st.subheader("🚀 Shift Utilization")
+        st.dataframe(utilization_df, hide_index=True)
 
     else:
         st.error(f"Optimization failed with status: {model.status}")
