@@ -27,7 +27,7 @@ def init_db():
 
     # Table: Tasks
     c.execute('''
-        CREATE TABLE IF NOT EXISTS TasksTable2 (
+        CREATE TABLE IF NOT EXISTS TasksTable3 (
             id INTEGER PRIMARY KEY,
             TaskName TEXT NOT NULL,
             Day TEXT NOT NULL,
@@ -40,7 +40,7 @@ def init_db():
 
     # Table: Shifts
     c.execute('''
-    CREATE TABLE IF NOT EXISTS ShiftsTable5 (
+    CREATE TABLE IF NOT EXISTS ShiftsTable6 (
         id INTEGER PRIMARY KEY,
         StartTime TEXT NOT NULL,
         EndTime TEXT NOT NULL,
@@ -75,7 +75,7 @@ def add_task_to_db(TaskName, Day, StartTime, EndTime, Duration, NursesRequired):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''
-        INSERT INTO TasksTable2 (TaskName, Day, StartTime, EndTime, Duration, NursesRequired)
+        INSERT INTO TasksTable3 (TaskName, Day, StartTime, EndTime, Duration, NursesRequired)
         VALUES (?, ?, ?, ?, ?, ?)
     ''', (TaskName, Day, StartTime, EndTime, Duration, NursesRequired))
     conn.commit()
@@ -86,7 +86,7 @@ def add_shift_to_db(data):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''
-        INSERT INTO ShiftsTable5 (
+        INSERT INTO ShiftsTable6 (
             StartTime, EndTime, BreakTime, BreakDuration, Weight,
             Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -114,7 +114,7 @@ def clear_all(table):
 def update_needed_workers_for_each_day(results_df):
     """
     Use the first-optimization assignments (results_df) to populate
-    MondayNeeded, TuesdayNeeded, ... columns for each ShiftID in ShiftsTable5.
+    MondayNeeded, TuesdayNeeded, ... columns for each ShiftID in ShiftsTable6.
     """
     if results_df.empty:
         st.error("No results to update needed workers. `results_df` is empty.")
@@ -151,13 +151,13 @@ def update_needed_workers_for_each_day(results_df):
         # Assign the needed count for that day
         shift_day_dict[sid][day] = needed
  
-    # 3. Update ShiftsTable5 for each shift ID
+    # 3. Update ShiftsTable6 for each shift ID
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
 
     for sid, day_map in shift_day_dict.items():
         c.execute('''
-            UPDATE ShiftsTable5
+            UPDATE ShiftsTable6
             SET
               MondayNeeded    = :mon,
               TuesdayNeeded   = :tue,
@@ -181,7 +181,7 @@ def update_needed_workers_for_each_day(results_df):
     conn.commit()
     conn.close()
 
-    st.success("Day-specific NeededWorkers columns have been updated in ShiftsTable5!")
+    st.success("Day-specific NeededWorkers columns have been updated in ShiftsTable6!")
 
 
 
@@ -644,7 +644,7 @@ def insert():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''
-        INSERT INTO TasksTable2 (
+        INSERT INTO TasksTable3 (
             TaskName,
             Day,
             StartTime,
@@ -678,7 +678,7 @@ def insert():
     ''')
     conn.commit()
     c.execute('''
-        INSERT INTO ShiftsTable5 (
+        INSERT INTO ShiftsTable6 (
             StartTime,
             EndTime,
             BreakTime,
@@ -714,7 +714,7 @@ def insert2():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''
-        INSERT INTO TasksTable2 (
+        INSERT INTO TasksTable3 (
             TaskName,
             Day,
             StartTime,
@@ -826,7 +826,7 @@ def insert2():
     ''')
     conn.commit()
     c.execute('''
-        INSERT INTO ShiftsTable5 (
+        INSERT INTO ShiftsTable6 (
             StartTime,
             EndTime,
             BreakTime,
@@ -959,8 +959,8 @@ def optimize_tasks_with_gurobi():
     """
 
     # --- 1. Load Data ---
-    tasks_df = get_all("TasksTable2")
-    shifts_df = get_all("ShiftsTable5")
+    tasks_df = get_all("TasksTable3")
+    shifts_df = get_all("ShiftsTable6")
 
     # Basic check for empty data
     if tasks_df.empty or shifts_df.empty:
@@ -975,7 +975,7 @@ def optimize_tasks_with_gurobi():
     shifts_df["StartTime"] = pd.to_datetime(shifts_df["StartTime"], format="%H:%M:%S").dt.time
     shifts_df["EndTime"]   = pd.to_datetime(shifts_df["EndTime"],   format="%H:%M:%S").dt.time
 
-    # Column names in ShiftsTable5 for the days of the week
+    # Column names in ShiftsTable6 for the days of the week
     day_names = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
 
     # --- 3. Create Gurobi Model ---
@@ -1180,8 +1180,8 @@ def display_tasks_and_shifts():
 
     # Get data with loading state
     with st.spinner("Loading scheduling data..."):
-        tasks_df = get_all("TasksTable2")
-        shifts_df = get_all("ShiftsTable5")
+        tasks_df = get_all("TasksTable3")
+        shifts_df = get_all("ShiftsTable6")
 
     # Show empty state if no data
     if tasks_df.empty and shifts_df.empty:
@@ -1517,11 +1517,11 @@ def main():
             col1, col2 = st.columns(2)
             with col1:
                 if st.button("🧹 Clear All Tasks", use_container_width=True):
-                    clear_all("TasksTable2")
+                    clear_all("TasksTable3")
                     st.success("All tasks cleared!")
             with col2:
                 if st.button("🧹 Clear All Shifts", use_container_width=True):
-                    clear_all("ShiftsTable5")
+                    clear_all("ShiftsTable6")
                     st.success("All shifts cleared!")
             
             # Example Data
