@@ -1572,7 +1572,7 @@ def main():
         }
         .stButton button:hover {
             transform: scale(1.05);
-            background-color: #2196F3 !important;  
+            /* background-color: #2196F3 !important;  */
         }
         /* Keep the rest of the CSS the same */
         .stDownloadButton button {
