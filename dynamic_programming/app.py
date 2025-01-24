@@ -3,7 +3,7 @@ import os
 import streamlit as st
 from streamlit_navigation_bar import st_navbar
 from pages import home, contact
-from database import init_db
+from pages.utilities.database import init_db
 
 # Configure paths
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
