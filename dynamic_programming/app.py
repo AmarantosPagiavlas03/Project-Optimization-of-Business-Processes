@@ -3,6 +3,7 @@ import os
 import streamlit as st
 from streamlit_navigation_bar import st_navbar
 from database import init_db
+import importlib
 
 # --- Path Configuration ---
 try:
@@ -23,6 +24,10 @@ try:
 except (ImportError, ModuleNotFoundError) as e:
     st.error(f"Critical import error: {str(e)}")
     st.stop()
+
+if os.environ.get("ENVIRONMENT") == "development":
+    importlib.reload(home)
+    importlib.reload(contact)
 
 # --- App Initialization ---
 st.set_page_config(
