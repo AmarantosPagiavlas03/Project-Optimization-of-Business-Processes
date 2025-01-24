@@ -10,7 +10,6 @@ import io
 import base64
 import os
 import datetime as dt
-from streamlit_navigation_bar import st_navbar
 import pages as pg
 
 DB_FILE = "tasksv2.db"
