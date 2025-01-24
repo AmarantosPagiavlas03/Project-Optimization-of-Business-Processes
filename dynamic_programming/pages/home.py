@@ -5,7 +5,7 @@ from dynamic_programming.optimizer import optimize_tasks_with_gurobi
 from dynamic_programming.visualization import display_tasks_and_shifts
 
 def show_home():
-    st.set_page_config(page_title="Hospital Scheduler", layout="wide")
+    # st.set_page_config(page_title="Hospital Scheduler", layout="wide")
     # Input forms
     task_input_form()
     shift_input_form()
