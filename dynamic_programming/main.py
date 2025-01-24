@@ -18,26 +18,45 @@ from streamlit_extras.switch_page_button import switch_page
 
 def navigation_bar():
     with st.container():
-        # Add VU MC logo
-        st.image(
-            'https://raw.githubusercontent.com/AmarantosPagiavlas03/Project-Optimization-of-Business-Processes/main/dynamic_programming/vu_mc_logo.png',
-            width=200  # Simplified width parameter (no px() needed)
-        )
-        selected = option_menu(
-            menu_title=None,
-            options=["Home", "Upload", "Analytics", 'Settings', 'Contact'],
-            icons=['house', 'cloud-upload', "graph-up-arrow", 'gear', 'phone'],
-            menu_icon="cast",
-            orientation="horizontal",
-            styles={
-                "nav-link": {
-                    "text-align": "left",
-                    "--hover-color": "#eee",
+        # Create two columns: one for the logo and one for the navigation menu
+        col1, col2 = st.columns([1, 4])
+        
+        with col1:
+            st.image(
+                'https://raw.githubusercontent.com/AmarantosPagiavlas03/Project-Optimization-of-Business-Processes/main/dynamic_programming/vu_mc_logo.png',
+                width=200  # Streamlit automatically handles pixel units
+            )
+        
+        with col2:
+            selected = option_menu(
+                menu_title=None,
+                options=["Home", "Upload", "Analytics", 'Settings', 'Contact'],
+                icons=['house', 'cloud-upload', "graph-up-arrow", 'gear', 'phone'],
+                menu_icon="cast",
+                orientation="horizontal",
+                styles={
+                    "container": {
+                        "padding": "0!important",
+                        "margin": "0!important",
+                        "background-color": "#f8f9fa"
+                    },
+                    "nav-link": {
+                        "text-align": "center",
+                        "--hover-color": "#e9ecef",
+                        "margin": "0 10px",
+                    }
                 }
-            }
-        )
+            )
+
+        # Handle page switching
+        if selected == "Home":
+            switch_page("Home")
+        if selected == "Upload":
+            switch_page("Upload")
         if selected == "Analytics":
             switch_page("Analytics")
+        if selected == "Settings":
+            switch_page("Settings")
         if selected == "Contact":
             switch_page("Contact")
 
