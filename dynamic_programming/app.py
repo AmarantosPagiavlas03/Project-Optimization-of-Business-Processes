@@ -19,7 +19,7 @@ init_db()
 if not os.path.exists(logo_path):
     st.error(f"⚠️ Missing logo at: {logo_path}")
     logo_path = None  # Will render without logo
-
+st.write(f"Logo path: {logo_path}") 
 # Setup navigation
 page = st_navbar(
     ["Home", "Contact"],
