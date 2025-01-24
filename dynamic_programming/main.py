@@ -547,7 +547,8 @@ def task_template_download():
                 label="Download Task Template (CSV)",
                 data=csv_data.encode("utf-8"),
                 file_name="task_template.csv",
-                mime="text/csv"
+                mime="text/csv".capitalize,
+                use_container_width=True
             )
         with colB:
             # --- Excel version ---
@@ -558,7 +559,8 @@ def task_template_download():
                 label="Download Task Template (Excel)",
                 data=excel_buffer.getvalue(),
                 file_name="task_template.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                use_container_width=True
             )
 
 def upload_tasks_excel():
