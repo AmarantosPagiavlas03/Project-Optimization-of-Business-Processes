@@ -2,7 +2,7 @@ import sys
 import os
 import streamlit as st
 from streamlit_navigation_bar import st_navbar
-from database import init_db
+from pages.database import init_db
 import time
 from pages import home, contact
 
