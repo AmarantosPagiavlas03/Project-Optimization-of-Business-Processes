@@ -62,6 +62,7 @@ styles = {
         "background-color": "transparent",
         "color": "#e6000f",
         "font-weight": "800",
+        "transform": "none", 
     }
 }
 # Navigation setup
