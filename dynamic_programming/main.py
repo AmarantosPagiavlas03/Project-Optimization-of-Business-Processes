@@ -1170,23 +1170,8 @@ def optimize_tasks_with_gurobi():
                     st.warning("No data available for bar chart")
         else:
             st.warning("No results to visualize") 
-            
-        results = []
-        # Collect task assignments
-        for (task_id, shift_id, d), assign_var in task_shift_vars.items():
-            if assign_var.x > 0.5:
-                workers_assigned = shift_worker_vars.get((shift_id, d), 0).x
-                results.append({
-                    "Task ID": tasks_df.loc[task_id, "id"],
-                    "Task Name": tasks_df.loc[task_id, "TaskName"],
-                    "Day": d,
-                    "Task Start": tasks_df.loc[task_id, "StartTime"].strftime("%H:%M"),
-                    "Task End": tasks_df.loc[task_id, "EndTime"].strftime("%H:%M"),
-                    "Shift ID": shifts_df.loc[shift_id, "id"],
-                    "Shift Start": shifts_df.loc[shift_id, "StartTime"].strftime("%H:%M"),
-                    "Shift End": shifts_df.loc[shift_id, "EndTime"].strftime("%H:%M"),
-                    "Workers Assigned": workers_assigned
-                })
+
+ 
  
         # Calculate daily summaries
         daily_costs = {day: 0 for day in day_names}
@@ -1260,21 +1245,6 @@ def optimize_tasks_with_gurobi():
             mime="text/csv"
         )
  
-
-        # Daily Cost Chart
-        fig_cost = px.bar(day_summary_df, x='Day', y='Total Cost ($)', 
-                        title='<b>Daily Cost Distribution</b>',
-                        color='Day', text_auto='.2s')
-        fig_cost.update_layout(showlegend=False)
-        st.plotly_chart(fig_cost, use_container_width=True)
-
-        # Daily Workers Chart
-        fig_workers = px.bar(day_summary_df, x='Day', y='Workers Assigned',
-                            title='<b>Daily Workforce Distribution</b>',
-                            color='Day', text_auto='.2s')
-        fig_workers.update_layout(showlegend=False)
-        st.plotly_chart(fig_workers, use_container_width=True)
-
 
         st.subheader("📊 Model Statistics")
         stats = {
