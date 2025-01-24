@@ -1176,43 +1176,55 @@ def optimize_tasks_with_gurobi():
         fig_workers.update_layout(showlegend=False)
         st.plotly_chart(fig_workers, use_container_width=True)
 
-        # Calculate shift contributions
-        shift_cost = []
-        for (shift_id, day_str), var in shift_worker_vars.items():
-            shift_cost.append({
-                "Shift ID": shifts_df.loc[shift_id, "id"],
-                "Shift Name": shifts_df.loc[shift_id, "ShiftName"],
-                "Day": day_str,
-                "Cost Contribution": var.x * shifts_df.loc[shift_id, "Weight"]
+        from streamlit_timeline import timeline
+
+        # Generate timeline items
+        timeline_items = []
+        for _, row in results_df.iterrows():
+            timeline_items.append({
+                "start": row["Day"] + " " + row["Task Start"],
+                "end": row["Day"] + " " + row["Task End"],
+                "content": f"{row['Task Name']} (Shift {row['Shift ID']})",
+                "group": row["Shift ID"]
             })
+
+        with st.expander("🕰️ Interactive Timeline"):
+            timeline(timeline_items, groups=[{"id": sid} for sid in results_df["Shift ID"].unique()], 
+                    options={"showCurrentTime": False})
+
+        st.subheader("📊 Model Statistics")
+        stats = {
+            "Solve Time": f"{model.Runtime:.2f} seconds",
+            "Total Variables": model.NumVars,
+            "Total Constraints": model.NumConstrs,
+            "Objective Value": f"${model.ObjVal:,.2f}",
+            "MIP Gap": f"{model.MIPGap*100:.2f}%" if model.IsMIP else "N/A"
+        }
+
+        col1, col2, col3, col4 = st.columns(4)
+        col1.metric("⏱️ Solve Time", stats["Solve Time"])
+        col2.metric("🧩 Variables", stats["Total Variables"])
+        col3.metric("🔗 Constraints", stats["Total Constraints"])
+        col4.metric("🎯 Objective", stats["Objective Value"])
+
+        with st.expander("📋 Detailed Assignments", expanded=True):
+            # Add shift details to results
+            merged_df = results_df.merge(shifts_df[["id", "ShiftName", "Weight"]], 
+                                        left_on="Shift ID", right_on="id")
+            merged_df["Shift Cost"] = merged_df["Weight"] * merged_df["Workers Assigned"]
+            from st_aggrid import AgGrid, GridOptionsBuilder
+            # Formatting
+            gb = GridOptionsBuilder.from_dataframe(merged_df)
+            gb.configure_pagination()
+            gb.configure_side_bar()
+            gb.configure_default_column(groupable=True, value=True, enableRowGroup=True)
+            grid_options = gb.build()
             
-        shift_cost_df = pd.DataFrame(shift_cost)
-        if not shift_cost_df.empty:
-            fig = px.treemap(shift_cost_df, path=['Shift Name', 'Day'], 
-                            values='Cost Contribution',
-                            title='<b>Cost Contribution by Shift</b>')
-            st.plotly_chart(fig, use_container_width=True)
-
-        # Add capacity data if available in shifts_df
-        utilization = []
-        for shift_id in shifts_df.index:
-            shift_days = [day for day in day_names if shifts_df.loc[shift_id, day] == 1]
-            total_workers = sum(
-                shift_worker_vars[(shift_id, day)].x
-                for day in shift_days
-                if (shift_id, day) in shift_worker_vars
-            )
-            utilization.append({
-                "Shift ID": shifts_df.loc[shift_id, "id"],
-                "Shift Name": shifts_df.loc[shift_id, "ShiftName"],
-                "Total Workers Used": total_workers,
-                "Days Active": ", ".join(shift_days)
-            })
-
-        utilization_df = pd.DataFrame(utilization)
-        st.subheader("🚀 Shift Utilization")
-        st.dataframe(utilization_df, hide_index=True)
-
+            AgGrid(merged_df, 
+                gridOptions=grid_options,
+                height=400,
+                theme="streamlit",
+                custom_css={"#gridToolBar": {"padding-bottom": "0px !important"}})
     else:
         st.error(f"Optimization failed with status: {model.status}")
         # Optional: Add infeasibility diagnostics
