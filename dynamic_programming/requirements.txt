@@ -6,3 +6,5 @@ plotly
 gurobipy
 xlsxwriter
 htbuilder
+streamlit_option_menu
+streamlit_extras
