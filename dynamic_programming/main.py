@@ -1373,7 +1373,7 @@ def main():
                 
                 st.divider()
                 with st.expander("👥 Manage Staff"):
-                    worker_input_form()
+                    task_input_form()
 
         # Right Panel - Outputs
         with col2:
