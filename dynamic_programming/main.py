@@ -1562,13 +1562,10 @@ def footer():
 
 def footer():
     myargs = [
-        "Made in ",
-        image('https://avatars3.githubusercontent.com/u/45109972?s=400&v=4',
-              width=px(25), height=px(25)),
-        " with ❤️ by ",
-        link("https://twitter.com/ChristianKlose3", "@ChristianKlose3"),
+        "This app was made for the VU Amsterdam Hospital.",
         br(),
-        link("https://buymeacoffee.com/chrischross", image('https://i.imgur.com/thJhzOO.png')),
+        image('https://github.com/AmarantosPagiavlas03/Project-Optimization-of-Business-Processes/blob/main/dynamic_programming/vu_mc_logo.png',
+        width=px(25), height=px(25)),
     ]
     layout(*myargs)
 
@@ -1584,11 +1581,7 @@ def main():
     task_input_form()
     shift_input_form()
     # worker_input_form()
-
-    # with st.sidebar:
-    #     st.markdown("---") 
-    # generate_and_fill_data_form()
-
+ 
     with st.sidebar:
         st.markdown("---")  # Add a separator line
         col1, col2 = st.columns(2)
