@@ -1304,9 +1304,7 @@ def main():
         }
         .stButton button:hover {
             transform: scale(1.05);
-            /* background-color: #2196F3 !important;  */
         }
-        /* Keep the rest of the CSS the same */
         .stDownloadButton button {
             background-color: #2196F3 !important;
             color: white !important;
@@ -1333,74 +1331,65 @@ def main():
     
     with home_tab:
         header()
-                
-        # Main Content Tabs
-        input_tab, visualize_tab, optimize_tab = st.tabs(["📥 Input Data", "📊 Visualization", "⚙️ Optimization"])
         
-        with input_tab:
-            st.subheader("Data Input Methods")
-            manual_tab, upload_tab = st.tabs(["✍️ Manual Entry", "📤 Bulk Upload"])
+        # Create two main columns
+        left_col, right_col = st.columns([1, 3])
+        
+        with left_col:
+            # Manual Input Section
+            with st.expander("➕ Add Tasks/Shifts Manually", expanded=True):
+                task_input_form()
+                shift_input_form()
             
-            with manual_tab:
-                with st.expander("➕ Add New Task", expanded=True):
-                    task_input_form()
-                
-                with st.expander("👥 Add New Shift", expanded=True):
-                    shift_input_form()
-                
+            # Bulk Upload Section
+            with st.expander("📤 Bulk Upload Data"):
+                upload_tasks_excel()
+                upload_shifts_excel()
                 st.markdown("---")
-                col1, col2 = st.columns(2)
-                with col1:
-                    if st.button("🧹 Clear All Tasks", use_container_width=True, type="secondary"):
-                        clear_all("TasksTable2")
-                        st.success("All tasks cleared!")
-                with col2:
-                    if st.button("🧹 Clear All Shifts", use_container_width=True, type="secondary"):
-                        clear_all("ShiftsTable5")
-                        st.success("All shifts cleared!")
-
-            with upload_tab:
-                st.subheader("Bulk Data Upload")
-                up_col1, up_col2 = st.columns(2)
-                
-                with up_col1:
-                    st.markdown("### Tasks Upload")
-                    upload_tasks_excel()
-                    with st.expander("📁 Task Template"):
-                        task_template_download()
-                
-                with up_col2:
-                    st.markdown("### Shifts Upload")
-                    upload_shifts_excel()
-                    with st.expander("📁 Shift Template"):
-                        shift_template_download()
-
-        with visualize_tab:
-            display_tasks_and_shifts()
-
-        with optimize_tab:
-            st.subheader("Optimization Engine")
-            st.markdown("### Task-Shift Assignment")
-            st.info("Assign tasks to shifts considering time windows and nurse requirements")
-            if st.button("🚀 Run Task Optimization", use_container_width=True):
-                optimize_tasks_with_gurobi()
+                st.write("Download templates:")
+                task_template_download()
+                shift_template_download()
             
-
-            
+            # Data Management
             st.markdown("---")
-            st.markdown("### Example Datasets")
+            st.write("**Data Management**")
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("🧹 Clear All Tasks", use_container_width=True):
+                    clear_all("TasksTable2")
+                    st.success("All tasks cleared!")
+            with col2:
+                if st.button("🧹 Clear All Shifts", use_container_width=True):
+                    clear_all("ShiftsTable5")
+                    st.success("All shifts cleared!")
+            
+            # Example Data
             with st.expander("🔍 Load Example Data"):
                 ex_col1, ex_col2 = st.columns(2)
                 with ex_col1:
-                    if st.button("Small Dataset", help="Load a small demo dataset", use_container_width=True):
+                    if st.button("Small Dataset", use_container_width=True):
                         insert()
                         st.success("Small example data loaded!")
                 with ex_col2:
-                    if st.button("Large Dataset", help="Load a comprehensive demo dataset", use_container_width=True):
+                    if st.button("Large Dataset", use_container_width=True):
                         insert2()
                         st.success("Large example data loaded!")
 
+        with right_col:
+            # Visualization and Optimization Tabs
+            viz_tab, opt_tab = st.tabs(["📊 Visualization", "⚙️ Optimization"])
+            
+            with viz_tab:
+                display_tasks_and_shifts()
+            
+            with opt_tab:
+                st.markdown("### Task-Shift Assignment Optimization")
+                st.info("Assign tasks to shifts considering time windows and nurse requirements")
+                if st.button("🚀 Run Task Optimization", use_container_width=True):
+                    optimize_tasks_with_gurobi()
+                
     with contact_tab:
         show_contact()
+
 if __name__ == "__main__":
     main()
