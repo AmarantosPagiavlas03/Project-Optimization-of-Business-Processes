@@ -255,13 +255,12 @@ def task_input_form():
             EndTime = st.time_input("End Time*", 
                                   (datetime.now() + timedelta(hours=1)).time())
         with time_col3:
-            duration = st.slider("Duration (minutes)*", 15, 480, 60, step=15)
+            duration = st.number_input("Duration (minutes)*", 
+                                     min_value=15, max_value=480, 
+                                     value=60, step=15)
 
-        # Add task button with proper alignment
-        _, col_submit = st.columns([4, 1])
-        with col_submit:
-            submitted = st.form_submit_button("➕ Add Task", 
-                                            use_container_width=True)
+        # Full-width submit button
+        submitted = st.form_submit_button("➕ Add Task", use_container_width=True)
             
         if submitted:
             if not TaskName:
@@ -307,11 +306,8 @@ def shift_input_form():
         day_states = [days[i].checkbox(label, key=f"day_{label}") 
                      for i, label in enumerate(day_labels)]
 
-        # Submit button
-        _, col_submit = st.columns([4, 1])
-        with col_submit:
-            submitted = st.form_submit_button("➕ Add Shift", 
-                                            use_container_width=True)
+        # Full-width submit button
+        submitted = st.form_submit_button("➕ Add Shift", use_container_width=True)
             
         if submitted:
             shift_data = (
