@@ -36,9 +36,9 @@ init_db()
 
 
 # Verify logo exists
-if not os.path.exists(logo_path):
-    st.error(f"⚠️ Missing logo at: {logo_path}")
-    logo_path = None  # Will render without logo
+# if not os.path.exists(logo_path):
+#     st.error(f"⚠️ Missing logo at: {logo_path}")
+#     logo_path = None  # Will render without logo
 
 styles = {
     "nav": {
@@ -72,7 +72,7 @@ styles = {
 page = st_navbar(
     ["Home", "Contact"],
     options={"show_menu": False, "show_sidebar": False},
-    logo_path=logo_path
+    # logo_path=logo_path
 )
 
 # Route pages
