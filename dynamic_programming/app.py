@@ -57,12 +57,12 @@ styles = {
         "font-weight": "500"
     },
     "active": {
-        "background-color": "transparent",  # Remove background
+        "background-color": "transparent",
         "color": "black",
         "font-weight": "600",
-        "padding": "14px",
-        "border-radius": "0",  # Remove rounded corners
-        "border-bottom": "3px solid #e6000f"  # Add underline instead
+        "padding": "14px 14px 18px 14px",  # Extra bottom padding
+        "border-radius": "0",
+        "border-bottom": "3px solid #e6000f"
     }
 }
 
