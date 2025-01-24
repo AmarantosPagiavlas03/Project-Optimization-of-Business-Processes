@@ -11,11 +11,16 @@ def show_home():
     shift_input_form()
     # worker_input_form()
  
-
-    st.markdown("---")  # Add a separator line
- 
-
- 
+    # Buttons for example data
+    colA, colB = st.columns(2)
+    with colA:
+        if st.button("Data Example"):
+            insert()
+            st.success("Data Example 1 inserted!")
+    with colB:
+        if st.button("Data Example2"):
+            insert2()
+            st.success("Data Example 2 inserted!")
     if st.button("Clear All Tasks"):
         clear_all("TasksTable2")
         st.success("All tasks have been cleared!")
