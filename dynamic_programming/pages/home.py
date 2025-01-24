@@ -13,9 +13,9 @@ def show_home():
  
     # Buttons for example data
  
-    if st.button("Clear All Tasks1"):
+    if st.button("Clear All Tasks"):
         clear_all("TasksTable2")
-        st.success("All tasks have been cleared!")
+        st.success("All tasks have been cleared!!!")
  
     if st.button("Clear All Shifts"):
         clear_all("ShiftsTable5")
