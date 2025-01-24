@@ -1528,7 +1528,7 @@ def display_tasks_and_shifts():
         st.warning(f"Plotly is required for Gantt charts: {e}")
 
 def show_contact():
-    st.title("Contact Us1")
+    st.title("Contact Us")
 
     # Add a description or introductory text
     st.write("We'd love to hear from you! Please use the form below to get in touch with us.")
@@ -1562,11 +1562,11 @@ def show_contact():
 
 
 def main():
-    st.set_page_config(page_title="Hospital Scheduler", layout="wide")
+    st.set_page_config(page_title="Hospital Scheduler", layout="centered")
 
         
     init_db()
-    home_tab , contact_tab = st.tabs(["Home", "Contact"])
+    home_tab , contact_tab = st.tabs(["Home", "Contact Us"])
     with home_tab:
         with st.container(border=True):
             # Simulate tabs using buttons/radio
@@ -1609,6 +1609,7 @@ def main():
                     if st.button("Clear All Shifts",use_container_width=True):
                         clear_all("ShiftsTable5")
                         st.success("All shifts have been cleared!")
+
         with st.expander("Example Data", expanded=False):
             # Buttons for example data
             colA, colB = st.columns(2)
