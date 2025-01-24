@@ -19,12 +19,36 @@ init_db()
 if not os.path.exists(logo_path):
     st.error(f"⚠️ Missing logo at: {logo_path}")
     logo_path = None  # Will render without logo
-
+styles = {
+    "nav": {
+        "background-color": "royalblue",
+        "justify-content": "left",
+    },
+    "img": {
+        "padding-right": "14px",
+    },
+    "span": {
+        "color": "white",
+        "padding": "14px",
+    },
+    "active": {
+        "background-color": "white",
+        "color": "var(--text-color)",
+        "font-weight": "normal",
+        "padding": "14px",
+    }
+}
+options = {
+    "show_menu": False,
+    "show_sidebar": False,
+}
 # Setup navigation
 page = st_navbar(
     ["Home", "Contact"],
     options={"show_menu": False, "show_sidebar": False},
-    logo_path=logo_path
+    logo_path=logo_path,
+    styles=styles,
+    options=options,
 )
 
 # Route pages
