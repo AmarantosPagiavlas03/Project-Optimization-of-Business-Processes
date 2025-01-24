@@ -10,7 +10,7 @@ import io
 import base64
 import os
 import datetime as dt
-import pages as pg
+
 
 DB_FILE = "tasksv2.db"
 
