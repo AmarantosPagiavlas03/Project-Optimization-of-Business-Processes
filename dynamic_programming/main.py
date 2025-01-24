@@ -1553,26 +1553,28 @@ def main():
     init_db()
     home_tab , contact_tab = st.tabs(["Home", "Contact"])
     with home_tab:
-        # Input forms
-        task_input_form()
-        shift_input_form()
-        # worker_input_form()
+        manual , upload = st.tabs(["manual", "upload"])
+        with manual:
+            # Input forms
+            task_input_form()
+            shift_input_form()
+            # worker_input_form()
     
-        with st.sidebar:
-            st.markdown("---")  # Add a separator line
-            col1, col2 = st.columns(2)
+        # with st.sidebar:
+        #     st.markdown("---")  # Add a separator line
+        #     col1, col2 = st.columns(2)
 
-            with col1:
-                if st.button("Clear All Tasks"):
-                    clear_all("TasksTable2")
-                    st.success("All tasks have been cleared!")
+        #     with col1:
+        #         if st.button("Clear All Tasks"):
+        #             clear_all("TasksTable2")
+        #             st.success("All tasks have been cleared!")
 
-            with col2:
-                if st.button("Clear All Shifts"):
-                    clear_all("ShiftsTable5")
-                    st.success("All shifts have been cleared!")
+        #     with col2:
+        #         if st.button("Clear All Shifts"):
+        #             clear_all("ShiftsTable5")
+        #             st.success("All shifts have been cleared!")
 
-        with st.sidebar.expander("Task Data Import/Export"):
+        with upload:
             # 1. Download Template
             st.subheader("Download Template")
             task_template_download()
@@ -1587,7 +1589,6 @@ def main():
             #     clear_all("Workers")
             #     st.success("All workers have been cleared!")
 
-        with st.sidebar.expander("Shift Data Import/Export"):
             st.subheader("Download Example Shift Template")
             shift_template_download()
 
