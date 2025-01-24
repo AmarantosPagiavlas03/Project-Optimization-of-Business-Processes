@@ -1561,7 +1561,6 @@ def main():
                 label_visibility="collapsed"
             )
         
-            manual , upload = st.tabs(["manual", "upload"])
     
             if selected_subtab == "Manual":
                 with st.container(border=True):
