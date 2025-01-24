@@ -1177,8 +1177,6 @@ def display_tasks_and_shifts():
         st.image("https://cdn-icons-png.flaticon.com/512/7486/7486744.png", width=200)
         return
 
-    TASK_COLOR_PALETTE = px.colors.qualitative.D3  # Try: Light24, Bold, Pastel, Vivid
-    SHIFT_COLOR_SCALE = px.colors.sequential.thermal  # Try: deep, emrld, mint, sunset
     # Metrics cards at the top
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -1217,7 +1215,7 @@ def display_tasks_and_shifts():
                     x_end="End",
                     y="Day",
                     color="TaskName",
-                    color_discrete_sequence=TASK_COLOR_PALETTE,  # Custom color palette
+                    color_discrete_sequence=px.colors.qualitative.Pastel,
                     hover_data={
                         "TaskName": True,
                         "NursesRequired": True,
@@ -1277,7 +1275,7 @@ def display_tasks_and_shifts():
                     x_end="End",
                     y="Day",
                     color="Weight",
-                    color_continuous_scale=SHIFT_COLOR_SCALE,  # Custom color scale
+                    color_continuous_scale=px.colors.sequential.Blues,
                     hover_data={
                         "ShiftID": True,
                         "NursesAllocated": True,
@@ -1288,7 +1286,6 @@ def display_tasks_and_shifts():
                     title="<b>Shift Schedule by Weight</b>",
                     template="plotly_white"
                 )
-
                 fig_shifts.update_layout(
                     height=600,
                     xaxis_title="Time of Day",
