@@ -1597,8 +1597,8 @@ def main():
                         upload_shifts_excel()
                         shift_template_download()
 
-            with st.container(border=True):
-                col1, col2 = st.columns(2)
+            with st.container(border=False):
+                col1, col2 = st.columns(2,gap="large")
                 with col1:
                     if st.button("Clear All Tasks"):
                         clear_all("TasksTable2")
