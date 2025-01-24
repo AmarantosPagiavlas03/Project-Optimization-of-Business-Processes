@@ -1285,9 +1285,9 @@ def display_tasks_and_shifts():
 
     # Show empty state if no data
     if tasks_df.empty and shifts_df.empty:
+        st.info("🌟 No tasks or shifts found. Add data to get started!")
         _,_, col, _, _ = st.columns([1, 1, 1,1,1])  # Ratio creates centered middle column
         with col:
-            st.info("🌟 No tasks or shifts found. Add data to get started!")
             st.image("https://cdn-icons-png.flaticon.com/512/7486/7486744.png", width=200)
         return
 
