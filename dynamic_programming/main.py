@@ -1482,48 +1482,55 @@ def image(src_as_string, **style):
 def link(link, text, **style):
     return a(_href=link, _target="_blank", style=styles(**style))(text)
 
-def layout(*args):
+# Common CSS for both header and footer
+COMMON_STYLE = """
+<style>
+  /* Hide Streamlit default footer & menu */
+  #MainMenu {visibility: hidden;}
+  footer {visibility: hidden;}
 
-    style = """
-    <style>
-      /* Hide streamlit default footer & menu */
-      # MainMenu {visibility: hidden;}
-      footer {visibility: hidden;}
-      .stApp { bottom: 105px; }
+  /* Push main app content down so the fixed header doesn't overlap it. 
+     Also, push it up a bit from the bottom if you have a fixed footer. */
+  .stApp {
+      margin-top: 70px; /* Adjust if header is taller or smaller */
+      margin-bottom: 105px; /* to accommodate the footer */
+  }
 
-      /* Remove the white border line by disabling hr border */
-      hr {
-          border: none;
-          height: 0;
-      }
+  /* Remove any default border/line from hr */
+  hr {
+      border: none;
+      height: 0;
+  }
 
-      /* 
-         Automatically switch to white text in dark mode 
-         and black text in light mode. 
-         This follows the user's system/browser preference. 
-      */
-      @media (prefers-color-scheme: dark) {
-          .stApp, .stApp * {
-              color: #FFFFFF !important;
-          }
+  /* Auto switch to white text in dark mode and black in light mode */
+  @media (prefers-color-scheme: dark) {
+      .stApp, .stApp * {
+          color: #FFFFFF !important;
       }
-      @media (prefers-color-scheme: light) {
-          .stApp, .stApp * {
-              color: #000000 !important;
-          }
+  }
+  @media (prefers-color-scheme: light) {
+      .stApp, .stApp * {
+          color: #000000 !important;
       }
-    </style>
+  }
+</style>
+"""
+
+def header_layout(*args):
     """
-
-    style_div = styles(
+    Creates a fixed-position header at the top of the page.
+    """
+    # Header style: fixed at top
+    style_div_header = styles(
         position="fixed",
+        top=0,
         left=0,
-        bottom=0,
         margin=px(0, 0, 0, 0),
         width=percent(100),
         text_align="center",
         height="auto",
-        opacity=1
+        opacity=1,
+        background_color="inherit"  # or specify a color if you want a header background
     )
 
     style_hr = styles(
@@ -1532,37 +1539,104 @@ def layout(*args):
     )
 
     body = p()
-    foot = div(style=style_div)(
+    header_div = div(style=style_div_header)(
         hr(style=style_hr),
         body
     )
 
-    st.markdown(style, unsafe_allow_html=True)
+    # Inject our common style
+    st.markdown(COMMON_STYLE, unsafe_allow_html=True)
 
+    # Build the header content
     for arg in args:
         if isinstance(arg, str):
             body(arg)
         elif isinstance(arg, HtmlElement):
             body(arg)
 
+    # Render the header
+    st.markdown(str(header_div), unsafe_allow_html=True)
+
+def layout_footer(*args):
+    """
+    Creates a fixed-position footer at the bottom of the page.
+    """
+    # Footer style: fixed at bottom
+    style_div_footer = styles(
+        position="fixed",
+        left=0,
+        bottom=0,
+        margin=px(0, 0, 0, 0),
+        width=percent(100),
+        text_align="center",
+        height="auto",
+        opacity=1,
+        background_color="inherit"  # or pick a color if you want a footer background
+    )
+
+    style_hr = styles(
+        display="block",
+        margin=px(8, 8, "auto", "auto")
+    )
+
+    body = p()
+    foot = div(style=style_div_footer)(
+        hr(style=style_hr),
+        body
+    )
+
+    # The same CSS injection for consistency
+    st.markdown(COMMON_STYLE, unsafe_allow_html=True)
+
+    # Build the footer content
+    for arg in args:
+        if isinstance(arg, str):
+            body(arg)
+        elif isinstance(arg, HtmlElement):
+            body(arg)
+
+    # Render the footer
     st.markdown(str(foot), unsafe_allow_html=True)
 
 
+def header():
+    """
+    Example usage of header_layout: 
+    You can add text, images, links, etc.
+    """
+    my_header_args = [
+        "VU Amsterdam Hospital - Dashboard",
+        br(),
+        image(
+            'https://raw.githubusercontent.com/AmarantosPagiavlas03/Project-Optimization-of-Business-Processes/main/dynamic_programming/vu_mc_logo.png',
+            width=px(100),  # auto-scale height
+        )
+    ]
+    header_layout(*my_header_args)
+
+
 def footer():
-    myargs = [
+    """
+    Example usage of layout_footer: 
+    You can add text, images, links, etc.
+    """
+    my_footer_args = [
         "This app was made for the VU Amsterdam Hospital.",
         br(),
-        image('https://raw.githubusercontent.com/AmarantosPagiavlas03/Project-Optimization-of-Business-Processes/main/dynamic_programming/vu_mc_logo.png',
-        width=px(200), height=px(33)),
+        image(
+            'https://raw.githubusercontent.com/AmarantosPagiavlas03/Project-Optimization-of-Business-Processes/main/dynamic_programming/vu_mc_logo.png',
+            width=px(200),
+            height=px(33)
+        ),
     ]
-    layout(*myargs)
-
+    layout_footer(*my_footer_args)
 # ------------------------------------------------------------------
 #                            Main App
 # ------------------------------------------------------------------
 def main():
     st.set_page_config(page_title="Hospital Scheduler", layout="wide")
-    footer()
+    header()
+    
     init_db()
 
     # Input forms
@@ -1630,7 +1704,7 @@ def main():
 
     # Visualization
     display_tasks_and_shifts()
-
+    footer()
 
 
 
