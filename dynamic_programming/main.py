@@ -324,15 +324,6 @@ def shift_input_form():
         for i, col in enumerate(cols):
             with col:
                 st.markdown(
-                    f"<div style='text-align: center; margin-bottom: -15px;'>"
-                    f"</div>", 
-                    unsafe_allow_html=True
-                )
-                day_states[i] = st.toggle(
-                    "",  # Empty label
-                    key=f"day_{days[i]}" 
-                )
-                st.markdown(
                     f"""
                     <div style="
                         position: relative;
@@ -345,6 +336,15 @@ def shift_input_form():
                     </div>
                     """,
                     unsafe_allow_html=True
+                )
+                st.markdown(
+                    f"<div style='text-align: center; margin-bottom: -15px;'>"
+                    f"</div>", 
+                    unsafe_allow_html=True
+                )
+                day_states[i] = st.toggle(
+                    "",  # Empty label
+                    key=f"day_{days[i]}" 
                 )
         # --- Form Submission ---
         submitted = st.form_submit_button("➕ Add Shift", use_container_width=True)
