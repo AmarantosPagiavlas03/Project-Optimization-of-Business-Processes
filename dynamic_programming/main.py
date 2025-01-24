@@ -1172,6 +1172,7 @@ def optimize_tasks_with_gurobi():
         # Add this after your existing visualizations but before the detailed tables
         if not results_df.empty:
             from streamlit import session_state as ss
+            import numpy as np
             # Initialize session state variables
             if 'selected_shift' not in ss:
                 ss.selected_shift = results_df["Shift ID"].iloc[0]
