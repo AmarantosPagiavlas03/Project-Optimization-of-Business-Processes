@@ -74,39 +74,6 @@ page = st_navbar(
 )
 
 # Add subtle shadow to nav bar
-st.markdown("""
-<style>
-    [data-testid="stNavigationBar"] .active {
-        z-index: 1;
-    }
-
-    [data-testid="stNavigationBar"] .active::before {
-        content: "";
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 110%;
-        height: 140%;
-        background: rgba(230, 0, 15, 0.1);
-        transform: translate(-50%, -50%) scale(0);
-        border-radius: 8px;
-        transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-        z-index: -1;
-    }
-
-    [data-testid="stNavigationBar"] .active:hover::before,
-    [data-testid="stNavigationBar"] .active:active::before {
-        transform: translate(-50%, -50%) scale(1);
-    }
-
-    [data-testid="stNavigationBar"] span {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 14px 16px;
-    }
-</style>
-""", unsafe_allow_html=True)
-
+ 
 # Route pages
 {"Home": home.show_home, "Contact": contact.show_contact}.get(page)()
