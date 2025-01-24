@@ -1530,13 +1530,13 @@ COMMON_STYLE = """
   #MainMenu {visibility: hidden;}
   footer {visibility: hidden;}
 
-  /* Push main app content down so the fixed header doesn't overlap it. 
-     Also, push it up a bit from the bottom if you have a fixed footer. */
+  /* Push main app content down so the fixed header doesn't overlap it. */
   .stApp {
-      margin-top: 70px; /* Adjust if header is taller or smaller */
-      margin-bottom: 60px; /* to accommodate the footer */
+      margin-top: 70px; 
+      margin-bottom: 60px; 
   }
-    /* Also push down the sidebar to clear the fixed header */
+
+  /* Also push down the sidebar to clear the fixed header */
   [data-testid="stSidebar"] {
       margin-top: 70px;
       z-index: 9999; /* ensures sidebar is on top if it overlaps header */
