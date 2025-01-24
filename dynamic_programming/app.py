@@ -1,15 +1,15 @@
-# Add this FIRST in app.py
+# In app.py (corrected version)
 import sys
 import os
 
-# Get the path to the project root (parent of dynamic_programming folder)
+# Add project root to Python path FIRST
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, project_root)  # Insert at start of path list
+sys.path.insert(0, project_root)
 
-# Now import other modules
+# Now import modules
 import streamlit as st
 from streamlit_navigation_bar import st_navbar
-from dynamic_programming.pages import home, contact  # Use absolute import
+from dynamic_programming.pages import home, contact  # Direct import
 from database import init_db
 
 # Add this at the top of app.py
@@ -29,9 +29,10 @@ page = st_navbar(
 )
 
 functions = {
-    "Home": pg.show_home,
-    "Contact": pg.show_contact,
+    "Home": home.show_home,
+    "Contact": contact.show_contact
 }
+
 go_to = functions.get(page)
 if go_to:
     go_to()
