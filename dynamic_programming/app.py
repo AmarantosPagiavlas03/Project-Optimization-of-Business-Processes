@@ -4,14 +4,15 @@ import streamlit as st
 from streamlit_navigation_bar import st_navbar
 from database import init_db
 import time
+# Import pages after path configuration
+from pages import home, contact
 
 # Configure paths FIRST to ensure proper imports
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(current_dir)
 sys.path.insert(0, project_root)
 
-# Import pages after path configuration
-from dynamic_programming.pages import home, contact
+
 
 # Constant configurations
 THEME_CONFIG = {
