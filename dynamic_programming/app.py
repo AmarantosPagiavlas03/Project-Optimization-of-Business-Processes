@@ -43,7 +43,6 @@ styles = {
         "padding-left": "2rem",
         "gap": "4rem",
         "background-color": theme_config["primaryColor"],
-        "position": "relative"  # Add positioning context
     },
     "img": {
         "width": "200px",
@@ -56,19 +55,13 @@ styles = {
         "color": "white",
         "font-size": "1.1rem",
         "font-weight": "500",
-        "position": "relative",  # Needed for pseudo-element
-        "transition": "all 0.2s ease"  # Smooth transitions
+        "position": "relative",
+        "transition": "none"  # Disable default transitions
     },
     "active": {
         "background-color": "transparent",
         "color": "#e6000f",
         "font-weight": "800",
-        "transform": "translateY(-2px)"  # Vertical lift instead of scale
-    },
-    "hover": {
-        "background-color": "transparent",
-        "color": "#e6000f",
-        "transform": "translateY(-1px)"
     }
 }
 # Navigation setup
@@ -84,9 +77,27 @@ st.markdown("""
 <style>
     [data-testid="stNavigationBar"] span {
         display: inline-block;
-        transition: all 0.2s ease;
+        transform: translateZ(0);  /* GPU acceleration */
+        will-change: transform;
+        transition: 
+            transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+            color 0.3s ease;
     }
-    
+
+    [data-testid="stNavigationBar"] .active {
+        transform: translateY(-2px);
+        animation: active-pulse 1.5s ease-in-out infinite;
+    }
+
+    [data-testid="stNavigationBar"] span:hover {
+        transform: translateY(-1px);
+    }
+
+    @keyframes active-pulse {
+        0%, 100% { transform: translateY(-2px); }
+        50% { transform: translateY(-3px); }
+    }
+
     [data-testid="stNavigationBar"] .active::after {
         content: "";
         display: block;
@@ -96,12 +107,12 @@ st.markdown("""
         position: absolute;
         bottom: -4px;
         left: 0;
-        transform: scaleX(1.1);
-        transform-origin: center;
+        animation: underline-grow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
-    
-    [data-testid="stNavigationBar"] span:hover {
-        transform: translateY(-1px);
+
+    @keyframes underline-grow {
+        from { transform: scaleX(0); }
+        to { transform: scaleX(1); }
     }
 </style>
 """, unsafe_allow_html=True)
