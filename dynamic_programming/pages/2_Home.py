@@ -49,5 +49,5 @@ def navigation_bar():
             switch_page("Analytics")
         if selected == "Contact":
             switch_page("Contact")
-# navigation_bar()
-st.title("Analytics")
+navigation_bar()
+st.title("Home")
