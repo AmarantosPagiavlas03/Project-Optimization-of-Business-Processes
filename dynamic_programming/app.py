@@ -14,7 +14,7 @@ logo_path = os.path.join(parent_dir, "vu_mc_logo_text.svg")
 # Initialize app
 st.set_page_config(
     initial_sidebar_state="collapsed",
-    layout="centered",
+    layout="wide",
     page_title="Business Process Optimizer",
     page_icon="⚙️"
 )
