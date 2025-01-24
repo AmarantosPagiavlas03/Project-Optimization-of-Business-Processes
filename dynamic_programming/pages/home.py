@@ -22,10 +22,6 @@ def show_home():
         clear_all("ShiftsTable5")
         st.success("All shifts have been cleared!")
  
-    st.markdown("---")
-    
-    st.subheader("Upload Your Shifts File")
-    upload_shifts_excel()
 
     # Buttons for example data
     colA, colB = st.columns(2)
