@@ -1212,8 +1212,13 @@ def optimize_tasks_with_gurobi():
 
             # Always show the chart container
             chart_container = st.container()
- 
-            
+                # Filter data for selected shift/day
+            shift_day_df = results_df[
+                (results_df["Shift ID"] == selected_shift) & 
+                (results_df["Day"] == selected_day)
+            ]
+    
+
             if not shift_day_df.empty:
                 with chart_container:
                     # Calculate total cost for title
