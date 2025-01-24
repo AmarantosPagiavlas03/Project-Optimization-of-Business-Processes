@@ -22,7 +22,7 @@ st.set_page_config(
     page_title="Business Process Optimizer",
     page_icon="⚙️"
 )
-
+st.write('get here')
 # # Set theme config
 # theme_config = {
 #     "primaryColor": "#f07814",
