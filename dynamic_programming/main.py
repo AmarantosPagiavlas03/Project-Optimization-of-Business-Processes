@@ -260,7 +260,7 @@ def task_input_form():
                                      value=60, step=15)
 
         # Full-width submit button
-        submitted = st.form_submit_button("➕ Add Task", use_container_width=True)
+        submitted = st.form_submit_button("➕ Add Task", use_container_width=True,type="primary")
             
         if submitted:
             if not TaskName:
@@ -312,12 +312,9 @@ def shift_input_form():
 
         # --- Shift Weight with Synced Display ---
         st.markdown("### Shift Preferences")
-        Weight = st.slider("Shift Weight*", 0.1, 5.0, 1.0, 0.1,
+        Weight = st.slider("Shift Weight*", 0.1, 10.0, 1.0, 0.1,
                          help="Higher weight means more expensive to schedule")
         
-        # Display weight in same column to ensure sync
-        st.metric("Selected Weight", f"{Weight:.1f}")
-
         # --- Days of Week Selection with Labels Below ---
         st.markdown("### Active Days*")
         days_full = ["Monday", "Tuesday", "Wednesday", "Thursday", 
@@ -326,14 +323,35 @@ def shift_input_form():
         
         cols = st.columns(7)
         day_states = {}
+        
         for i, col in enumerate(cols):
             with col:
-                # Toggle button with invisible label
-                state = st.toggle("", key=f"day_{days_full[i]}")
-                # Display abbreviation below toggle
-                st.markdown(f"<div style='text-align: center'>{abbreviations[i]}</div>", 
-                          unsafe_allow_html=True)
-                day_states[days_full[i]] = state
+                # Container with fixed height and centered content
+                st.markdown(
+                    f"""
+                    <div style="
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: space-between;
+                        height: 80px;
+                        margin: 0 -10px;
+                    ">
+                        <div style="margin-top: 8px;">
+                            {st.toggle("", key=f"day_{days_full[i]}")}
+                        </div>
+                        <div style="
+                            margin-top: 4px;
+                            font-weight: 500;
+                            font-size: 0.8em;
+                        ">
+                            {abbreviations[i]}
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+                day_states[days_full[i]] = st.session_state[f"day_{days_full[i]}"]
 
         # --- Validation & Submission ---
         submitted = st.form_submit_button("➕ Add Shift", 
