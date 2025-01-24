@@ -270,32 +270,18 @@ def task_input_form():
             # Generate time intervals for select boxes
             intervals = generate_time_intervals()
 
-            def generate_15_min_intervals():
-                intervals = []
-                for hour in range(24):
-                    for minute in [0, 15, 30, 45]:
-                        intervals.append(dt.time(hour=hour, minute=minute))
-                return intervals
-
-            intervals = generate_15_min_intervals()
-
-            # Suppose you want the default to be 'current time + 1 hour'
             now_plus_1h = (dt.datetime.now() + dt.timedelta(hours=1)).time()
             now_plus_2h = (dt.datetime.now() + dt.timedelta(hours=2)).time()
-
             # Round to nearest 15 minutes (optional)
             nearest_15_1h = (now_plus_1h.minute // 15) * 15
             default_time_1h = now_plus_1h.replace(minute=nearest_15_1h, second=0, microsecond=0)
             nearest_15_2h = (now_plus_2h.minute // 15) * 15
             default_time_2h = now_plus_2h.replace(minute=nearest_15_2h, second=0, microsecond=0)
-
-            # Ensure that default_time is in your intervals list
-            # For this example, it should be after rounding.
+            # Ensure that default_time is in the intervals list
             if default_time_1h in intervals:
                 default_idx_1h = intervals.index(default_time_1h)
             else:
                 default_idx_1h = 0 
-
             if default_time_2h in intervals:
                 default_idx_2h = intervals.index(default_time_2h)
             else:
