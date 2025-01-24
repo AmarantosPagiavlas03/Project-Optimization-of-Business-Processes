@@ -57,10 +57,13 @@ styles = {
         "font-weight": "500"
     },
     "active": {
-        "color": "black",
-        "font-weight": "600",
-        "padding": "14px",
-        "position": "relative",  # Needed for pseudo-element
+        "background-color": "#e6000f",
+        "color": "white",
+        "font-weight": "500",
+        "padding": "20px 24px",  # Increased from 14px
+        "border-radius": "50%",   # Perfect circle
+        "margin": "0 8px",        # Space between circle and other elements
+        "transform": "scale(1.1)" # Slight enlargement
     }
 }
 
@@ -75,20 +78,8 @@ page = st_navbar(
 # Add subtle shadow to nav bar
 st.markdown("""
 <style>
-    [data-testid="stNavigationBar"] .active::after {
-        content: "";
-        display: block;
-        width: 100%;
-        height: 3px;
-        background: #e6000f;
-        position: absolute;
-        bottom: -8px;
-        left: 0;
-    }
-    
-    [data-testid="stNavigationBar"] .active {
-        margin-bottom: 8px !important;
-        overflow: visible !important;
+    [data-testid="stNavigationBar"] {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 </style>
 """, unsafe_allow_html=True)
