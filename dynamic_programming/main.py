@@ -1580,27 +1580,25 @@ def main():
 
         with upload:
             with st.container(border=True):
-                # 1. Download Template
-                st.subheader("Download Template")
-                task_template_download()
+                colA, colB = st.columns(2)
+                with colA:
+                    # 1. Download Template
+                    st.subheader("Download Template")
+                    task_template_download()
 
-                st.markdown("---")
+ 
 
-                # 2. Upload user file
-                st.subheader("Upload Your Tasks")
-                upload_tasks_excel()
+                    # 2. Upload user file
+                    st.subheader("Upload Your Tasks")
+                    upload_tasks_excel()
+                with colB:
+                    st.subheader("Download Example Shift Template")
+                    shift_template_download()
 
-                # if st.button("Clear All Workers"):
-                #     clear_all("Workers")
-                #     st.success("All workers have been cleared!")
-
-                st.subheader("Download Example Shift Template")
-                shift_template_download()
-
-                st.markdown("---")
-                
-                st.subheader("Upload Your Shifts File")
-                upload_shifts_excel()
+        
+                    
+                    st.subheader("Upload Your Shifts File")
+                    upload_shifts_excel()
 
         # Buttons for example data
         colA, colB = st.columns(2)
