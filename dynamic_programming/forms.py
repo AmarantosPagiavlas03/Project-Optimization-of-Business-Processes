@@ -305,7 +305,8 @@ def task_template_download():
         label="Download Task Template (CSV)",
         data=csv_data.encode("utf-8"),
         file_name="task_template.csv",
-        mime="text/csv"
+        mime="text/csv",
+        key="task_template_download_csv"
     )
 
     # --- Excel version ---
@@ -316,7 +317,8 @@ def task_template_download():
         label="Download Task Template (Excel)",
         data=excel_buffer.getvalue(),
         file_name="task_template.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        key="task_template_download_excel"
     )
 
 def upload_tasks_excel():
@@ -395,7 +397,8 @@ def shift_template_download():
         label="Download Shift Template (CSV)",
         data=csv_data.encode("utf-8"),
         file_name="shift_template.csv",
-        mime="text/csv"
+        mime="text/csv",
+        key="shift_template_download_csv"
     )
 
     # --- Excel version ---
@@ -406,7 +409,8 @@ def shift_template_download():
         label="Download Shift Template (Excel)",
         data=excel_buffer.getvalue(),
         file_name="shift_template.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        key="shift_template_download_excel"
     )
 
 def upload_shifts_excel():
