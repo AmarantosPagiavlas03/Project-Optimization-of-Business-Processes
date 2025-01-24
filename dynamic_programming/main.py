@@ -281,17 +281,25 @@ def task_input_form():
 
             # Suppose you want the default to be 'current time + 1 hour'
             now_plus_1h = (dt.datetime.now() + dt.timedelta(hours=1)).time()
+            now_plus_2h = (dt.datetime.now() + dt.timedelta(hours=1)).time()
 
             # Round to nearest 15 minutes (optional)
-            nearest_15 = (now_plus_1h.minute // 15) * 15
-            default_time = now_plus_1h.replace(minute=nearest_15, second=0, microsecond=0)
+            nearest_15_1h = (now_plus_1h.minute // 15) * 15
+            default_time_1h = now_plus_1h.replace(minute=nearest_15_1h, second=0, microsecond=0)
+            nearest_15_2h = (now_plus_2h.minute // 15) * 15
+            default_time_2h = now_plus_2h.replace(minute=nearest_15_2h, second=0, microsecond=0)
 
             # Ensure that default_time is in your intervals list
             # For this example, it should be after rounding.
-            if default_time in intervals:
-                default_idx = intervals.index(default_time)
+            if default_time_1h in intervals:
+                default_idx_1h = intervals.index(default_time_1h)
             else:
-                default_idx = 0 
+                default_idx_1h = 0 
+
+            if default_time_2h in intervals:
+                default_idx_2h = intervals.index(default_time_2h)
+            else:
+                default_idx_2h = 0 
 
             # Create columns for horizontal layout within the expander
             col1, col2, col3, col4,col5,col6,col7 = st.columns(7, gap="small")
@@ -301,9 +309,9 @@ def task_input_form():
             with col2:
                 Day = st.selectbox("Day of the Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], key="day_of_week")
             with col3:
-                StartTime = st.selectbox("Start Time", options=intervals,index= default_idx, format_func=lambda t: t.strftime("%H:%M"), key="start_time")
+                StartTime = st.selectbox("Start Time", options=intervals,index= default_time_1h, format_func=lambda t: t.strftime("%H:%M"), key="start_time")
             with col4:
-                EndTime = st.selectbox("End Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"), key="end_time")
+                EndTime = st.selectbox("End Time", options=intervals,index= default_idx_2h, format_func=lambda t: t.strftime("%H:%M"), key="end_time")
             with col5:
                 duration_hours = st.number_input("Duration Hours", min_value=0, max_value=23, value=1, step=1, key="duration_hours")
             with col6:
