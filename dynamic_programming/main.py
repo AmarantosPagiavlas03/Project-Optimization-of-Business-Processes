@@ -1674,7 +1674,14 @@ def main():
     header()
     
     init_db()
-
+    st.markdown("""
+    <style>
+    /* Force the sidebar to appear on top */
+    [data-testid="stSidebar"] {
+        z-index: 9999 !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
     # Input forms
     task_input_form()
     shift_input_form()
