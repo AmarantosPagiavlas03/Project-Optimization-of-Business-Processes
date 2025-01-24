@@ -1164,7 +1164,7 @@ def optimize_tasks_with_gurobi():
 # ------------------------------------------------------------------
 def display_tasks_and_shifts():
     """Modern interactive visualization of tasks and shifts with enhanced UI."""
-    st.header("📅 Schedule Visualization Dashboard", divider="rainbow")
+    st.header(" Schedule Visualization Dashboard", divider="rainbow")
 
     # Get data with loading state
     with st.spinner("Loading scheduling data..."):
