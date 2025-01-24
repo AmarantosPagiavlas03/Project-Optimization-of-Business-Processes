@@ -1671,8 +1671,7 @@ def footer():
 # ------------------------------------------------------------------
 def main():
     st.set_page_config(page_title="Hospital Scheduler", layout="wide")
-    # header()
-    st.header("These headers have rotating dividers", divider=True)
+    header()
     
     init_db()
 
