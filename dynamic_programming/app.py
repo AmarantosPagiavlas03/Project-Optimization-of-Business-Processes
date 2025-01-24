@@ -3,41 +3,17 @@ import os
 import streamlit as st
 from streamlit_navigation_bar import st_navbar
 from database import init_db
-import importlib
+import time
 
-# --- Path Configuration ---
-try:
-    # Get the absolute path of the current file's directory
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    
-    # Add parent directory to Python path (project root)
-    project_root = os.path.dirname(current_dir)
-    if project_root not in sys.path:
-        sys.path.insert(0, project_root)
-    
-    # Import pages after path configuration
-    from dynamic_programming.pages import home, contact
-    
-    # Configure logo path
-    logo_path = os.path.join(current_dir, "vu_mc_logo_text.svg")
+# Configure paths FIRST to ensure proper imports
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)
+sys.path.insert(0, project_root)
 
-except (ImportError, ModuleNotFoundError) as e:
-    st.error(f"Critical import error: {str(e)}")
-    st.stop()
+# Import pages after path configuration
+from dynamic_programming.pages import home, contact
 
-if os.environ.get("ENVIRONMENT") == "development":
-    importlib.reload(home)
-    importlib.reload(contact)
-
-# --- App Initialization ---
-st.set_page_config(
-    initial_sidebar_state="collapsed",
-    layout="wide",
-    page_title="Business Process Optimizer",
-    page_icon="⚙️"
-)
-
-# --- Theme Configuration ---
+# Constant configurations
 THEME_CONFIG = {
     "primaryColor": "#f07814",
     "backgroundColor": "#FFFFFF",
@@ -46,18 +22,6 @@ THEME_CONFIG = {
     "font": "sans serif"
 }
 
-for key, value in THEME_CONFIG.items():
-    st._config.set_option(f"theme.{key}", value)
-
-# --- Database Initialization ---
-init_db()
-
-# --- Logo Validation ---
-if not os.path.exists(logo_path):
-    st.error(f"⚠️ Missing logo at: {logo_path}")
-    logo_path = None
-
-# --- Navigation Styles ---
 NAV_STYLES = {
     "nav": {
         "justify-content": "left",
@@ -70,42 +34,70 @@ NAV_STYLES = {
         "max-width": "100%",
         "min-width": "120px",
         "padding-right": "3rem",
-        "margin-left": "-1rem",
-        "transition": "opacity 0.3s ease"  # Smooth logo transitions
+        "margin-left": "-1rem"
     },
     "span": {
         "color": "white",
         "font-size": "1.1rem",
         "font-weight": "500",
-        "transition": "all 0.2s ease-out"  # Smooth menu transitions
+        "position": "relative",
+        "transition": "none" 
     },
     "active": {
+        "background-color": "transparent",
         "color": "#e6000f",
-        "font-weight": "600",
-        "transform": "translateY(-1px)",  # Subtle lift effect
+        "font-weight": "500",
+        "transform": "none", 
     }
 }
 
-# --- Navigation Setup ---
-try:
+def main():
+    """Main application entry point"""
+    # Initialize app configuration
+    st.set_page_config(
+        initial_sidebar_state="collapsed",
+        layout="wide",
+        page_title="Business Process Optimizer",
+        page_icon="⚙️"
+    )
+    
+    # Apply theme configuration
+    for key, value in THEME_CONFIG.items():
+        st._config.set_option(f"theme.{key}", value)
+    
+    # Initialize database
+    init_db()
+    
+    # Handle logo
+    logo_path = os.path.join(current_dir, "vu_mc_logo_text.svg")
+    if not os.path.exists(logo_path):
+        st.error(f"⚠️ Missing logo at: {logo_path}")
+        logo_path = None
+    
+    # Setup navigation
     page = st_navbar(
         ["Home", "Contact"],
         options={"show_menu": False, "show_sidebar": False},
         logo_path=logo_path,
         styles=NAV_STYLES
     )
-except Exception as nav_error:
-    st.error(f"Navigation initialization failed: {str(nav_error)}")
-    st.stop()
+    
+    # Route pages
+    {"Home": home.show_home, "Contact": contact.show_contact}.get(page)()
 
-# --- Page Routing ---
-PAGE_HANDLERS = {
-    "Home": home.show_home,
-    "Contact": contact.show_contact
-}
-
-try:
-    PAGE_HANDLERS.get(page)()
-except Exception as page_error:
-    st.error(f"Page loading error: {str(page_error)}")
-    st.write("Please try refreshing the page or contact support.")
+if __name__ == "__main__":
+    # Add development reloading
+    if os.environ.get("ENVIRONMENT") == "development":
+        import importlib
+        importlib.reload(home)
+        importlib.reload(contact)
+    
+    main()
+    
+    # Force browser refresh on changes
+    if os.environ.get("ENVIRONMENT") == "development":
+        st.markdown(f"""
+        <script>
+            window.location.href += "?cachebust={int(time.time())}";
+        </script>
+        """, unsafe_allow_html=True)
