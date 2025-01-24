@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 from gurobipy import Model, GRB, quicksum
-from database import get_all
+from .database import get_all
 
 # ------------------------------------------------------------------
 #                     First Optimizer: Tasks-Shifts
