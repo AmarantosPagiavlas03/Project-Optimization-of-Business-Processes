@@ -1168,81 +1168,110 @@ def optimize_tasks_with_gurobi():
                 else:
                     st.warning("No data available for bar chart")
         else:
-            st.warning("No results to visualize")
-        # Add this after your existing visualizations but before the detailed tables
+            st.warning("No results to visualize") 
+
+        # Add at the top with other imports
+        import plotly.express as px
+        from streamlit import session_state as ss
+        import numpy as np
+
+        # Inside your optimize_tasks_with_gurobi function, after initial results processing
         if not results_df.empty:
             st.subheader("🔍 Detailed Task Cost Breakdown by Shift & Day")
             
-            # Create two columns for selectors
+            # Initialize session state
+            if 'selected_shift' not in ss:
+                ss.selected_shift = results_df["Shift ID"].iloc[0]
+            if 'selected_day' not in ss:
+                ss.selected_day = results_df["Day"].iloc[0]
+
+            # Get unique values
+            unique_shifts = results_df["Shift ID"].unique()
+            all_days = results_df["Day"].unique()
+
+            # Selection widgets
             col1, col2 = st.columns(2)
             
             with col1:
-                # Get unique shifts with tasks
-                unique_shifts = results_df["Shift ID"].unique()
-                selected_shift = st.selectbox(
-                    "Select Shift ID", 
+                # Shift selector
+                current_shift_idx = np.where(unique_shifts == ss.selected_shift)[0][0] if ss.selected_shift in unique_shifts else 0
+                new_shift = st.selectbox(
+                    "Select Shift ID",
                     options=unique_shifts,
-                    index=0  # Default to first option
+                    index=current_shift_idx,
+                    key="shift_selector"
                 )
-            
+                ss.selected_shift = new_shift
+
             with col2:
-                # Get days available for selected shift
-                shift_days = results_df[results_df["Shift ID"] == selected_shift]["Day"].unique()
-                selected_day = st.selectbox(
-                    "Select Day", 
-                    options=shift_days,
-                    index=0
+                # Day selector (filtered by shift)
+                valid_days = results_df[results_df["Shift ID"] == ss.selected_shift]["Day"].unique()
+                current_day_idx = np.where(valid_days == ss.selected_day)[0][0] if ss.selected_day in valid_days else 0
+                new_day = st.selectbox(
+                    "Select Day",
+                    options=valid_days,
+                    index=current_day_idx,
+                    key="day_selector"
                 )
-            
-            # Filter data for selected shift/day
-            shift_day_df = results_df[
-                (results_df["Shift ID"] == selected_shift) & 
-                (results_df["Day"] == selected_day)
+                ss.selected_day = new_day
+
+            # Filter data
+            filtered_df = results_df[
+                (results_df["Shift ID"] == ss.selected_shift) &
+                (results_df["Day"] == ss.selected_day)
             ]
-            
-            # Create container for visualization
+
+            # Visualization container
             chart_container = st.container()
             
-            if not shift_day_df.empty:
+            if not filtered_df.empty:
                 with chart_container:
-                    # Calculate total cost for title
-                    total_cost = shift_day_df["Task Cost ($)"].sum()
+                    # Calculate totals
+                    total_cost = filtered_df["Task Cost ($)"].sum()
+                    total_hours = filtered_df["Task Cost ($)"].sum() / filtered_df["Hourly Rate ($)"].iloc[0]
                     
-                    # Create enhanced pie chart
+                    # Create pie chart
                     fig = px.pie(
-                        shift_day_df,
+                        filtered_df,
                         names="Task Name",
                         values="Task Cost ($)",
-                        title=f"<b>Task Cost Breakdown for Shift {selected_shift} ({selected_day})</b><br>"
-                            f"Total Daily Cost: ${total_cost:,.2f}",
-                        hover_data=["Task Start", "Task End"],
+                        title=(
+                            f"Shift {ss.selected_shift} - {ss.selected_day}<br>"
+                            f"Total Cost: ${total_cost:,.2f} | Total Worker-Hours: {total_hours:.1f}"
+                        ),
+                        hover_data=["Task Start", "Task End", "Workers Assigned"],
+                        hole=0.3,
                         color_discrete_sequence=px.colors.qualitative.Pastel
                     )
                     
-                    # Improve label formatting
+                    # Formatting
                     fig.update_traces(
-                        hovertemplate="<b>%{label}</b><br>"
-                                    "Cost: $%{value:,.2f}<br>"
-                                    "(%{percent})<br>"
-                                    "%{customdata[0]} - %{customdata[1]}",
-                        texttemplate="%{label}<br>$%{value:,.2f} (%{percent})",
-                        textposition="inside"
+                        textposition="inside",
+                        textinfo="percent+label",
+                        hovertemplate=(
+                            "<b>%{label}</b><br>"
+                            "Cost: $%{value:,.2f}<br>"
+                            "Workers: %{customdata[2]}<br>"
+                            "Time: %{customdata[0]} - %{customdata[1]}"
+                        )
                     )
                     
-                    # Adjust layout
                     fig.update_layout(
                         uniformtext_minsize=12,
                         uniformtext_mode="hide",
-                        showlegend=False,
-                        height=600
+                        height=500,
+                        showlegend=False
                     )
                     
                     st.plotly_chart(fig, use_container_width=True)
-                    
-                    # Add raw numbers below
-                    st.write(f"**Detailed Costs for Shift {selected_shift} ({selected_day}):**")
+
+                    # Data table
+                    st.write(f"**Task Details for Shift {ss.selected_shift} ({ss.selected_day})**")
                     st.dataframe(
-                        shift_day_df[["Task Name", "Task Start", "Task End", "Task Cost ($)", "Cost %"]],
+                        filtered_df[
+                            ["Task Name", "Task Start", "Task End", 
+                            "Workers Assigned", "Task Cost ($)", "Cost %"]
+                        ].sort_values("Task Cost ($)", ascending=False),
                         hide_index=True,
                         column_config={
                             "Task Cost ($)": st.column_config.NumberColumn(format="$%.2f"),
@@ -1250,7 +1279,10 @@ def optimize_tasks_with_gurobi():
                         }
                     )
             else:
-                chart_container.warning("No tasks found for this Shift/Day combination")
+                chart_container.warning("⚠️ No tasks found for this Shift/Day combination")
+        else:
+            st.warning("No optimization results available for visualization")
+
     # --- 8. Collect and Display Results ---
     if model.status == GRB.OPTIMAL:
         results = []
