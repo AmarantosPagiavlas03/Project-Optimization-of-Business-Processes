@@ -1,19 +1,25 @@
+# import streamlit as st
+# import pandas as pd
+# import sqlite3
+# from datetime import datetime, timedelta
+# import random
+# import plotly.express as px
+# from gurobipy import Model, GRB, quicksum
+# from datetime import time
+# import io  
+# import base64
+# import os
+# import datetime as dt
+# from streamlit_option_menu import option_menu
+# from streamlit_extras.switch_page_button import switch_page
+# from streamlit_navigation_bar import st_navbar
+
 import streamlit as st
-import pandas as pd
-import sqlite3
-from datetime import datetime, timedelta
-import random
-import plotly.express as px
-from gurobipy import Model, GRB, quicksum
-from datetime import time
-import io  
-import base64
-import os
-import datetime as dt
-from streamlit_option_menu import option_menu
-from streamlit_extras.switch_page_button import switch_page
 from streamlit_navigation_bar import st_navbar
 
+
+page = st_navbar(["Home", "Documentation", "Examples", "Community", "About"])
+st.write(page)
 
 DB_FILE = "tasksv2.db"
 
