@@ -77,10 +77,20 @@ page = st_navbar(
 # Add subtle shadow to nav bar
 st.markdown("""
 <style>
+    [data-testid="stNavigationBar"] .active::after {
+        content: "";
+        display: block;
+        width: 100%;
+        height: 3px;
+        background: #e6000f;
+        position: absolute;
+        bottom: -8px;
+        left: 0;
+    }
+    
     [data-testid="stNavigationBar"] .active {
-        border-bottom: 3px solid #FFFFFF !important;
-        box-sizing: border-box !important;
-        margin-bottom: -3px !important;
+        margin-bottom: 8px !important;
+        overflow: visible !important;
     }
 </style>
 """, unsafe_allow_html=True)
