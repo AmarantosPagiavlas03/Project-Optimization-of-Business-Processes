@@ -1171,54 +1171,38 @@ def optimize_tasks_with_gurobi():
             st.warning("No results to visualize")
         # Add this after your existing visualizations but before the detailed tables
         if not results_df.empty:
-            from streamlit import session_state as ss
-            import numpy as np
-            # Initialize session state variables
-            if 'selected_shift' not in ss:
-                ss.selected_shift = results_df["Shift ID"].iloc[0]
-            if 'selected_day' not in ss:
-                ss.selected_day = results_df["Day"].iloc[0]
-
             st.subheader("🔍 Detailed Task Cost Breakdown by Shift & Day")
             
-            # Get unique shifts and days only once
-            unique_shifts = results_df["Shift ID"].unique()
-            all_days = results_df["Day"].unique()
-
-            # Selection columns
+            # Create two columns for selectors
             col1, col2 = st.columns(2)
+            
             with col1:
-                # Shift selector with session state preservation
-                new_shift = st.selectbox(
+                # Get unique shifts with tasks
+                unique_shifts = results_df["Shift ID"].unique()
+                selected_shift = st.selectbox(
                     "Select Shift ID", 
                     options=unique_shifts,
-                    index=np.where(unique_shifts == ss.selected_shift)[0][0],
-                    key="shift_selector"
+                    index=0  # Default to first option
                 )
-                ss.selected_shift = new_shift
-
+            
             with col2:
-                # Filter days for selected shift
-                shift_days = results_df[results_df["Shift ID"] == ss.selected_shift]["Day"].unique()
-                
-                # Day selector with session state preservation
-                new_day = st.selectbox(
+                # Get days available for selected shift
+                shift_days = results_df[results_df["Shift ID"] == selected_shift]["Day"].unique()
+                selected_day = st.selectbox(
                     "Select Day", 
                     options=shift_days,
-                    index=0 if ss.selected_day not in shift_days else np.where(shift_days == ss.selected_day)[0][0],
-                    key="day_selector"
+                    index=0
                 )
-                ss.selected_day = new_day
-
-            # Always show the chart container
-            chart_container = st.container()
-                # Filter data for selected shift/day
+            
+            # Filter data for selected shift/day
             shift_day_df = results_df[
                 (results_df["Shift ID"] == selected_shift) & 
                 (results_df["Day"] == selected_day)
             ]
-    
-
+            
+            # Create container for visualization
+            chart_container = st.container()
+            
             if not shift_day_df.empty:
                 with chart_container:
                     # Calculate total cost for title
@@ -1266,7 +1250,7 @@ def optimize_tasks_with_gurobi():
                         }
                     )
             else:
-                chart_container.warning("No tasks found for this Shift/Day combination") 
+                chart_container.warning("No tasks found for this Shift/Day combination")
     # --- 8. Collect and Display Results ---
     if model.status == GRB.OPTIMAL:
         results = []
