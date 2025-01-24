@@ -355,6 +355,18 @@ def upload_tasks_excel():
         except Exception as e:
             st.error(f"Error reading file: {e}")
 
+def task_upload_download_form():
+    with st.expander("Upload Multipe Tasks", expanded=False):
+        # 1. Download Template
+        st.subheader("Download Template")
+        task_template_download()
+
+        st.markdown("---")
+
+        # 2. Upload user file
+        st.subheader("Upload Your Tasks")
+        upload_tasks_excel()
+
 def shift_template_download():
     """
     Provide a button to download a Shifts template *with example rows*,
@@ -443,3 +455,14 @@ def upload_shifts_excel():
         except Exception as e:
             st.error(f"Error reading file: {e}")
 
+def shift_upload_download_form():
+    with st.expander("Upload Multiple Shifts", expanded=False):
+        # 1. Download Template
+        st.subheader("Download Template")
+        shift_template_download()
+
+        st.markdown("---")
+
+        # 2. Upload user file
+        st.subheader("Upload Your Shifts")
+        upload_shifts_excel()
