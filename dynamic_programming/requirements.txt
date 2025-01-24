@@ -7,4 +7,4 @@ streamlit
 # xlsxwriter
 # streamlit_option_menu
 # streamlit_extras
-streamlit_navigation_bar
+streamlit-navigation-bar==3.3.0
