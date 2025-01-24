@@ -11,6 +11,8 @@ import base64
 import os
 import datetime as dt
 
+from streamlit import session_state as ss
+import numpy as np
 
 DB_FILE = "tasksv2.db"
 
@@ -1168,6 +1170,7 @@ def optimize_tasks_with_gurobi():
                     st.warning("No data available for bar chart")
         else:
             st.warning("No results to visualize") 
+
 
 
         # Inside your optimize_tasks_with_gurobi function, after initial results processing
