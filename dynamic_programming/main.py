@@ -309,7 +309,7 @@ def task_input_form():
             with col2:
                 Day = st.selectbox("Day of the Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], key="day_of_week")
             with col3:
-                StartTime = st.selectbox("Start Time", options=intervals,index= default_time_1h, format_func=lambda t: t.strftime("%H:%M"), key="start_time")
+                StartTime = st.selectbox("Start Time", options=intervals,index= default_idx_1h, format_func=lambda t: t.strftime("%H:%M"), key="start_time")
             with col4:
                 EndTime = st.selectbox("End Time", options=intervals,index= default_idx_2h, format_func=lambda t: t.strftime("%H:%M"), key="end_time")
             with col5:
