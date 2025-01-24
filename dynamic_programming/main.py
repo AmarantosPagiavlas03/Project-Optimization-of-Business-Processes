@@ -11,7 +11,7 @@ import base64
 import os
 import datetime as dt
 from streamlit_navigation_bar import st_navbar
-
+import pages as pg
 
 DB_FILE = "tasksv2.db"
 
@@ -1553,9 +1553,17 @@ def contact_page():
 
 def main():
     st.set_page_config(page_title="Hospital Scheduler", layout="wide")
-    pages = ["Home", "Library", "Tutorials", "Development", "Download"]
+    pages = ["Contact"]
+    page = st_navbar(
+    pages
+    )
+    functions = {
+        "Contact": pg.show_contact,
+    }
+    go_to = functions.get(page)
+    if go_to:
+        go_to()
     page = st_navbar(pages)
-    st.write(page)
         
     init_db()
  

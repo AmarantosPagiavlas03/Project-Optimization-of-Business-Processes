@@ -1,0 +1,1 @@
+from pages.contact import show_contact
