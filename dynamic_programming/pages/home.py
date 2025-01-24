@@ -8,7 +8,7 @@ def show_home():
     # st.set_page_config(page_title="Hospital Scheduler", layout="wide")
     # Input forms
     task_input_form()
-    shift_input_form()
+    # shift_input_form()
     # worker_input_form()
  
     # Buttons for example data
