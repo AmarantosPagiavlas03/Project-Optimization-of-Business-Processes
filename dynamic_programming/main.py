@@ -312,11 +312,11 @@ def shift_input_form():
 
         # --- Shift Weight with Synced Display ---
         st.markdown("### Shift Preferences")
-        Weight = st.slider("Shift Weight*", 0.1, 10.0, 1.0, 0.1,
+        Weight = st.slider("Shift Weight ", 0.1, 10.0, 1.0, 0.1,
                          help="Higher weight means more expensive to schedule")
         
         # --- Days of Week Selection ---
-        st.markdown("### Active Days*")
+        st.markdown("### Active Days ")
         days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
         cols = st.columns(7)
         day_states = {}
