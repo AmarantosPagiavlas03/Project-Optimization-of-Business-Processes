@@ -11,68 +11,68 @@ def show_home():
     shift_input_form()
     # worker_input_form()
  
-    # Buttons for example data
-    colA, colB = st.columns(2)
-    with colA:
-        if st.button("Data Example"):
-            insert()
-            st.success("Data Example 1 inserted!")
-    with colB:
-        if st.button("Data Example2"):
-            insert2()
-            st.success("Data Example 2 inserted!")
-    if st.button("Clear All Tasks"):
-        clear_all("TasksTable2")
-        st.success("All tasks have been cleared!")
+    # # Buttons for example data
+    # colA, colB = st.columns(2)
+    # with colA:
+    #     if st.button("Data Example"):
+    #         insert()
+    #         st.success("Data Example 1 inserted!")
+    # with colB:
+    #     if st.button("Data Example2"):
+    #         insert2()
+    #         st.success("Data Example 2 inserted!")
+    # if st.button("Clear All Tasks"):
+    #     clear_all("TasksTable2")
+    #     st.success("All tasks have been cleared!")
 
 
-    if st.button("Clear All Shifts"):
-        clear_all("ShiftsTable5")
-        st.success("All shifts have been cleared!")
-
- 
-    # 1. Download Template
-    st.subheader("Download Template")
-    task_template_download()
-
-    st.markdown("---")
-
-    # 2. Upload user file
-    st.subheader("Upload Your Tasks")
-    upload_tasks_excel()
-
-    # if st.button("Clear All Workers"):
-    #     clear_all("Workers")
-    #     st.success("All workers have been cleared!")
+    # if st.button("Clear All Shifts"):
+    #     clear_all("ShiftsTable5")
+    #     st.success("All shifts have been cleared!")
 
  
-    st.subheader("Download Example Shift Template")
-    shift_template_download()
+    # # 1. Download Template
+    # st.subheader("Download Template")
+    # task_template_download()
 
-    st.markdown("---")
+    # st.markdown("---")
+
+    # # 2. Upload user file
+    # st.subheader("Upload Your Tasks")
+    # upload_tasks_excel()
+
+    # # if st.button("Clear All Workers"):
+    # #     clear_all("Workers")
+    # #     st.success("All workers have been cleared!")
+
+ 
+    # st.subheader("Download Example Shift Template")
+    # shift_template_download()
+
+    # st.markdown("---")
     
-    st.subheader("Upload Your Shifts File")
-    upload_shifts_excel()
+    # st.subheader("Upload Your Shifts File")
+    # upload_shifts_excel()
 
-    # Buttons for example data
-    colA, colB = st.columns(2)
-    with colA:
-        if st.button("Data Example"):
-            insert()
-            st.success("Data Example 1 inserted!")
-    with colB:
-        if st.button("Data Example2"):
-            insert2()
-            st.success("Data Example 2 inserted!")
+    # # Buttons for example data
+    # colA, colB = st.columns(2)
+    # with colA:
+    #     if st.button("Data Example"):
+    #         insert()
+    #         st.success("Data Example 1 inserted!")
+    # with colB:
+    #     if st.button("Data Example2"):
+    #         insert2()
+    #         st.success("Data Example 2 inserted!")
 
-    # First optimization
-    if st.button("Optimize Task Assignment"):
-        optimize_tasks_with_gurobi()
+    # # First optimization
+    # if st.button("Optimize Task Assignment"):
+    #     optimize_tasks_with_gurobi()
 
-    ## Second optimization: Assign workers to shifts
-    # if st.button("Assign Workers to Shifts"):
-    #     optimize_workers_for_shifts()
+    # ## Second optimization: Assign workers to shifts
+    # # if st.button("Assign Workers to Shifts"):
+    # #     optimize_workers_for_shifts()
 
 
-    # Visualization
-    display_tasks_and_shifts()
+    # # Visualization
+    # display_tasks_and_shifts()
