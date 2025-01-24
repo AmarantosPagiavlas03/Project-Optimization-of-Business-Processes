@@ -58,7 +58,7 @@ styles = {
     },
     "active": {
         "background-color": "#FFFFFF33",  # Semi-transparent white
-        "border-radius": "0.7rem"
+        "border-radius": "0.9rem"
     }
 }
 
