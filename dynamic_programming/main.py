@@ -13,6 +13,28 @@ from htbuilder import HtmlElement, div, ul, li, br, hr, a, p, img, styles, class
 from htbuilder.units import percent, px
 from htbuilder.funcs import rgba, rgb
 import datetime as dt
+from streamlit_option_menu import option_menu
+from streamlit_extras.switch_page_button import switch_page
+
+def navigation_bar():
+    with st.container():
+        selected = option_menu(
+            menu_title=None,
+            options=["Home", "Upload", "Analytics", 'Settings', 'Contact'],
+            icons=['house', 'cloud-upload', "graph-up-arrow", 'gear', 'phone'],
+            menu_icon="cast",
+            orientation="horizontal",
+            styles={
+                "nav-link": {
+                    "text-align": "left",
+                    "--hover-color": "#eee",
+                }
+            }
+        )
+        if selected == "Analytics":
+            switch_page("Analytics")
+        if selected == "Contact":
+            switch_page("Contact")
 
 DB_FILE = "tasksv2.db"
 
@@ -1672,30 +1694,8 @@ def footer():
 def main():
     st.set_page_config(page_title="Hospital Scheduler", layout="wide")
     # header()
-    st.markdown('<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">', unsafe_allow_html=True)
-
-    st.markdown("""
-    <nav class="navbar fixed-top navbar-expand-lg navbar-dark" style="background-color: #ffffff;">
-    <a class="navbar-brand" href="https://youtube.com/dataprofessor" target="_blank">Data Professor</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav">
-        <li class="nav-item active">
-            <a class="nav-link disabled" href="#">Home <span class="sr-only">(current)</span></a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="https://youtube.com/dataprofessor" target="_blank">YouTube</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="https://twitter.com/thedataprof" target="_blank">Twitter</a>
-        </li>
-        </ul>
-    </div>
-    </nav>
-    """, unsafe_allow_html=True)
-    
+    navigation_bar()
+        
     init_db()
  
     # Input forms
