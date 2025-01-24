@@ -1554,56 +1554,12 @@ def contact_page():
     st.write("📧 Email: support@vuamsterdamscheduling.com")
     st.write("📍 Address: De Boelelaan 1105, 1081 HV Amsterdam, North Holland, Netherlands")
 
-
-def navigation_bar():
-    with st.container():
-        st.markdown(
-            """
-            <style>
-                .nav-logo {
-                    display: flex;
-                    align-items: center;
-                    margin-bottom: 10px;
-                }
-                .nav-logo img {
-                    width: 200px;
-                    height: 33px;
-                    margin-right: 20px;
-                }
-            </style>
-            """,
-            unsafe_allow_html=True,
-        )
-        st.markdown(
-            """
-            <div class="nav-logo">
-                <img src="https://raw.githubusercontent.com/AmarantosPagiavlas03/Project-Optimization-of-Business-Processes/main/dynamic_programming/vu_mc_logo.png" alt="Logo">
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-        selected = option_menu(
-            menu_title=None,
-            options=["Home", "Upload", "Analytics", 'Settings', 'Contact'],
-            icons=['house', 'cloud-upload', "graph-up-arrow", 'gear', 'phone'],
-            menu_icon="cast",
-            orientation="horizontal",
-            styles={
-                "nav-link": {
-                    "text-align": "left",
-                    "--hover-color": "#eee",
-                }
-            }
-        )
-        if selected == "Analytics":
-            switch_page("Analytics")
-        if selected == "Contact":
-            contact_page() 
+ 
 
 def main():
     st.set_page_config(page_title="Hospital Scheduler", layout="wide")
     # header()
-    navigation_bar()
+ 
         
     init_db()
  
