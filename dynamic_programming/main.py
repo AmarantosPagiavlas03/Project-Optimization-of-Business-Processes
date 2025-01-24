@@ -15,7 +15,7 @@ from htbuilder.funcs import rgba, rgb
 import datetime as dt
 from streamlit_option_menu import option_menu
 from streamlit_extras.switch_page_button import switch_page
-
+from streamlit_navigation_bar import st_navbar
 
 
 DB_FILE = "tasksv2.db"
@@ -1528,7 +1528,8 @@ def display_tasks_and_shifts():
 
 def main():
     st.set_page_config(page_title="Hospital Scheduler", layout="wide")
-
+    page = st_navbar(["Home", "Documentation", "Examples", "Community", "About"])
+    st.write(page)
         
     init_db()
  

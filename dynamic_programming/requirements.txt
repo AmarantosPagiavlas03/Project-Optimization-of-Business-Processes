@@ -8,3 +8,4 @@ xlsxwriter
 htbuilder
 streamlit_option_menu
 streamlit_extras
+streamlit_navigation_bar
