@@ -1475,25 +1475,42 @@ def display_tasks_and_shifts():
     except Exception as e:
         st.warning(f"Plotly is required for Gantt charts: {e}")
 
+
 def image(src_as_string, **style):
     return img(src=src_as_string, style=styles(**style))
 
-
 def link(link, text, **style):
     return a(_href=link, _target="_blank", style=styles(**style))(text)
-
 
 def layout(*args):
 
     style = """
     <style>
+      /* Hide streamlit default footer & menu */
       # MainMenu {visibility: hidden;}
       footer {visibility: hidden;}
       .stApp { bottom: 105px; }
+
       /* Remove the white border line by disabling hr border */
       hr {
           border: none;
           height: 0;
+      }
+
+      /* 
+         Automatically switch to white text in dark mode 
+         and black text in light mode. 
+         This follows the user's system/browser preference. 
+      */
+      @media (prefers-color-scheme: dark) {
+          .stApp, .stApp * {
+              color: #FFFFFF !important;
+          }
+      }
+      @media (prefers-color-scheme: light) {
+          .stApp, .stApp * {
+              color: #000000 !important;
+          }
       }
     </style>
     """
@@ -1504,7 +1521,6 @@ def layout(*args):
         bottom=0,
         margin=px(0, 0, 0, 0),
         width=percent(100),
-        color="black",
         text_align="center",
         height="auto",
         opacity=1
@@ -1530,6 +1546,19 @@ def layout(*args):
             body(arg)
 
     st.markdown(str(foot), unsafe_allow_html=True)
+
+def footer():
+    myargs = [
+        "Made in ",
+        image('https://avatars3.githubusercontent.com/u/45109972?s=400&v=4',
+              width=px(25), height=px(25)),
+        " with ❤️ by ",
+        link("https://twitter.com/ChristianKlose3", "@ChristianKlose3"),
+        br(),
+        link("https://buymeacoffee.com/chrischross",
+             image('https://i.imgur.com/thJhzOO.png')),
+    ]
+    layout(*myargs)
 
 def footer():
     myargs = [
