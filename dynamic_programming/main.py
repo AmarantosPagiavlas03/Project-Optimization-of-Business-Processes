@@ -10,8 +10,7 @@ import io
 import base64
 import os
 import datetime as dt
-import numpy as np
-
+import numpy as np  
 
 DB_FILE = "tasksv2.db"
 
@@ -1625,184 +1624,121 @@ def show_contact():
 # ------------------------------------------------------------------
 
 def main():
-    st.set_page_config(page_title="Hospital Scheduler Pro", layout="wide", page_icon="🏥")
+    st.set_page_config(page_title="Hospital Scheduler", layout="wide", page_icon="🏥")
     init_db()
-    # Modern UI CSS
+    # Clean, functional CSS
     st.markdown("""
     <style>
-        /* Base Theme */
+        /* Modern Minimalist Theme */
         :root {
-            --primary: #2563eb;
-            --secondary: #3b82f6;
-            --accent: #f59e0b;
+            --primary: #3b82f6;
+            --hover: #2563eb;
             --background: #f8fafc;
-            --card-bg: rgba(255, 255, 255, 0.9);
-            --text: #1e293b;
+            --card-bg: white;
         }
         
-        /* Modern Glassmorphism Effect */
-        .glass-card {
-            background: var(--card-bg) !important;
-            backdrop-filter: blur(10px) !important;
-            border-radius: 16px !important;
-            border: 1px solid rgba(255, 255, 255, 0.3) !important;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1) !important;
-            padding: 2rem !important;
-            margin-bottom: 1.5rem !important;
-            transition: all 0.3s ease !important;
-        }
-        
-        .glass-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15) !important;
-        }
-        
-        /* Enhanced Header */
-        .modern-header {
+        /* Enhanced Readability */
+        body {
             font-family: 'Inter', sans-serif;
-            font-size: 2.75rem !important;
-            font-weight: 800;
-            color: var(--text);
-            text-align: center;
+            line-height: 1.6;
+            color: #1e293b;
+        }
+        
+        /* Functional Cards */
+        .stContainer {
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
             padding: 1.5rem;
-            margin: 2rem 0;
+            margin-bottom: 1.5rem;
             background: var(--card-bg);
-            border-radius: 16px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            position: relative;
-            border-bottom: 4px solid var(--primary);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
         
-        /* Modern Input Fields */
-        .stTextInput input, .stNumberInput input, .stSelectbox select {
-            border: 2px solid #e2e8f0 !important;
-            border-radius: 8px !important;
-            padding: 0.75rem 1rem !important;
-            transition: all 0.3s ease !important;
+        /* Clear Visual Hierarchy */
+        h1, h2, h3 {
+            color: #1e293b !important;
+            margin-bottom: 1rem !important;
         }
         
-        .stTextInput input:focus, .stNumberInput input:focus, .stSelectbox select:focus {
-            border-color: var(--primary) !important;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+        /* Intuitive Forms */
+        .stTextInput, .stNumberInput, .stSelectbox {
+            margin-bottom: 1rem;
         }
         
-        /* Enhanced Buttons */
+        /* Responsive Columns */
+        .stColumn {
+            padding: 0 1rem !important;
+        }
+        
+        /* Clear Button States */
         .stButton button {
-            border-radius: 8px !important;
-            padding: 0.75rem 1.5rem !important;
-            font-weight: 600 !important;
-            transition: all 0.3s ease !important;
-            border: none !important;
-            background: var(--primary) !important;
-            color: white !important;
+            width: 100%;
+            transition: all 0.2s ease;
+            border-radius: 8px;
         }
         
         .stButton button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2) !important;
-            background: var(--secondary) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
         }
         
-        /* Modern Data Tables */
+        /* Visible Table Borders */
         .stDataFrame {
-            border-radius: 12px !important;
-            overflow: hidden !important;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05) !important;
-        }
-        
-        /* Progress Spinner Animation */
-        .stSpinner > div {
-            border-color: var(--primary) transparent transparent transparent !important;
-            animation: spinner 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite !important;
-        }
-        
-        @keyframes spinner {
-            0% { transform: rotate(0deg) }
-            100% { transform: rotate(360deg) }
-        }
-        
-        /* Custom Tabs */
-        .stTabs [role="tablist"] {
-            gap: 1rem !important;
-            padding: 0.5rem !important;
-            background: var(--card-bg) !important;
-            border-radius: 12px !important;
-        }
-        
-        .stTabs [role="tab"] {
+            border: 1px solid #e2e8f0 !important;
             border-radius: 8px !important;
-            padding: 0.75rem 1.5rem !important;
-            transition: all 0.3s ease !important;
-            border: none !important;
-        }
-        
-        .stTabs [role="tab"][aria-selected="true"] {
-            background: var(--primary) !important;
-            color: white !important;
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     """, unsafe_allow_html=True)
 
-    st.markdown("""
-    <div class="modern-header">
-        ⚕️ Hospital Staff Scheduling Pro
-        <div style="font-size: 1.2rem; color: #64748b; margin-top: 0.5rem;">
-            Intelligent Workforce Management System
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    # Main Layout
+    st.title("🏥 Hospital Staff Scheduling")
+    st.caption("Optimize workforce management with AI-powered scheduling")
 
-    # Main Content
     with st.container():
         col1, col2 = st.columns([1, 2], gap="large")
         
+        # Left Panel - Inputs
         with col1:
             with st.container():
-                st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-                st.subheader("📅 Quick Actions")
-                st.button("➕ New Schedule Template", use_container_width=True)
-                st.button("👥 Staff Availability", use_container_width=True)
-                st.button("📈 Performance Analytics", use_container_width=True)
-                st.markdown('</div>', unsafe_allow_html=True)
+                st.subheader("📥 Schedule Inputs")
+                with st.expander("➕ Add New Task", expanded=True):
+                    task_input_form()
                 
-                with st.expander("🔔 Notifications", expanded=True):
-                    st.info("🔄 3 schedule updates pending review")
-                    st.warning("⚠️ 2 staff members on leave tomorrow")
-                    st.success("✅ Last optimization saved successfully")
+                with st.expander("🕒 Create Shift"):
+                    shift_input_form()
+                
+                st.divider()
+                with st.expander("👥 Manage Staff"):
+                    worker_input_form()
 
+        # Right Panel - Outputs
         with col2:
             with st.container():
-                st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-                tab1, tab2, tab3 = st.tabs(["📋 Schedule Overview", "📊 Workforce Analytics", "⚙️ Settings"])
+                st.subheader("📊 Schedule Overview")
+                tab1, tab2 = st.tabs(["🗓 Calendar View", "📈 Analytics"])
                 
                 with tab1:
-                    st.subheader("Daily Schedule")
-                    # Add schedule visualization components
                     display_tasks_and_shifts()
                 
                 with tab2:
-                    st.subheader("Staff Utilization")
-                    # Add analytics components
+                    st.write("Staff Utilization Metrics")
                     st.line_chart(np.random.randn(30, 3), use_container_width=True)
-                
-                with tab3:
-                    st.subheader("System Configuration")
-                    st.number_input("Max Shift Duration (hours)", min_value=4, max_value=12, value=8)
-                    st.slider("Optimization Intensity", 1, 5, 3)
-                    st.toggle("Enable AI Suggestions", value=True)
-                
-                st.markdown('</div>', unsafe_allow_html=True)
+                    st.progress(75, text="Current Schedule Efficiency")
 
-    # Bottom Status Bar
-    st.markdown("""
-    <div style="position: fixed; bottom: 0; right: 0; left: 0; background: var(--card-bg); padding: 0.5rem 2rem; 
-                border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-        <div>🟢 Connected to Hospital CMS</div>
-        <div>👥 42 Staff Members Active</div>
-        <div>📅 Current Shift Cycle: 2024-Q3</div>
-    </div>
-    """, unsafe_allow_html=True)
+                st.divider()
+                st.subheader("⚙️ Optimization Controls")
+                col_a, col_b = st.columns(2)
+                with col_a:
+                    if st.button("🚀 Run Schedule Optimization", use_container_width=True):
+                        optimize_tasks_with_gurobi()
+                with col_b:
+                    if st.button("🧑⚕️ Assign Staff Shifts", use_container_width=True):
+                        optimize_workers_for_shifts()
+
+    # Status Bar
+    st.divider()
+    st.caption("System Status: 🟢 Connected | Staff Members: 42 | Active Shifts: 15")
 
 if __name__ == "__main__":
     main()
