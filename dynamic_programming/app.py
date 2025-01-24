@@ -63,17 +63,13 @@ styles = {
         "font-weight": "800",
         # "padding": "20px 24px",  # Increased from 14px
         # "border-radius": "50%",   # Perfect circle
-        # "margin": "0 8px",        # Space between circle and other elements
+        "margin": "0 8px",        # Space between circle and other elements
         "transform": "scale(1.1)" # Slight enlargement
     },
     "hover": {
         "background-color": "transparent",
         "color": "#e6000f",
         "font-weight": "800",
-        # "padding": "20px 24px",  # Increased from 14px
-        # "border-radius": "50%",   # Perfect circle
-        # "margin": "0 8px",        # Space between circle and other elements
-        "transform": "scale(1.1)" # Slight enlargement
     }
 }
 
