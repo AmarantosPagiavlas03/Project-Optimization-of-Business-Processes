@@ -1238,47 +1238,41 @@ def display_tasks_and_shifts():
             # Interactive shift visualization
             if not shifts_df.empty:
                 st.subheader("👥 Shift Schedule", divider="green")
-                shifts_expanded = []
+
+                shifts_df["Start"] = pd.to_datetime("2023-01-01 " + shifts_df["StartTime"], format="%Y-%m-%d %H:%M:%S")
+                shifts_df["End"]   = pd.to_datetime("2023-01-01 " + shifts_df["EndTime"],   format="%Y-%m-%d %H:%M:%S")
+
+                # Expand shifts for days they are active
+                shift_expanded = []
                 for _, row in shifts_df.iterrows():
                     for day in day_order:
                         if row[day] == 1:
-                            shifts_expanded.append({
+                            shift_expanded.append({
                                 "ShiftID": row["id"],
                                 "Day": day,
-                                "Start": pd.to_datetime("2023-01-01 " + row["StartTime"]),
-                                "End": pd.to_datetime("2023-01-01 " + row["EndTime"]),
-                                "Duration": pd.Timedelta(row["Duration"]).total_seconds()/3600
+                                "Start": row["Start"],
+                                "End": row["End"]
                             })
-
-                shifts_expanded_df = pd.DataFrame(shifts_expanded)
-                shifts_expanded_df["Day"] = pd.Categorical(shifts_expanded_df["Day"], 
-                                                         categories=day_order, 
-                                                         ordered=True)
-
+                shifts_expanded_df = pd.DataFrame(shift_expanded)
+                shifts_expanded_df["Day"] = pd.Categorical(shifts_expanded_df["Day"], categories=day_order, ordered=True)
+                full_day_range = ["2023-01-01 00:00:00", "2023-01-01 23:59:59"]
+                st.subheader("Shifts Schedule")
                 fig_shifts = px.timeline(
                     shifts_expanded_df,
                     x_start="Start",
                     x_end="End",
                     y="Day",
                     color="ShiftID",
-                    color_continuous_scale=px.colors.sequential.Magma,
-                    hover_data={"Duration": ":.1f hours", "ShiftID": True},
-                    title="<b>Shift Distribution by Day</b>",
-                    template="plotly_dark"
+                    title="Shifts Gantt Chart",
+                    labels={"Start": "Start Time", "End": "End Time", "Day": "Day of the Week", "ShiftID": "Shift"}
                 )
-                fig_shifts.update_layout(
-                    height=600,
-                    xaxis_title="Time",
-                    yaxis_title="Day",
-                    coloraxis_showscale=False,
-                    font=dict(family="Arial", size=12)
-                )
+                fig_shifts.update_yaxes(categoryorder="array", categoryarray=day_order)
                 fig_shifts.update_xaxes(
                     tickformat="%H:%M",
                     dtick=3600000,
-                    range=time_range
+                    range=full_day_range
                 )
-                st.plotly_chart(fig_shifts, use_container_width=True)
+                st.plotly_chart(fig_shifts)
 
         except Exception as e:
             st.error(f"🚨 Visualization error: {str(e)}")
