@@ -535,7 +535,7 @@ def task_template_download():
         "Duration": ["0:30:00", "0:30:00"],            # "HH:MM:SS" total duration
         "NursesRequired": [2, 1]                       # Integer
     })
-    st.markdown("""
+    # st.markdown("""
     # <style>
     #     /* Center align content in columns */
     #     div[data-testid="column"] {
