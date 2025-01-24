@@ -2,7 +2,7 @@ import streamlit as st
 from streamlit_option_menu import option_menu
 from streamlit_extras.switch_page_button import switch_page
 
-st.set_page_config(page_title="Analytics", layout="wide")
+st.set_page_config(page_title="Home", layout="wide")
 def navigation_bar():
     with st.container():
         st.markdown(
@@ -44,7 +44,7 @@ def navigation_bar():
             }
         )
         if selected == "Home":
-            switch_page("Home")
+            switch_page("Hospital Scheduler")
         if selected == "Analytics":
             switch_page("Analytics")
         if selected == "Contact":
