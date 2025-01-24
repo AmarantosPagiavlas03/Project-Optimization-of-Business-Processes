@@ -18,45 +18,46 @@ from streamlit_extras.switch_page_button import switch_page
 
 def navigation_bar():
     with st.container():
-        # Create two columns: one for the logo and one for the navigation menu
-        col1, col2 = st.columns([1, 4])
-        
-        with col1:
-            st.image(
-                'https://raw.githubusercontent.com/AmarantosPagiavlas03/Project-Optimization-of-Business-Processes/main/dynamic_programming/vu_mc_logo.png',
-                width=200  # Streamlit automatically handles pixel units
-            )
-        
-        with col2:
-            selected = option_menu(
-                menu_title=None,
-                options=["Home", "Upload", "Analytics", 'Settings', 'Contact'],
-                icons=['house', 'cloud-upload', "graph-up-arrow", 'gear', 'phone'],
-                menu_icon="cast",
-                orientation="horizontal",
-                styles={
-                    "container": {
-                        "padding": "0!important",
-                        "margin": "0!important",
-                        "background-color": "#f8f9fa"
-                    },
-                    "nav-link": {
-                        "text-align": "center",
-                        "--hover-color": "#e9ecef",
-                        "margin": "0 10px",
-                    }
+        st.markdown(
+            """
+            <style>
+                .nav-logo {
+                    display: flex;
+                    align-items: center;
+                    margin-bottom: 10px;
                 }
-            )
-
-        # Handle page switching
-        if selected == "Home":
-            switch_page("Home")
-        if selected == "Upload":
-            switch_page("Upload")
+                .nav-logo img {
+                    width: 200px;
+                    height: 33px;
+                    margin-right: 20px;
+                }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            """
+            <div class="nav-logo">
+                <img src="https://raw.githubusercontent.com/AmarantosPagiavlas03/Project-Optimization-of-Business-Processes/main/dynamic_programming/vu_mc_logo.png" alt="Logo">
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        selected = option_menu(
+            menu_title=None,
+            options=["Home", "Upload", "Analytics", 'Settings', 'Contact'],
+            icons=['house', 'cloud-upload', "graph-up-arrow", 'gear', 'phone'],
+            menu_icon="cast",
+            orientation="horizontal",
+            styles={
+                "nav-link": {
+                    "text-align": "left",
+                    "--hover-color": "#eee",
+                }
+            }
+        )
         if selected == "Analytics":
             switch_page("Analytics")
-        if selected == "Settings":
-            switch_page("Settings")
         if selected == "Contact":
             switch_page("Contact")
 
@@ -1560,7 +1561,7 @@ def display_tasks_and_shifts():
     except Exception as e:
         st.warning(f"Plotly is required for Gantt charts: {e}")
 
-
+ 
 # ------------------------------------------------------------------
 #                            Main App
 # ------------------------------------------------------------------
