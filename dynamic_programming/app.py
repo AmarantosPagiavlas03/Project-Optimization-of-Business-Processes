@@ -61,7 +61,7 @@ styles = {
         "color": "white",
         "font-weight": "500",
         "padding": "10px 16px",  # Increased from 14px
-        "border-radius": "70%",   # Perfect circle
+        "border-radius": "55%",   # Perfect circle
         "margin": "0 2px",        # Space between circle and other elements
         "transform": "scale(1.1)" # Slight enlargement
     }
