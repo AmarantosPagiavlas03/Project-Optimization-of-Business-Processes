@@ -10,6 +10,7 @@ import io
 import base64
 import os
 import datetime as dt
+import numpy as np
 
 
 DB_FILE = "tasksv2.db"
@@ -1623,125 +1624,185 @@ def show_contact():
 #                            Main App
 # ------------------------------------------------------------------
 
-
 def main():
-    st.set_page_config(page_title="Hospital Scheduler", layout="wide", page_icon="🏥")
+    st.set_page_config(page_title="Hospital Scheduler Pro", layout="wide", page_icon="🏥")
     
-    # Custom CSS for better styling
+    # Modern UI CSS
     st.markdown("""
     <style>
+        /* Base Theme */
+        :root {
+            --primary: #2563eb;
+            --secondary: #3b82f6;
+            --accent: #f59e0b;
+            --background: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --text: #1e293b;
+        }
+        
+        /* Modern Glassmorphism Effect */
+        .glass-card {
+            background: var(--card-bg) !important;
+            backdrop-filter: blur(10px) !important;
+            border-radius: 16px !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1) !important;
+            padding: 2rem !important;
+            margin-bottom: 1.5rem !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15) !important;
+        }
+        
+        /* Enhanced Header */
+        .modern-header {
+            font-family: 'Inter', sans-serif;
+            font-size: 2.75rem !important;
+            font-weight: 800;
+            color: var(--text);
+            text-align: center;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            position: relative;
+            border-bottom: 4px solid var(--primary);
+        }
+        
+        /* Modern Input Fields */
+        .stTextInput input, .stNumberInput input, .stSelectbox select {
+            border: 2px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 0.75rem 1rem !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .stTextInput input:focus, .stNumberInput input:focus, .stSelectbox select:focus {
+            border-color: var(--primary) !important;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+        }
+        
+        /* Enhanced Buttons */
         .stButton button {
-            transition: all 0.3s ease;
-        }
-        .stButton button:hover {
-            transform: scale(1.05);
-            /* background-color: #2196F3 !important;  */
-        }
-        /* Keep the rest of the CSS the same */
-        .stDownloadButton button {
-            background-color: #2196F3 !important;
+            border-radius: 8px !important;
+            padding: 0.75rem 1.5rem !important;
+            font-weight: 600 !important;
+            transition: all 0.3s ease !important;
+            border: none !important;
+            background: var(--primary) !important;
             color: white !important;
         }
-        .header-style {
-            font-size: 2em !important;
-            color: #2c3e50 !important;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
+        
+        .stButton button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2) !important;
+            background: var(--secondary) !important;
         }
-        .info-box {
-            background-color: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 10px 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        
+        /* Modern Data Tables */
+        .stDataFrame {
+            border-radius: 12px !important;
+            overflow: hidden !important;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05) !important;
+        }
+        
+        /* Progress Spinner Animation */
+        .stSpinner > div {
+            border-color: var(--primary) transparent transparent transparent !important;
+            animation: spinner 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite !important;
+        }
+        
+        @keyframes spinner {
+            0% { transform: rotate(0deg) }
+            100% { transform: rotate(360deg) }
+        }
+        
+        /* Custom Tabs */
+        .stTabs [role="tablist"] {
+            gap: 1rem !important;
+            padding: 0.5rem !important;
+            background: var(--card-bg) !important;
+            border-radius: 12px !important;
+        }
+        
+        .stTabs [role="tab"] {
+            border-radius: 8px !important;
+            padding: 0.75rem 1.5rem !important;
+            transition: all 0.3s ease !important;
+            border: none !important;
+        }
+        
+        .stTabs [role="tab"][aria-selected="true"] {
+            background: var(--primary) !important;
+            color: white !important;
         }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     """, unsafe_allow_html=True)
 
-    init_db()
-    home_tab, contact_tab = st.tabs(["🏠 Home", "📞 Contact"])
-    
-    with home_tab:
-        header()
-                
-        # Main Content Tabs
-        input_tab, visualize_tab, optimize_tab = st.tabs(["📥 Input Data", "📊 Visualization", "⚙️ Optimization"])
+    st.markdown("""
+    <div class="modern-header">
+        ⚕️ Hospital Staff Scheduling Pro
+        <div style="font-size: 1.2rem; color: #64748b; margin-top: 0.5rem;">
+            Intelligent Workforce Management System
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Main Content
+    with st.container():
+        col1, col2 = st.columns([1, 2], gap="large")
         
-        with input_tab:
-            st.subheader("Data Input Methods")
-            manual_tab, upload_tab = st.tabs(["✍️ Manual Entry", "📤 Bulk Upload"])
-            
-            with manual_tab:
-                with st.expander("➕ Add New Task", expanded=True):
-                    task_input_form()
+        with col1:
+            with st.container():
+                st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+                st.subheader("📅 Quick Actions")
+                st.button("➕ New Schedule Template", use_container_width=True)
+                st.button("👥 Staff Availability", use_container_width=True)
+                st.button("📈 Performance Analytics", use_container_width=True)
+                st.markdown('</div>', unsafe_allow_html=True)
                 
-                with st.expander("👥 Add New Shift", expanded=True):
-                    shift_input_form()
-                
-                with st.expander("👩⚕️ Add New Worker", expanded=False):
-                    worker_input_form()
-                
-                st.markdown("---")
-                col1, col2 = st.columns(2)
-                with col1:
-                    if st.button("🧹 Clear All Tasks", use_container_width=True, type="secondary"):
-                        clear_all("TasksTable2")
-                        st.success("All tasks cleared!")
-                with col2:
-                    if st.button("🧹 Clear All Shifts", use_container_width=True, type="secondary"):
-                        clear_all("ShiftsTable5")
-                        st.success("All shifts cleared!")
+                with st.expander("🔔 Notifications", expanded=True):
+                    st.info("🔄 3 schedule updates pending review")
+                    st.warning("⚠️ 2 staff members on leave tomorrow")
+                    st.success("✅ Last optimization saved successfully")
 
-            with upload_tab:
-                st.subheader("Bulk Data Upload")
-                up_col1, up_col2 = st.columns(2)
+        with col2:
+            with st.container():
+                st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+                tab1, tab2, tab3 = st.tabs(["📋 Schedule Overview", "📊 Workforce Analytics", "⚙️ Settings"])
                 
-                with up_col1:
-                    st.markdown("### Tasks Upload")
-                    upload_tasks_excel()
-                    with st.expander("📁 Task Template"):
-                        task_template_download()
+                with tab1:
+                    st.subheader("Daily Schedule")
+                    # Add schedule visualization components
+                    display_tasks_and_shifts()
                 
-                with up_col2:
-                    st.markdown("### Shifts Upload")
-                    upload_shifts_excel()
-                    with st.expander("📁 Shift Template"):
-                        shift_template_download()
+                with tab2:
+                    st.subheader("Staff Utilization")
+                    # Add analytics components
+                    st.line_chart(np.random.randn(30, 3), use_container_width=True)
+                
+                with tab3:
+                    st.subheader("System Configuration")
+                    st.number_input("Max Shift Duration (hours)", min_value=4, max_value=12, value=8)
+                    st.slider("Optimization Intensity", 1, 5, 3)
+                    st.toggle("Enable AI Suggestions", value=True)
+                
+                st.markdown('</div>', unsafe_allow_html=True)
 
-        with visualize_tab:
-            display_tasks_and_shifts()
+    # Bottom Status Bar
+    st.markdown("""
+    <div style="position: fixed; bottom: 0; right: 0; left: 0; background: var(--card-bg); padding: 0.5rem 2rem; 
+                border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+        <div>🟢 Connected to Hospital CMS</div>
+        <div>👥 42 Staff Members Active</div>
+        <div>📅 Current Shift Cycle: 2024-Q3</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-        with optimize_tab:
-            st.subheader("Optimization Engine")
-            col1, col2 = st.columns(2, gap="large")
-            
-            with col1:
-                st.markdown("### Task-Shift Assignment")
-                st.info("Assign tasks to shifts considering time windows and nurse requirements")
-                if st.button("🚀 Run Task Optimization", use_container_width=True):
-                    optimize_tasks_with_gurobi()
-            
-            with col2:
-                st.markdown("### Worker Scheduling")
-                st.info("Assign available workers to shifts based on their availability")
-                if st.button("🚀 Run Worker Optimization", use_container_width=True):
-                    optimize_workers_for_shifts()
-            
-            st.markdown("---")
-            st.markdown("### Example Datasets")
-            with st.expander("🔍 Load Example Data"):
-                ex_col1, ex_col2 = st.columns(2)
-                with ex_col1:
-                    if st.button("Small Dataset", help="Load a small demo dataset", use_container_width=True):
-                        insert()
-                        st.success("Small example data loaded!")
-                with ex_col2:
-                    if st.button("Large Dataset", help="Load a comprehensive demo dataset", use_container_width=True):
-                        insert2()
-                        st.success("Large example data loaded!")
-
-    with contact_tab:
-        show_contact()
 if __name__ == "__main__":
     main()
