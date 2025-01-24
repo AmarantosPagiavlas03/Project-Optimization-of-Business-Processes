@@ -333,8 +333,17 @@ def shift_input_form():
                     key=f"day_{days[i]}" 
                 )
                 st.markdown(
-                    f"<div style='text-align: center; margin-top: -5px;'>"
-                    f"<strong>{days[i]}</strong></div>", 
+                    f"""
+                    <div style="
+                        position: relative;
+                        left: -3px;
+                        top: -8px;
+                        text-align: center;
+                        width: 100%;
+                    ">
+                        {days[i]}
+                    </div>
+                    """,
                     unsafe_allow_html=True
                 )
         # --- Form Submission ---
