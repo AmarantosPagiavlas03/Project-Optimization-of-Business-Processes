@@ -277,49 +277,110 @@ def task_input_form():
                 st.success("Task added successfully!")
 
 def shift_input_form():
-    """Sidebar form to add a new shift."""
+    """Sidebar form to add new shifts with enhanced time selection and validation."""
     with st.form("shift_form", clear_on_submit=True):
         st.subheader("Add New Shift")
         
-        # Time inputs
-        time_col1, time_col2, time_col3 = st.columns(3)
-        with time_col1:
-            Shift_StartTime = st.time_input("Shift Start*", datetime.now().time())
-        with time_col2:
-            Shift_EndTime = st.time_input("Shift End*", 
-                                        (datetime.now() + timedelta(hours=8)).time())
-        with time_col3:
-            BreakTime = st.time_input("Break Start*", 
-                                    (datetime.now() + timedelta(hours=4)).time())
+        # --- Time Selection with 15-minute intervals ---
+        intervals = generate_time_intervals()
         
-        # Break duration and weight
-        dur_col, weight_col = st.columns(2)
-        with dur_col:
-            break_mins = st.slider("Break Duration (minutes)*", 15, 120, 30, step=15)
-        with weight_col:
-            Weight = st.number_input("Shift Weight*", min_value=0.1, value=1.0, step=0.1)
+        # Create columns for time inputs
+        time_col1, time_col2 = st.columns(2)
+        with time_col1:
+            Shift_StartTime = st.selectbox("Shift Start*", intervals, 
+                                         format_func=lambda t: t.strftime("%H:%M"),
+                                         help="Select shift start time")
+        with time_col2:
+            Shift_EndTime = st.selectbox("Shift End*", intervals,
+                                       index=min(len(intervals)-1, intervals.index(Shift_StartTime) + 32),  # 8 hours later
+                                       format_func=lambda t: t.strftime("%H:%M"),
+                                       help="Select shift end time")
 
-        # Days of the week checkboxes
-        st.write("Active Days*")
-        days = st.columns(7)
-        day_labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-        day_states = [days[i].checkbox(label, key=f"day_{label}") 
-                     for i, label in enumerate(day_labels)]
+        # --- Break Configuration ---
+        st.markdown("### Break Configuration")
+        break_col1, break_col2 = st.columns(2)
+        with break_col1:
+            BreakTime = st.selectbox("Break Start*", intervals,
+                                   format_func=lambda t: t.strftime("%H:%M"),
+                                   help="Select break start time")
+        with break_col2:
+            break_durations = [15, 30, 45, 60, 75, 90, 105, 120]
+            BreakDuration = st.selectbox("Break Duration (minutes)*",
+                                       options=break_durations,
+                                       index=1,  # Default to 30 minutes
+                                       format_func=lambda x: f"{x} minutes")
 
-        # Full-width submit button
-        submitted = st.form_submit_button("➕ Add Shift", use_container_width=True)
+        # --- Shift Weight with Dual Input ---
+        st.markdown("### Shift Preferences")
+        weight_col1, weight_col2 = st.columns([3, 1])
+        with weight_col1:
+            Weight = st.slider("Shift Weight*", 0.1, 5.0, 1.0, 0.1,
+                             help="Higher weight means more expensive to schedule")
+        with weight_col2:
+            st.metric("Selected Weight", f"{Weight:.1f}")
+
+        # --- Days of Week Selection with Toggle Buttons ---
+        st.markdown("### Active Days*")
+        days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+        day_states = {}
+        
+        # Create a grid of toggle buttons
+        cols = st.columns(7)
+        for i, (col, day) in enumerate(zip(cols, days)):
+            with col:
+                day_states[day] = st.toggle(day, key=f"day_{day}",
+                                          help=f"Active on {days[i]}")
+
+        # --- Validation & Submission ---
+        submitted = st.form_submit_button("➕ Add Shift", 
+                                        use_container_width=True,
+                                        type="primary")
             
         if submitted:
-            shift_data = (
-                Shift_StartTime.strftime("%H:%M:%S"),
-                Shift_EndTime.strftime("%H:%M:%S"),
-                BreakTime.strftime("%H:%M:%S"),
-                str(timedelta(minutes=break_mins)),
-                Weight,
-                *[1 if state else 0 for state in day_states]
-            )
-            add_shift_to_db(shift_data)
-            st.success("Shift added successfully!")
+            errors = []
+            
+            # Validate time sequence
+            if Shift_StartTime >= Shift_EndTime:
+                errors.append("Shift end time must be after start time")
+                
+            # Validate break time within shift
+            if not (Shift_StartTime <= BreakTime < Shift_EndTime):
+                errors.append("Break must occur during shift hours")
+                
+            # Validate break duration
+            break_end = (datetime.combine(datetime.today(), BreakTime) 
+                       + timedelta(minutes=BreakDuration)).time()
+            if break_end > Shift_EndTime:
+                errors.append("Break duration exceeds shift end time")
+
+            if errors:
+                for error in errors:
+                    st.error(error)
+            else:
+                # Convert days to original format (Monday, Tuesday...)
+                day_mapping = {
+                    "Mon": "Monday",
+                    "Tue": "Tuesday",
+                    "Wed": "Wednesday",
+                    "Thu": "Thursday",
+                    "Fri": "Friday",
+                    "Sat": "Saturday",
+                    "Sun": "Sunday"
+                }
+                active_days = [1 if day_states[abbr] else 0 
+                             for abbr in days]
+                
+                shift_data = (
+                    Shift_StartTime.strftime("%H:%M:%S"),
+                    Shift_EndTime.strftime("%H:%M:%S"),
+                    BreakTime.strftime("%H:%M:%S"),
+                    str(timedelta(minutes=BreakDuration)),
+                    Weight,
+                    *active_days
+                )
+                add_shift_to_db(shift_data)
+                st.success("Shift added successfully!")
+ 
 def generate_and_fill_data_form():
     """Sidebar form to generate and fill random data."""
     with st.sidebar.expander("Generate Random Data", expanded=False):
