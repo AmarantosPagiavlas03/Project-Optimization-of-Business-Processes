@@ -535,16 +535,7 @@ def task_template_download():
         "Duration": ["0:30:00", "0:30:00"],            # "HH:MM:SS" total duration
         "NursesRequired": [2, 1]                       # Integer
     })
-    # st.markdown("""
-    # <style>
-    #     /* Center align content in columns */
-    #     div[data-testid="column"] {
-    #         display: flex;
-    #         flex-direction: column;
-    #         align-items: center;
-    #     }
-    # </style>
-    # """, unsafe_allow_html=True)
+
     with st.container(border=False):
         
         # Create columns with large gap
@@ -627,16 +618,6 @@ def shift_template_download():
         "Saturday": [0, 1],
         "Sunday": [0, 1]
     })
-    # st.markdown("""
-    # <style>
-    #     /* Center align content in columns */
-    #     div[data-testid="column"] {
-    #         display: flex;
-    #         flex-direction: column;
-    #         align-items: center;
-    #     }
-    # </style>
-    # """, unsafe_allow_html=True)
 
     with st.container(border=False):
         
@@ -1616,19 +1597,17 @@ def main():
                         upload_shifts_excel()
                         shift_template_download()
 
-            # with st.sidebar:
-            #     st.markdown("---")  # Add a separator line
-            #     col1, col2 = st.columns(2)
+            with st.container(border=True):
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("Clear All Tasks"):
+                        clear_all("TasksTable2")
+                        st.success("All tasks have been cleared!")
+                with col2:
+                    if st.button("Clear All Shifts"):
+                        clear_all("ShiftsTable5")
+                        st.success("All shifts have been cleared!")
 
-            #     with col1:
-            #         if st.button("Clear All Tasks"):
-            #             clear_all("TasksTable2")
-            #             st.success("All tasks have been cleared!")
-
-            #     with col2:
-            #         if st.button("Clear All Shifts"):
-            #             clear_all("ShiftsTable5")
-            #             st.success("All shifts have been cleared!")
         # Buttons for example data
         colA, colB = st.columns(2)
         with colA:
