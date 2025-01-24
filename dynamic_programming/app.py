@@ -5,61 +5,78 @@ from streamlit_navigation_bar import st_navbar
 from dynamic_programming.pages import home, contact
 from database import init_db
 
-# Configure paths FIRST
+# Configure paths
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, project_root)
 parent_dir = os.path.dirname(os.path.abspath(__file__))
 logo_path = os.path.join(parent_dir, "vu_mc_logo_text.svg")
 
 # Initialize app
-st.set_page_config(initial_sidebar_state="collapsed", layout="wide")
-st._config.set_option("theme.primaryColor", "#E53935")  # Red color
-st._config.set_option("theme.backgroundColor", "#FFFFFF")  # White background
-st._config.set_option("theme.secondaryBackgroundColor", "#F5F5F5")  # Light gray
-st._config.set_option("theme.textColor", "#000000")  # Black text
-st._config.set_option("theme.font", "sans serif")
+st.set_page_config(
+    initial_sidebar_state="collapsed",
+    layout="wide",
+    page_title="Business Process Optimizer",
+    page_icon="⚙️"
+)
+
+# Set theme config
+theme_config = {
+    "primaryColor": "#E53935",
+    "backgroundColor": "#FFFFFF",
+    "secondaryBackgroundColor": "#F5F5F5",
+    "textColor": "#000000",
+    "font": "sans serif"
+}
+for key, value in theme_config.items():
+    st._config.set_option(f"theme.{key}", value)
+
 init_db()
 
-# Verify logo exists
+# Logo handling
 if not os.path.exists(logo_path):
     st.error(f"⚠️ Missing logo at: {logo_path}")
-    logo_path = None  # Will render without logo
+    logo_path = None
 
+# Simplified styles focusing on logo spacing
 styles = {
     "nav": {
-        "background-color": "#f07814",
-        "justify-content": "left",
-        "padding-left": "20px",
-        "gap": "40px",
-        "border-bottom": "2px solid #e6000f"  # Add accent line
+        "padding-left": "2rem",
+        "gap": "4rem",
+        "background-color": theme_config["primaryColor"]
     },
     "img": {
-        "padding-right": "50px",
-        "padding-left": "20px",
-        "width": "200px",
-        "filter": "brightness(0) invert(1)"  # Make black logo white
+        "width": "320px",  # Increased from 200px
+        "min-width": "320px",
+        "padding-right": "3rem",
+        "margin-left": "-1rem"  # Compensate for SVG spacing
     },
     "span": {
         "color": "white",
-        "padding": "14px",
-        "font-size": "18px",
-        "transition": "all 0.3s ease"  # Smooth hover effects
+        "font-size": "1.1rem",
+        "font-weight": "500"
     },
     "active": {
-        "background-color": "#e6000f",
-        "color": "white",  # Better contrast than black
-        "font-weight": "500",  # Semi-bold for better visibility
-        "padding": "14px",
-        "border-radius": "4px"  # Soften edges
+        "background-color": "#FFFFFF33",  # Semi-transparent white
+        "border-radius": "0.5rem"
     }
 }
 
-# Setup navigation
+# Navigation setup
 page = st_navbar(
     ["Home", "Contact"],
     options={"show_menu": False, "show_sidebar": False},
     logo_path=logo_path,
-    styles=styles 
+    styles=styles
 )
+
+# Add subtle shadow to nav bar
+st.markdown("""
+<style>
+    [data-testid="stNavigationBar"] {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+</style>
+""", unsafe_allow_html=True)
+
 # Route pages
 {"Home": home.show_home, "Contact": contact.show_contact}.get(page)()
