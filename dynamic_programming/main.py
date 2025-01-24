@@ -231,101 +231,99 @@ def get_default_indices_for_intervals(intervals):
 
 def task_input_form():
     """Sidebar form to add a new task."""
-
-    with st.form("task_form",border=False):
-        if "task_start_time" not in st.session_state:
-            st.session_state["task_start_time"] = datetime.now().time()
-        if "task_end_time" not in st.session_state:
-            st.session_state["task_end_time"] = (datetime.now() + timedelta(hours=1)).time()
-
-        # Generate time intervals for select boxes
-        intervals = generate_time_intervals()
-
-        default_idx_1h, default_idx_2h = get_default_indices_for_intervals(intervals)
-
-        # Create columns for the input fields
-        col1, col2, col3, col4,col5,col6,col7 = st.columns(7, gap="small")
-
+    with st.form("task_form", clear_on_submit=True):
+        st.subheader("Add New Task")
+        
+        # Create two main columns for task details
+        col1, col2 = st.columns(2)
+        
         with col1:
-            TaskName = st.text_input("Task Name", key="task_name")
+            TaskName = st.text_input("Task Name*", key="task_name")
+            Day = st.selectbox("Day of the Week*", 
+                             ["Monday", "Tuesday", "Wednesday", "Thursday",
+                              "Friday", "Saturday", "Sunday"])
+            
         with col2:
-            Day = st.selectbox("Day of the Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], key="day_of_week")
-        with col3:
-            StartTime = st.selectbox("Start Time", options=intervals,index= default_idx_1h, format_func=lambda t: t.strftime("%H:%M"), key="start_time")
-        with col4:
-            EndTime = st.selectbox("End Time", options=intervals,index= default_idx_2h, format_func=lambda t: t.strftime("%H:%M"), key="end_time")
-        with col5:
-            duration_hours = st.number_input("Duration Hours", min_value=0, max_value=23, value=1, step=1, key="duration_hours")
-        with col6:
-            duration_minutes = st.number_input("Duration Minutes", min_value=0, max_value=59, value=0, step=1, key="duration_minutes")
-        with col7:
-            NursesRequired = st.number_input("Nurses Required", min_value=1, value=1, step=1, key="nurses_required")
+            NursesRequired = st.number_input("Nurses Required*", 
+                                           min_value=1, value=1, step=1)
+            
+        # Time inputs in their own columns
+        time_col1, time_col2, time_col3 = st.columns(3)
+        with time_col1:
+            StartTime = st.time_input("Start Time*", datetime.now().time())
+        with time_col2:
+            EndTime = st.time_input("End Time*", 
+                                  (datetime.now() + timedelta(hours=1)).time())
+        with time_col3:
+            duration = st.slider("Duration (minutes)*", 15, 480, 60, step=15)
 
-        # Add task button
-        col8, col9 = st.columns(2, gap="small")
-        with col9:
-            if st.form_submit_button("Add Task"):
-                if TaskName:
-                    duration_delta = timedelta(hours=duration_hours, minutes=duration_minutes)
-                    add_task_to_db(
-                        TaskName,
-                        Day,
-                        f"{StartTime.hour}:{StartTime.minute}:00",
-                        f"{EndTime.hour}:{EndTime.minute}:00",
-                        str(duration_delta),
-                        NursesRequired
-                    )
-                    st.success(f"Task '{TaskName}' added!")
-                else:
-                    st.error("Task name cannot be empty!")
-                            
+        # Add task button with proper alignment
+        _, col_submit = st.columns([4, 1])
+        with col_submit:
+            submitted = st.form_submit_button("➕ Add Task", 
+                                            use_container_width=True)
+            
+        if submitted:
+            if not TaskName:
+                st.error("Task Name is required!")
+            else:
+                add_task_to_db(
+                    TaskName,
+                    Day,
+                    StartTime.strftime("%H:%M:%S"),
+                    EndTime.strftime("%H:%M:%S"),
+                    str(timedelta(minutes=duration)),
+                    NursesRequired
+                )
+                st.success("Task added successfully!")
+
 def shift_input_form():
     """Sidebar form to add a new shift."""
-    if "shift_start_time" not in st.session_state:
-        st.session_state["shift_start_time"] = datetime.now().time()
-    if "shift_end_time" not in st.session_state:
-        st.session_state["shift_end_time"] = (datetime.now() + timedelta(hours=1)).time()
-    if "break_start_time" not in st.session_state:
-        st.session_state["break_start_time"] = (datetime.now() + timedelta(hours=2)).time()
+    with st.form("shift_form", clear_on_submit=True):
+        st.subheader("Add New Shift")
+        
+        # Time inputs
+        time_col1, time_col2, time_col3 = st.columns(3)
+        with time_col1:
+            Shift_StartTime = st.time_input("Shift Start*", datetime.now().time())
+        with time_col2:
+            Shift_EndTime = st.time_input("Shift End*", 
+                                        (datetime.now() + timedelta(hours=8)).time())
+        with time_col3:
+            BreakTime = st.time_input("Break Start*", 
+                                    (datetime.now() + timedelta(hours=4)).time())
+        
+        # Break duration and weight
+        dur_col, weight_col = st.columns(2)
+        with dur_col:
+            break_mins = st.slider("Break Duration (minutes)*", 15, 120, 30, step=15)
+        with weight_col:
+            Weight = st.number_input("Shift Weight*", min_value=0.1, value=1.0, step=0.1)
 
-    intervals = generate_time_intervals()
-    default_idx_1h, default_idx_2h = get_default_indices_for_intervals(intervals)
- 
-    with st.form("shift_form",border=False):
-        cols  = st.columns(6, gap="small")
-        with cols[0]:
-            Shift_StartTime = st.selectbox("Shift Start Time", options=intervals, index=default_idx_1h, format_func=lambda t: t.strftime("%H:%M"))
-        with cols[1]:
-            Shift_EndTime = st.selectbox("Shift End Time", options=intervals,index=default_idx_2h, format_func=lambda t: t.strftime("%H:%M"))
-        with cols[2]:
-            BreakTime = st.selectbox("Break Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
-        with cols[3]:
-            BreakDuration_hours = st.number_input("Break Duration Hours", min_value=0, max_value=23, value=0)
-        with cols[4]:
-            BreakDuration_minutes = st.number_input("Break Duration Minutes", min_value=0, max_value=59, value=30)
-        with cols[5]:
-            Weight = st.number_input("Shift Weight", min_value=0.0, value=1.0)
+        # Days of the week checkboxes
+        st.write("Active Days*")
+        days = st.columns(7)
+        day_labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+        day_states = [days[i].checkbox(label, key=f"day_{label}") 
+                     for i, label in enumerate(day_labels)]
 
+        # Submit button
+        _, col_submit = st.columns([4, 1])
+        with col_submit:
+            submitted = st.form_submit_button("➕ Add Shift", 
+                                            use_container_width=True)
             
-        # st.markdown("### Select Days")
-        col_days = st.columns(7, gap="small")
-        days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-        Days = {day: col_days[i].checkbox(day, value=(day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])) for i, day in enumerate(days_of_week)}
-
-        col7, col8 = st.columns(2, gap="small")
-        with col8:
-            if st.form_submit_button("Add Shift"):
-                shift_data = (
-                    f"{Shift_StartTime.hour}:{Shift_StartTime.minute}:00",
-                    f"{Shift_EndTime.hour}:{Shift_EndTime.minute}:00",
-                    f"{BreakTime.hour}:{BreakTime.minute}:00",
-                    str(timedelta(hours=BreakDuration_hours, minutes=BreakDuration_minutes)),
-                    Weight,
-                    *(1 if Days[day] else 0 for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
-                )
-                add_shift_to_db(shift_data)
-                st.success("Shift added successfully!")
-
+        if submitted:
+            shift_data = (
+                Shift_StartTime.strftime("%H:%M:%S"),
+                Shift_EndTime.strftime("%H:%M:%S"),
+                BreakTime.strftime("%H:%M:%S"),
+                str(timedelta(minutes=break_mins)),
+                Weight,
+                *[1 if state else 0 for state in day_states]
+            )
+            add_shift_to_db(shift_data)
+            st.success("Shift added successfully!")
 def generate_and_fill_data_form():
     """Sidebar form to generate and fill random data."""
     with st.sidebar.expander("Generate Random Data", expanded=False):
