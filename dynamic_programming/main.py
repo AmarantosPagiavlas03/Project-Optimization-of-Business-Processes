@@ -1,25 +1,22 @@
-# import streamlit as st
-# import pandas as pd
-# import sqlite3
-# from datetime import datetime, timedelta
-# import random
-# import plotly.express as px
-# from gurobipy import Model, GRB, quicksum
-# from datetime import time
-# import io  
-# import base64
-# import os
-# import datetime as dt
-# from streamlit_option_menu import option_menu
-# from streamlit_extras.switch_page_button import switch_page
-# from streamlit_navigation_bar import st_navbar
-
 import streamlit as st
-from streamlit_navigation_bar import st_navbar
+import pandas as pd
+import sqlite3
+from datetime import datetime, timedelta
+import random
+import plotly.express as px
+from gurobipy import Model, GRB, quicksum
+from datetime import time
+import io  
+import base64
+import os
+from htbuilder import HtmlElement, div, ul, li, br, hr, a, p, img, styles, classes, fonts
+from htbuilder.units import percent, px
+from htbuilder.funcs import rgba, rgb
+import datetime as dt
+from streamlit_option_menu import option_menu
+from streamlit_extras.switch_page_button import switch_page
 
 
-page = st_navbar(["Home", "Documentation", "Examples", "Community", "About"])
-st.write(page)
 
 DB_FILE = "tasksv2.db"
 
@@ -1527,84 +1524,158 @@ def display_tasks_and_shifts():
 # ------------------------------------------------------------------
 
 
+def contact_page():
+    st.title("Contact Us")
+
+    # Add a description or introductory text
+    st.write("We'd love to hear from you! Please use the form below to get in touch with us.")
+
+    # Contact form
+    with st.form("contact_form"):
+        # Name input
+        name = st.text_input("Name", placeholder="Enter your name")
+        # Email input
+        email = st.text_input("Email", placeholder="Enter your email address")
+        # Message input
+        message = st.text_area("Message", placeholder="Write your message here", height=150)
+        # Submit button
+        submitted = st.form_submit_button("Submit")
+
+        # Handle form submission
+        if submitted:
+            if name and email and message:
+                st.success("Thank you for your message! We'll get back to you shortly.")
+                # You can add email sending functionality here, e.g., using an API like SendGrid
+            else:
+                st.error("Please fill in all fields before submitting.")
+
+    # Additional contact information
+    st.write("### Other Ways to Reach Us")
+    st.write("📧 Email: support@vuamsterdamscheduling.com")
+    st.write("📍 Address: De Boelelaan 1105, 1081 HV Amsterdam, North Holland, Netherlands")
 
 
-# def main():
-# st.set_page_config(page_title="Hospital Scheduler", layout="wide")
-page = st_navbar(["Home", "Documentation", "Examples", "Community", "About"])
-st.write(page)
+def navigation_bar():
+    with st.container():
+        st.markdown(
+            """
+            <style>
+                .nav-logo {
+                    display: flex;
+                    align-items: center;
+                    margin-bottom: 10px;
+                }
+                .nav-logo img {
+                    width: 200px;
+                    height: 33px;
+                    margin-right: 20px;
+                }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            """
+            <div class="nav-logo">
+                <img src="https://raw.githubusercontent.com/AmarantosPagiavlas03/Project-Optimization-of-Business-Processes/main/dynamic_programming/vu_mc_logo.png" alt="Logo">
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        selected = option_menu(
+            menu_title=None,
+            options=["Home", "Upload", "Analytics", 'Settings', 'Contact'],
+            icons=['house', 'cloud-upload', "graph-up-arrow", 'gear', 'phone'],
+            menu_icon="cast",
+            orientation="horizontal",
+            styles={
+                "nav-link": {
+                    "text-align": "left",
+                    "--hover-color": "#eee",
+                }
+            }
+        )
+        if selected == "Analytics":
+            switch_page("Analytics")
+        if selected == "Contact":
+            contact_page() 
+
+def main():
+    st.set_page_config(page_title="Hospital Scheduler", layout="wide")
+    # header()
+    navigation_bar()
         
-    # init_db()
+    init_db()
  
-    # # Input forms
-    # task_input_form()
-    # shift_input_form()
-    # # worker_input_form()
+    # Input forms
+    task_input_form()
+    shift_input_form()
+    # worker_input_form()
  
-    # with st.sidebar:
-    #     st.markdown("---")  # Add a separator line
-    #     col1, col2 = st.columns(2)
+    with st.sidebar:
+        st.markdown("---")  # Add a separator line
+        col1, col2 = st.columns(2)
 
-    #     with col1:
-    #         if st.button("Clear All Tasks"):
-    #             clear_all("TasksTable2")
-    #             st.success("All tasks have been cleared!")
+        with col1:
+            if st.button("Clear All Tasks"):
+                clear_all("TasksTable2")
+                st.success("All tasks have been cleared!")
 
-    #     with col2:
-    #         if st.button("Clear All Shifts"):
-    #             clear_all("ShiftsTable5")
-    #             st.success("All shifts have been cleared!")
+        with col2:
+            if st.button("Clear All Shifts"):
+                clear_all("ShiftsTable5")
+                st.success("All shifts have been cleared!")
 
-    # with st.sidebar.expander("Task Data Import/Export"):
-    #     # 1. Download Template
-    #     st.subheader("Download Template")
-    #     task_template_download()
+    with st.sidebar.expander("Task Data Import/Export"):
+        # 1. Download Template
+        st.subheader("Download Template")
+        task_template_download()
 
-    #     st.markdown("---")
+        st.markdown("---")
 
-    #     # 2. Upload user file
-    #     st.subheader("Upload Your Tasks")
-    #     upload_tasks_excel()
+        # 2. Upload user file
+        st.subheader("Upload Your Tasks")
+        upload_tasks_excel()
 
-    #     # if st.button("Clear All Workers"):
-    #     #     clear_all("Workers")
-    #     #     st.success("All workers have been cleared!")
+        # if st.button("Clear All Workers"):
+        #     clear_all("Workers")
+        #     st.success("All workers have been cleared!")
 
-    # with st.sidebar.expander("Shift Data Import/Export"):
-    #     st.subheader("Download Example Shift Template")
-    #     shift_template_download()
+    with st.sidebar.expander("Shift Data Import/Export"):
+        st.subheader("Download Example Shift Template")
+        shift_template_download()
 
-    #     st.markdown("---")
+        st.markdown("---")
         
-    #     st.subheader("Upload Your Shifts File")
-    #     upload_shifts_excel()
+        st.subheader("Upload Your Shifts File")
+        upload_shifts_excel()
 
-    # # Buttons for example data
-    # colA, colB = st.columns(2)
-    # with colA:
-    #     if st.button("Data Example"):
-    #         insert()
-    #         st.success("Data Example 1 inserted!")
-    # with colB:
-    #     if st.button("Data Example2"):
-    #         insert2()
-    #         st.success("Data Example 2 inserted!")
+    # Buttons for example data
+    colA, colB = st.columns(2)
+    with colA:
+        if st.button("Data Example"):
+            insert()
+            st.success("Data Example 1 inserted!")
+    with colB:
+        if st.button("Data Example2"):
+            insert2()
+            st.success("Data Example 2 inserted!")
 
-    # # First optimization
-    # if st.button("Optimize Task Assignment"):
-    #     optimize_tasks_with_gurobi()
+    # First optimization
+    if st.button("Optimize Task Assignment"):
+        optimize_tasks_with_gurobi()
 
-    # ## Second optimization: Assign workers to shifts
-    # # if st.button("Assign Workers to Shifts"):
-    # #     optimize_workers_for_shifts()
-
-
-    # # Visualization
-    # display_tasks_and_shifts()
+    ## Second optimization: Assign workers to shifts
+    # if st.button("Assign Workers to Shifts"):
+    #     optimize_workers_for_shifts()
 
 
+    # Visualization
+    display_tasks_and_shifts()
+    # footer()
 
 
 
-# if __name__ == "__main__":
-#     main()
+
+if __name__ == "__main__":
+    main()
