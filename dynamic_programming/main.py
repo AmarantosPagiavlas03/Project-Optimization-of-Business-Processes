@@ -1607,11 +1607,9 @@ def header():
     You can add text, images, links, etc.
     """
     my_header_args = [
-        "VU Amsterdam Hospital - Dashboard",
-        br(),
         image(
             'https://raw.githubusercontent.com/AmarantosPagiavlas03/Project-Optimization-of-Business-Processes/main/dynamic_programming/vu_mc_logo.png',
-            width=px(100),  # auto-scale height
+            width=px(200), height=px(33)
         )
     ]
     header_layout(*my_header_args)
@@ -1626,14 +1624,7 @@ def footer():
         link("mailto:someone@example.com", "Contact us via Email"),
         " | ",
         link("https://github.com/YourGithubUser/YourRepoName", "GitHub Repo"),
-        br(),
-        "Developed by Your Name - 2025",
-        br(),
-        image(
-            "https://raw.githubusercontent.com/AmarantosPagiavlas03/Project-Optimization-of-Business-Processes/main/dynamic_programming/vu_mc_logo.png",
-            width=px(200),
-            height=px(33)
-        )
+        br()
     ]
     layout_footer(*my_footer_args)
 # ------------------------------------------------------------------
