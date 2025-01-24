@@ -1495,7 +1495,7 @@ COMMON_STYLE = """
      Also, push it up a bit from the bottom if you have a fixed footer. */
   .stApp {
       margin-top: 70px; /* Adjust if header is taller or smaller */
-      margin-bottom: 70px; /* to accommodate the footer */
+      margin-bottom: 60px; /* to accommodate the footer */
   }
 
   /* Remove any default border/line from hr */
