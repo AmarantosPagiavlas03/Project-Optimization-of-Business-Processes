@@ -1,38 +1,31 @@
-# In app.py (corrected version)
 import sys
 import os
-
-# Add project root to Python path FIRST
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, project_root)
-
-# Now import modules
 import streamlit as st
 from streamlit_navigation_bar import st_navbar
-from dynamic_programming.pages import home, contact  # Direct import
+from dynamic_programming.pages import home, contact
 from database import init_db
 
-# Add this at the top of app.py
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Configure paths FIRST
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, project_root)
+parent_dir = os.path.dirname(os.path.abspath(__file__))
+logo_path = os.path.join(parent_dir, "vu_mc_logo.png")
+
+# Initialize app
 st.set_page_config(initial_sidebar_state="collapsed", layout="wide")
 init_db()
-pages = ["Home", "Contact"]
 
-options = {
-    "show_menu": False,
-    "show_sidebar": False,
-}
+# Verify logo exists
+if not os.path.exists(logo_path):
+    st.error(f"⚠️ Missing logo at: {logo_path}")
+    logo_path = None  # Will render without logo
 
+# Setup navigation
 page = st_navbar(
-    pages,
-    options=options,
+    ["Home", "Contact"],
+    options={"show_menu": False, "show_sidebar": False},
+    logo_path=logo_path
 )
 
-functions = {
-    "Home": home.show_home,
-    "Contact": contact.show_contact
-}
-
-go_to = functions.get(page)
-if go_to:
-    go_to()
+# Route pages
+{"Home": home.show_home, "Contact": contact.show_contact}.get(page)()
