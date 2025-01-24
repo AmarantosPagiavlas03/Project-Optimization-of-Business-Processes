@@ -270,28 +270,28 @@ def task_input_form():
             # Generate time intervals for select boxes
             intervals = generate_time_intervals()
 
-        def generate_15_min_intervals():
-            intervals = []
-            for hour in range(24):
-                for minute in [0, 15, 30, 45]:
-                    intervals.append(dt.time(hour=hour, minute=minute))
-            return intervals
+            def generate_15_min_intervals():
+                intervals = []
+                for hour in range(24):
+                    for minute in [0, 15, 30, 45]:
+                        intervals.append(dt.time(hour=hour, minute=minute))
+                return intervals
 
-        intervals = generate_15_min_intervals()
+            intervals = generate_15_min_intervals()
 
-        # Suppose you want the default to be 'current time + 1 hour'
-        now_plus_1h = (dt.datetime.now() + dt.timedelta(hours=1)).time()
+            # Suppose you want the default to be 'current time + 1 hour'
+            now_plus_1h = (dt.datetime.now() + dt.timedelta(hours=1)).time()
 
-        # Round to nearest 15 minutes (optional)
-        nearest_15 = (now_plus_1h.minute // 15) * 15
-        default_time = now_plus_1h.replace(minute=nearest_15, second=0, microsecond=0)
+            # Round to nearest 15 minutes (optional)
+            nearest_15 = (now_plus_1h.minute // 15) * 15
+            default_time = now_plus_1h.replace(minute=nearest_15, second=0, microsecond=0)
 
-        # Ensure that default_time is in your intervals list
-        # For this example, it should be after rounding.
-        if default_time in intervals:
-            default_idx = intervals.index(default_time)
-        else:
-            default_idx = 0 
+            # Ensure that default_time is in your intervals list
+            # For this example, it should be after rounding.
+            if default_time in intervals:
+                default_idx = intervals.index(default_time)
+            else:
+                default_idx = 0 
 
             # Create columns for horizontal layout within the expander
             col1, col2, col3, col4,col5,col6,col7 = st.columns(7, gap="small")
