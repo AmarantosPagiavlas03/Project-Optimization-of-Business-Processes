@@ -1,8 +1,8 @@
 import streamlit as st
 from database import  clear_all, insert, insert2
 from forms import task_input_form, shift_input_form, worker_input_form, task_template_download, upload_tasks_excel, shift_template_download, upload_shifts_excel
-from ..optimizer import optimize_tasks_with_gurobi, optimize_workers_for_shifts
-from ..visualization import display_tasks_and_shifts
+from .optimizer import optimize_tasks_with_gurobi, optimize_workers_for_shifts
+from .visualization import display_tasks_and_shifts
 
 def show_home():
     st.set_page_config(page_title="Hospital Scheduler", layout="wide")
