@@ -535,26 +535,40 @@ def task_template_download():
         "Duration": ["0:30:00", "0:30:00"],            # "HH:MM:SS" total duration
         "NursesRequired": [2, 1]                       # Integer
     })
-
-    # --- CSV version ---
-    csv_data = template_df.to_csv(index=False)
-    st.download_button(
-        label="Download Task Template (CSV)",
-        data=csv_data.encode("utf-8"),
-        file_name="task_template.csv",
-        mime="text/csv"
-    )
-
-    # --- Excel version ---
-    excel_buffer = io.BytesIO()
-    with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
-        template_df.to_excel(writer, index=False, sheet_name='TaskTemplate')
-    st.download_button(
-        label="Download Task Template (Excel)",
-        data=excel_buffer.getvalue(),
-        file_name="task_template.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+    st.markdown("""
+    <style>
+        /* Center align content in columns */
+        div[data-testid="column"] {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    with st.container(border=False):
+        
+        # Create columns with large gap
+        colA, colB = st.columns(2, gap="large")
+        with colA:
+            # --- CSV version ---
+            csv_data = template_df.to_csv(index=False)
+            st.download_button(
+                label="Download Task Template (CSV)",
+                data=csv_data.encode("utf-8"),
+                file_name="task_template.csv",
+                mime="text/csv"
+            )
+        with colB:
+            # --- Excel version ---
+            excel_buffer = io.BytesIO()
+            with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
+                template_df.to_excel(writer, index=False, sheet_name='TaskTemplate')
+            st.download_button(
+                label="Download Task Template (Excel)",
+                data=excel_buffer.getvalue(),
+                file_name="task_template.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
 
 def upload_tasks_excel():
     """
