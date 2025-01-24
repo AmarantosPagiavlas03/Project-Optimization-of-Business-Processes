@@ -1475,34 +1475,30 @@ def display_tasks_and_shifts():
     except Exception as e:
         st.warning(f"Plotly is required for Gantt charts: {e}")
 
-
+# ------------------------------------------------------------------
 def image(src_as_string, **style):
     return img(src=src_as_string, style=styles(**style))
 
-def link(link, text, **style):
-    return a(_href=link, _target="_blank", style=styles(**style))(text)
+def link(url, text, **style):
+    return a(_href=url, _target="_blank", style=styles(**style))(text)
 
-# Common CSS for both header and footer
 COMMON_STYLE = """
 <style>
   /* Hide Streamlit default footer & menu */
   #MainMenu {visibility: hidden;}
   footer {visibility: hidden;}
 
-  /* Push main app content down so the fixed header doesn't overlap it. 
-     Also, push it up a bit from the bottom if you have a fixed footer. */
   .stApp {
-      margin-top: 70px; /* Adjust if header is taller or smaller */
-      margin-bottom: 105px; /* to accommodate the footer */
+      margin-top: 70px;  /* top spacing if you have a header */
+      margin-bottom: 105px; /* bottom spacing for the footer */
   }
 
-  /* Remove any default border/line from hr */
   hr {
       border: none;
       height: 0;
   }
 
-  /* Auto switch to white text in dark mode and black in light mode */
+  /* Auto switch text color based on dark/light mode */
   @media (prefers-color-scheme: dark) {
       .stApp, .stApp * {
           color: #FFFFFF !important;
@@ -1516,21 +1512,17 @@ COMMON_STYLE = """
 </style>
 """
 
-def header_layout(*args):
-    """
-    Creates a fixed-position header at the top of the page.
-    """
-    # Header style: fixed at top
-    style_div_header = styles(
+def layout_footer(*args):
+    style_div_footer = styles(
         position="fixed",
-        top=0,
         left=0,
+        bottom=0,
         margin=px(0, 0, 0, 0),
         width=percent(100),
         text_align="center",
         height="auto",
         opacity=1,
-        background_color="inherit"  # or specify a color if you want a header background
+        background_color="inherit"  # or pick a specific color
     )
 
     style_hr = styles(
@@ -1539,23 +1531,44 @@ def header_layout(*args):
     )
 
     body = p()
-    header_div = div(style=style_div_header)(
+    foot = div(style=style_div_footer)(
         hr(style=style_hr),
         body
     )
 
-    # Inject our common style
+    # Inject the common style
     st.markdown(COMMON_STYLE, unsafe_allow_html=True)
 
-    # Build the header content
+    # Build the footer content from *args
     for arg in args:
         if isinstance(arg, str):
             body(arg)
         elif isinstance(arg, HtmlElement):
             body(arg)
 
-    # Render the header
-    st.markdown(str(header_div), unsafe_allow_html=True)
+    # Render the footer
+    st.markdown(str(foot), unsafe_allow_html=True)
+
+def footer():
+    """
+    Example of how to include various contact info, GitHub link, etc.
+    """
+    my_footer_args = [
+        "This app was made for the VU Amsterdam Hospital. | ",
+        link("mailto:someone@example.com", "Contact us via Email"),
+        " | ",
+        link("https://github.com/YourGithubUser/YourRepoName", "GitHub Repo"),
+        br(),
+        "Developed by Your Name - 2025",
+        br(),
+        image(
+            "https://raw.githubusercontent.com/AmarantosPagiavlas03/Project-Optimization-of-Business-Processes/main/dynamic_programming/vu_mc_logo.png",
+            width=px(200),
+            height=px(33)
+        )
+    ]
+    layout_footer(*my_footer_args)
+
 
 def layout_footer(*args):
     """
