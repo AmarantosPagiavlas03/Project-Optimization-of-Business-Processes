@@ -624,8 +624,7 @@ def shift_template_download():
     </style>
     """, unsafe_allow_html=True)
 
-    with st.container(border=True):
-        st.subheader("Download Shift Template")
+    with st.container(border=False):
         
         # Create columns with large gap
         colA, colB = st.columns(2, gap="large")
