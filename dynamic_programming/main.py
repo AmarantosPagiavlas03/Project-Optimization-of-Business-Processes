@@ -326,8 +326,7 @@ def shift_input_form():
                 # Toggle button with centered layout
                 day_states[days[i]] = st.toggle(
                     "",  # Empty label
-                    key=f"day_{days[i]}",
-                    help=f"Toggle for {days[i]}"
+                    key=f"day_{days[i]}"
                 )
                 # Centered label below toggle
                 st.markdown(f"<div style='text-align: center'>{days[i]}</div>", 
@@ -358,8 +357,15 @@ def shift_input_form():
                     st.error(error)
             else:
                 # Convert days to database format
-                active_days = [1 if day_states[day] else 0 
-                             for day in days_full]
+                active_days = [
+                day_states["Mon"],  # Monday
+                day_states["Tue"],  # Tuesday
+                day_states["Wed"],  # Wednesday
+                day_states["Thu"],  # Thursday
+                day_states["Fri"],  # Friday
+                day_states["Sat"],  # Saturday
+                day_states["Sun"]   # Sunday
+                ]
                 
                 shift_data = (
                     Shift_StartTime.strftime("%H:%M:%S"),
