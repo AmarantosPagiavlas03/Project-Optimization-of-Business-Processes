@@ -1,10 +1,10 @@
 streamlit
-pandas
-numpy
-matplotlib
-plotly
-gurobipy
-xlsxwriter
-streamlit_option_menu
-streamlit_extras
+# pandas
+# numpy
+# matplotlib
+# plotly
+# gurobipy
+# xlsxwriter
+# streamlit_option_menu
+# streamlit_extras
 streamlit_navigation_bar
