@@ -1512,18 +1512,12 @@ def layout(*args):
 
     style_hr = styles(
         display="block",
-        margin=px(8, 8, "auto", "auto"),
-        border_style="inset",
-        border_width=px(2)
+        margin=px(8, 8, "auto", "auto")
     )
 
     body = p()
-    foot = div(
-        style=style_div
-    )(
-        hr(
-            style=style_hr
-        ),
+    foot = div(style=style_div)(
+        hr(style=style_hr),
         body
     )
 
@@ -1532,12 +1526,10 @@ def layout(*args):
     for arg in args:
         if isinstance(arg, str):
             body(arg)
-
         elif isinstance(arg, HtmlElement):
             body(arg)
 
     st.markdown(str(foot), unsafe_allow_html=True)
-
 
 def footer():
     myargs = [
