@@ -16,6 +16,43 @@ import datetime as dt
 from streamlit_option_menu import option_menu
 from streamlit_extras.switch_page_button import switch_page
 
+
+
+def contact_page():
+    st.title("Contact Us")
+
+    # Add a description or introductory text
+    st.write("We'd love to hear from you! Please use the form below to get in touch with us.")
+
+    # Contact form
+    with st.form("contact_form"):
+        # Name input
+        name = st.text_input("Name", placeholder="Enter your name")
+        # Email input
+        email = st.text_input("Email", placeholder="Enter your email address")
+        # Message input
+        message = st.text_area("Message", placeholder="Write your message here", height=150)
+        # Submit button
+        submitted = st.form_submit_button("Submit")
+
+        # Handle form submission
+        if submitted:
+            if name and email and message:
+                st.success("Thank you for your message! We'll get back to you shortly.")
+                # You can add email sending functionality here, e.g., using an API like SendGrid
+            else:
+                st.error("Please fill in all fields before submitting.")
+
+    # Additional contact information
+    st.write("### Other Ways to Reach Us")
+    st.write("📧 Email: support@example.com")
+    st.write("📞 Phone: +1 234 567 890")
+    st.write("🌐 Website: [Visit our website](https://example.com)")
+    st.write("📍 Address: 123 Business Street, City, Country")
+
+    # Embed a map (optional)
+    st.map({"latitude": 37.7749, "longitude": -122.4194}, zoom=10)
+
 def navigation_bar():
     with st.container():
         st.markdown(
@@ -59,8 +96,7 @@ def navigation_bar():
         if selected == "Analytics":
             switch_page("Analytics")
         if selected == "Contact":
-            switch_page("Contact")
-
+            contact_page() 
 DB_FILE = "tasksv2.db"
 
 
