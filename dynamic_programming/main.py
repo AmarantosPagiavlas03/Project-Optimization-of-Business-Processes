@@ -1571,7 +1571,7 @@ def navigation_bar():
 
 def main():
     st.set_page_config(page_title="Hospital Scheduler", layout="wide")
-    # navigation_bar()
+    navigation_bar()
         
     init_db()
  
