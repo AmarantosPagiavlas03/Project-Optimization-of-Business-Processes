@@ -25,7 +25,12 @@ page = st_navbar(
     ["Home", "Contact"],
     options={"show_menu": False, "show_sidebar": False},
     logo_path=logo_path,
+    styles={
+        "nav": {
+            "padding-left": "20px",  # Space from left edge
+            "gap": "40px"  # Space between logo and menu items
+        }
+    }
 )
-
 # Route pages
 {"Home": home.show_home, "Contact": contact.show_contact}.get(page)()
