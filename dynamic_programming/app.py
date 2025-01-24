@@ -23,13 +23,18 @@ styles = {
     "nav": {
         "background-color": "royalblue",
         "justify-content": "left",
+        "padding-left": "20px",  # Add space from left edge
+        "gap": "40px",  # Space between logo and menu items
     },
     "img": {
-        "padding-right": "14px",
+        "padding-right": "50px",  # Increased right padding for logo
+        "padding-left": "20px",  # Add left padding to logo
+        "width": "200px",  # Set explicit width for logo container
     },
     "span": {
         "color": "white",
         "padding": "14px",
+        "font-size": "18px",  # Make text slightly larger
     },
     "active": {
         "background-color": "white",
