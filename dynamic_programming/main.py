@@ -1152,7 +1152,7 @@ def optimize_tasks_with_gurobi():
                 if not results_df.empty:
                     fig = px.pie(results_df, names='Day', values='Task Cost ($)', 
                                 title='<b>Cost Distribution by Day</b>')
-                    st.plotly_chart(fig, use_container_width=True)
+                    fig.show()
                 else:
                     st.warning("No data available for pie chart")
 
@@ -1162,7 +1162,7 @@ def optimize_tasks_with_gurobi():
                     shift_cost = results_df.groupby("Shift ID")["Task Cost ($)"].sum().reset_index()
                     fig = px.bar(shift_cost, x='Shift ID', y='Task Cost ($)', 
                                 title='<b>Total Cost by Shift</b>')
-                    st.plotly_chart(fig, use_container_width=True)
+                    fig.show()
                 else:
                     st.warning("No data available for bar chart")
         else:
