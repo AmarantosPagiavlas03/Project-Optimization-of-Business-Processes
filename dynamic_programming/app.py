@@ -27,13 +27,30 @@ if not os.path.exists(logo_path):
 
 styles = {
     "nav": {
+        "background-color": "#f07814",
         "justify-content": "left",
-        "padding-left": "20px",  # Add space from left edge
-        "gap": "40px",  # Space between logo and menu items
+        "padding-left": "20px",
+        "gap": "40px",
+        "border-bottom": "2px solid #e6000f"  # Add accent line
     },
     "img": {
-        "padding-right": "50px",  # Increased right padding for logo
-        "padding-left": "20px",  # Add left padding to logo
+        "padding-right": "50px",
+        "padding-left": "20px",
+        "width": "200px",
+        "filter": "brightness(0) invert(1)"  # Make black logo white
+    },
+    "span": {
+        "color": "white",
+        "padding": "14px",
+        "font-size": "18px",
+        "transition": "all 0.3s ease"  # Smooth hover effects
+    },
+    "active": {
+        "background-color": "#e6000f",
+        "color": "white",  # Better contrast than black
+        "font-weight": "500",  # Semi-bold for better visibility
+        "padding": "14px",
+        "border-radius": "4px"  # Soften edges
     }
 }
 
