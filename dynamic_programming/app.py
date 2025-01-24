@@ -67,8 +67,8 @@ styles = {
         "transform": "scale(1.1)" # Slight enlargement
     },
     "hover": {
-        "background-color": "#e6000f",
-        "color": "white",
+        "background-color": "transparent",
+        "color": "#e6000f",
         "font-weight": "500",
         "padding": "20px 24px",  # Increased from 14px
         "border-radius": "50%",   # Perfect circle
