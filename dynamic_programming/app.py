@@ -76,44 +76,34 @@ page = st_navbar(
 # Add subtle shadow to nav bar
 st.markdown("""
 <style>
-    [data-testid="stNavigationBar"] span {
-        display: inline-block;
-        transform: translateZ(0);  /* GPU acceleration */
-        will-change: transform;
-        transition: 
-            transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-            color 0.3s ease;
-    }
-
     [data-testid="stNavigationBar"] .active {
-        transform: translateY(-2px);
-        animation: active-pulse 1.5s ease-in-out infinite;
+        z-index: 1;
     }
 
-    [data-testid="stNavigationBar"] span:hover {
-        transform: translateY(-1px);
-    }
-
-    @keyframes active-pulse {
-        0%, 100% { transform: translateY(-2px); }
-        50% { transform: translateY(-3px); }
-    }
-
-    [data-testid="stNavigationBar"] .active::after {
+    [data-testid="stNavigationBar"] .active::before {
         content: "";
-        display: block;
-        width: 100%;
-        height: 2px;
-        background: #e6000f;
         position: absolute;
-        bottom: -4px;
-        left: 0;
-        animation: underline-grow 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        top: 50%;
+        left: 50%;
+        width: 110%;
+        height: 140%;
+        background: rgba(230, 0, 15, 0.1);
+        transform: translate(-50%, -50%) scale(0);
+        border-radius: 8px;
+        transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        z-index: -1;
     }
 
-    @keyframes underline-grow {
-        from { transform: scaleX(0); }
-        to { transform: scaleX(1); }
+    [data-testid="stNavigationBar"] .active:hover::before,
+    [data-testid="stNavigationBar"] .active:active::before {
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    [data-testid="stNavigationBar"] span {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 14px 16px;
     }
 </style>
 """, unsafe_allow_html=True)
