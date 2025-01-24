@@ -1601,7 +1601,7 @@ def navigation_bar():
             contact_page() 
 
 def main():
-    st.set_page_config(page_title="Hospital Scheduler", layout="wide")
+    st.set_page_config(page_title="Home", layout="wide")
     # header()
     navigation_bar()
         
