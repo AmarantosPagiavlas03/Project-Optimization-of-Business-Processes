@@ -13,17 +13,17 @@ def show_home():
  
 
     st.markdown("---")  # Add a separator line
-    col1, col2 = st.columns(2)
+ 
 
-    with col1:
-        if st.button("Clear All Tasks"):
-            clear_all("TasksTable2")
-            st.success("All tasks have been cleared!")
+ 
+    if st.button("Clear All Tasks"):
+        clear_all("TasksTable2")
+        st.success("All tasks have been cleared!")
 
-    with col2:
-        if st.button("Clear All Shifts"):
-            clear_all("ShiftsTable5")
-            st.success("All shifts have been cleared!")
+
+    if st.button("Clear All Shifts"):
+        clear_all("ShiftsTable5")
+        st.success("All shifts have been cleared!")
 
  
     # 1. Download Template
