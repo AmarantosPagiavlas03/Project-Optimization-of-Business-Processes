@@ -1626,7 +1626,7 @@ def show_contact():
 
 def main():
     st.set_page_config(page_title="Hospital Scheduler Pro", layout="wide", page_icon="🏥")
-    
+    init_db()
     # Modern UI CSS
     st.markdown("""
     <style>
