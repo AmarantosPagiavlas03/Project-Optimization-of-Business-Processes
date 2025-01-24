@@ -1554,31 +1554,32 @@ def main():
     with home_tab:
         
         manual , upload = st.tabs(["manual", "upload"])
-        with st.container(border=True):
-            with manual:
-                with st.container(border=True):
-                    # Input forms
-                    with st.expander("Add Task", expanded=False):
-                        task_input_form()
-                    with st.expander("Add Task", expanded=False):
-                        shift_input_form()
-                    # worker_input_form()
-            
-                # with st.sidebar:
-                #     st.markdown("---")  # Add a separator line
-                #     col1, col2 = st.columns(2)
+ 
+        with manual:
+            with st.container(border=True):
+                # Input forms
+                with st.expander("Add Task", expanded=False):
+                    task_input_form()
+                with st.expander("Add Task", expanded=False):
+                    shift_input_form()
+                # worker_input_form()
+        
+            # with st.sidebar:
+            #     st.markdown("---")  # Add a separator line
+            #     col1, col2 = st.columns(2)
 
-                #     with col1:
-                #         if st.button("Clear All Tasks"):
-                #             clear_all("TasksTable2")
-                #             st.success("All tasks have been cleared!")
+            #     with col1:
+            #         if st.button("Clear All Tasks"):
+            #             clear_all("TasksTable2")
+            #             st.success("All tasks have been cleared!")
 
-                #     with col2:
-                #         if st.button("Clear All Shifts"):
-                #             clear_all("ShiftsTable5")
-                #             st.success("All shifts have been cleared!")
+            #     with col2:
+            #         if st.button("Clear All Shifts"):
+            #             clear_all("ShiftsTable5")
+            #             st.success("All shifts have been cleared!")
 
-            with upload:
+        with upload:
+            with st.container(border=True):
                 # 1. Download Template
                 st.subheader("Download Template")
                 task_template_download()
