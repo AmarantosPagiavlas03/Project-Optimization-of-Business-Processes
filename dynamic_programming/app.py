@@ -82,8 +82,13 @@ def main():
         styles=NAV_STYLES
     )
     
-    # Route pages
-    {"Home": home.show_home, "Contact": contact.show_contact}.get(page)()
+    functions = {
+        "Home": home.show_home,
+        "Contact": contact.show_contact
+    }
+    go_to = functions.get(page)
+    if go_to:
+        go_to()
 
 if __name__ == "__main__":
     # Add development reloading
