@@ -1176,21 +1176,6 @@ def optimize_tasks_with_gurobi():
         fig_workers.update_layout(showlegend=False)
         st.plotly_chart(fig_workers, use_container_width=True)
 
-        from streamlit_timeline import timeline
-
-        # Generate timeline items
-        timeline_items = []
-        for _, row in results_df.iterrows():
-            timeline_items.append({
-                "start": row["Day"] + " " + row["Task Start"],
-                "end": row["Day"] + " " + row["Task End"],
-                "content": f"{row['Task Name']} (Shift {row['Shift ID']})",
-                "group": row["Shift ID"]
-            })
-
-        with st.expander("🕰️ Interactive Timeline"):
-            timeline(timeline_items, groups=[{"id": sid} for sid in results_df["Shift ID"].unique()], 
-                    options={"showCurrentTime": False})
 
         st.subheader("📊 Model Statistics")
         stats = {
