@@ -44,7 +44,7 @@ def navigation_bar():
             }
         )
         if selected == "Home":
-            switch_page("Hospital Scheduler")
+            switch_page("Home")
         if selected == "Analytics":
             switch_page("Analytics")
         if selected == "Contact":
