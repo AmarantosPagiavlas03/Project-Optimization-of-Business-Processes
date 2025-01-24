@@ -536,15 +536,15 @@ def task_template_download():
         "NursesRequired": [2, 1]                       # Integer
     })
     st.markdown("""
-    <style>
-        /* Center align content in columns */
-        div[data-testid="column"] {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-    </style>
-    """, unsafe_allow_html=True)
+    # <style>
+    #     /* Center align content in columns */
+    #     div[data-testid="column"] {
+    #         display: flex;
+    #         flex-direction: column;
+    #         align-items: center;
+    #     }
+    # </style>
+    # """, unsafe_allow_html=True)
     with st.container(border=False):
         
         # Create columns with large gap
@@ -627,16 +627,16 @@ def shift_template_download():
         "Saturday": [0, 1],
         "Sunday": [0, 1]
     })
-    st.markdown("""
-    <style>
-        /* Center align content in columns */
-        div[data-testid="column"] {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-    </style>
-    """, unsafe_allow_html=True)
+    # st.markdown("""
+    # <style>
+    #     /* Center align content in columns */
+    #     div[data-testid="column"] {
+    #         display: flex;
+    #         flex-direction: column;
+    #         align-items: center;
+    #     }
+    # </style>
+    # """, unsafe_allow_html=True)
 
     with st.container(border=False):
         
