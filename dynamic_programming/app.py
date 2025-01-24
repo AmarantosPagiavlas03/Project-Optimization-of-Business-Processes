@@ -20,17 +20,36 @@ if not os.path.exists(logo_path):
     st.error(f"⚠️ Missing logo at: {logo_path}")
     logo_path = None  # Will render without logo
 
+styles = {
+    "nav": {
+        "background-color": "royalblue",
+        "justify-content": "left",
+        "padding-left": "20px",  # Add space from left edge
+        "gap": "40px",  # Space between logo and menu items
+    },
+    "img": {
+        "padding-right": "50px",  # Increased right padding for logo
+        "padding-left": "20px",  # Add left padding to logo
+    },
+    "span": {
+        "color": "white",
+        "padding": "14px",
+        "font-size": "18px",  # Make text slightly larger
+    },
+    "active": {
+        "background-color": "white",
+        "color": "var(--text-color)",
+        "font-weight": "normal",
+        "padding": "14px",
+    }
+}
+
 # Setup navigation
 page = st_navbar(
     ["Home", "Contact"],
     options={"show_menu": False, "show_sidebar": False},
     logo_path=logo_path,
-    styles={
-        "nav": {
-            "padding-left": "20px",  # Space from left edge
-            "gap": "40px"  # Space between logo and menu items
-        }
-    }
+    styles=styles 
 )
 # Route pages
 {"Home": home.show_home, "Contact": contact.show_contact}.get(page)()
