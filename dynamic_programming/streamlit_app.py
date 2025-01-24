@@ -82,22 +82,14 @@ def main():
         styles=NAV_STYLES
     )
     
-    # Route pages
-    {"Home": home.show_home, "Contact": contact.show_contact}.get(page)()
+    functions = {
+        "Home": home.show_home,
+        "Contact": contact.show_contact
+    }
+    go_to = functions.get(page)
+    if go_to:
+        go_to()
 
 if __name__ == "__main__":
     # Add development reloading
-    if os.environ.get("ENVIRONMENT") == "development":
-        import importlib
-        importlib.reload(home)
-        importlib.reload(contact)
-    
     main()
-    
-    # Force browser refresh on changes
-    if os.environ.get("ENVIRONMENT") == "development":
-        st.markdown(f"""
-        <script>
-            window.location.href += "?cachebust={int(time.time())}";
-        </script>
-        """, unsafe_allow_html=True)
