@@ -14,7 +14,7 @@ from database import init_db
 
 # Add this at the top of app.py
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-st.set_page_config(initial_sidebar_state="collapsed")
+st.set_page_config(initial_sidebar_state="collapsed", layout="wide")
 init_db()
 pages = ["Home", "Contact"]
 
