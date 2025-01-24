@@ -1056,17 +1056,17 @@ def optimize_tasks_with_gurobi():
             name=f"Shift_{shift_id}_{day_str}_WorkerCap"
         )
 
-    # # 6.2. Worker capacity: for each (shift, day), total nurses required
-    # #     by tasks assigned cannot exceed the # of workers assigned
-    # for (shift_id, day_str) in shift_worker_vars:
-    #     model.addConstr(
-    #         quicksum(
-    #             task_shift_vars[(t_id-1, shift_id, day_str)] + task_shift_vars[(t_id, shift_id, day_str)]
-    #             for (t_id, s_id, d) in task_shift_vars
-    #             if s_id == shift_id and d == day_str and tasks_df.loc[t_id-1, "EndTime"] <= tasks_df.loc[t_id, "StartTime"]
-    #         ) <= 1,
-    #         name=f"Shift_{shift_id}_{day_str}"
-    #     )
+    # 6.2. Worker capacity: for each (shift, day), total nurses required
+    #     by tasks assigned cannot exceed the # of workers assigned
+    for (shift_id, day_str) in shift_worker_vars:
+        model.addConstr(
+            quicksum(
+                task_shift_vars[(t_id-1, shift_id, day_str)] + task_shift_vars[(t_id, shift_id, day_str)]
+                for (t_id, s_id, d) in task_shift_vars
+                if s_id == shift_id and d == day_str and tasks_df.loc[t_id-1, "EndTime"] <= tasks_df.loc[t_id, "StartTime"]
+            ) <= 1,
+            name=f"Shift_{shift_id}_{day_str}"
+        )
 
     # --- 7. Solve the model ---
     with st.spinner("Optimizing tasks and shifts. Please wait..."):
@@ -1557,7 +1557,7 @@ def show_contact():
 
 
 def main():
-    st.set_page_config(page_title="Hospital Scheduler", layout="wide", page_icon="🏥")
+    st.set_page_config(page_title="Hospital Scheduler", layout="wide", page_icon="🏥",menu_items={"Get Help": "https://www.github.com/vuamsterdam/scheduling-app"})
     
     # Custom CSS for better styling
     st.markdown("""
