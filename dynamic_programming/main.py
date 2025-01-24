@@ -1489,11 +1489,12 @@ def layout(*args):
     <style>
       # MainMenu {visibility: hidden;}
       footer {visibility: hidden;}
-     .stApp { bottom: 105px; }
-     hr {
-         border: none;
-         height: 0;
-     }
+      .stApp { bottom: 105px; }
+      /* Remove the white border line by disabling hr border */
+      hr {
+          border: none;
+          height: 0;
+      }
     </style>
     """
 
