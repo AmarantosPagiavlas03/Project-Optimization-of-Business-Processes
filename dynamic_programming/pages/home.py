@@ -18,7 +18,7 @@ def show_home():
         clear_all("TasksTable2")
         st.success("All tasks have been cleared!")
  
-    if st.button("Clear All Shifts"):
+    if st.button("Clear All Shifts1"):
         clear_all("ShiftsTable5")
         st.success("All shifts have been cleared!")
  
