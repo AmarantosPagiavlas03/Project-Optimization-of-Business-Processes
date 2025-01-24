@@ -1087,8 +1087,8 @@ def optimize_tasks_with_gurobi():
                 # Calculate task duration in hours
                 t_start = task_row["StartTime"]
                 t_end = task_row["EndTime"]
-                duration = (datetime.datetime.combine(datetime.date.min, t_end) -
-                            datetime.datetime.combine(datetime.date.min, t_start)).seconds / 3600
+                duration = ( datetime.combine(datetime.date.min, t_end) -
+                             datetime.combine(datetime.date.min, t_start)).seconds / 3600
                 
                 # Calculate contribution metric (nurses × hours)
                 contribution = task_row["NursesRequired"] * duration
