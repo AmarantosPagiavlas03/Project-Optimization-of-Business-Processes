@@ -57,12 +57,10 @@ styles = {
         "font-weight": "500"
     },
     "active": {
-        "background-color": "transparent",
         "color": "black",
         "font-weight": "600",
-        "padding": "14px 14px 18px 14px",  # Extra bottom padding
-        "border-radius": "0",
-        "border-bottom": "3px solid #FFFFFF"
+        "padding": "14px",
+        "position": "relative",  # Needed for pseudo-element
     }
 }
 
