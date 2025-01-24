@@ -9,7 +9,9 @@ from datetime import time
 import io  
 import base64
 import os
-
+from htbuilder import HtmlElement, div, ul, li, br, hr, a, p, img, styles, classes, fonts
+from htbuilder.units import percent, px
+from htbuilder.funcs import rgba, rgb
 
 DB_FILE = "tasksv2.db"
 
@@ -1473,45 +1475,83 @@ def display_tasks_and_shifts():
     except Exception as e:
         st.warning(f"Plotly is required for Gantt charts: {e}")
 
+def image(src_as_string, **style):
+    return img(src=src_as_string, style=styles(**style))
+
+
+def link(link, text, **style):
+    return a(_href=link, _target="_blank", style=styles(**style))(text)
+
+
+def layout(*args):
+
+    style = """
+    <style>
+      # MainMenu {visibility: hidden;}
+      footer {visibility: hidden;}
+     .stApp { bottom: 105px; }
+    </style>
+    """
+
+    style_div = styles(
+        position="fixed",
+        left=0,
+        bottom=0,
+        margin=px(0, 0, 0, 0),
+        width=percent(100),
+        color="black",
+        text_align="center",
+        height="auto",
+        opacity=1
+    )
+
+    style_hr = styles(
+        display="block",
+        margin=px(8, 8, "auto", "auto"),
+        border_style="inset",
+        border_width=px(2)
+    )
+
+    body = p()
+    foot = div(
+        style=style_div
+    )(
+        hr(
+            style=style_hr
+        ),
+        body
+    )
+
+    st.markdown(style, unsafe_allow_html=True)
+
+    for arg in args:
+        if isinstance(arg, str):
+            body(arg)
+
+        elif isinstance(arg, HtmlElement):
+            body(arg)
+
+    st.markdown(str(foot), unsafe_allow_html=True)
+
+
+def footer():
+    myargs = [
+        "Made in ",
+        image('https://avatars3.githubusercontent.com/u/45109972?s=400&v=4',
+              width=px(25), height=px(25)),
+        " with ❤️ by ",
+        link("https://twitter.com/ChristianKlose3", "@ChristianKlose3"),
+        br(),
+        link("https://buymeacoffee.com/chrischross", image('https://i.imgur.com/thJhzOO.png')),
+    ]
+    layout(*myargs)
 
 # ------------------------------------------------------------------
 #                            Main App
 # ------------------------------------------------------------------
 def main():
     st.set_page_config(page_title="Hospital Scheduler", layout="wide")
-    st.write(os.getcwd())
-    # Read the local file and encode it
-    with open("mount/src/project-optimization-of-business-processes/vu_mc_logo.png", "rb") as file:
-        encoded_image = base64.b64encode(file.read()).decode()
-
-    banner_html = f"""
-        <div style="
-            position: sticky; 
-            top: 0; 
-            z-index: 9999;
-            background-color: #f5f5f5;
-            padding: 10px;
-            text-align: center; 
-            border-bottom: 2px solid #ccc;
-        ">
-            <img src="data:image/png;base64,{encoded_image}" 
-                 style="max-width: 100%; height: auto;" />
-            <h2 style="margin-top: 10px;">VU MC Hospital Scheduler</h2>
-        </div>
-    """
-    st.markdown(banner_html, unsafe_allow_html=True)
-
-    # (Optional) Ensure content isn’t hidden behind the banner
-    st.markdown(
-        """
-        <style>
-        .main .block-container {
-            padding-top: 150px;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+    footer()
     init_db()
 
     # Input forms
@@ -1583,6 +1623,9 @@ def main():
 
     # Visualization
     display_tasks_and_shifts()
+
+
+
 
 
 if __name__ == "__main__":
