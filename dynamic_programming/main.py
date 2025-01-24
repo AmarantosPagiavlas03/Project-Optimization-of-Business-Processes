@@ -1556,7 +1556,7 @@ def main():
         manual , upload = st.tabs(["manual", "upload"])
 
         with manual:
-            with st.container():
+            with st.container(border=True):
                 # Input forms
                 with st.expander("Add Task", expanded=False):
                     task_input_form()
