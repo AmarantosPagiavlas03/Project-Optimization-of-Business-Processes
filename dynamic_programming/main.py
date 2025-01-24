@@ -1562,74 +1562,122 @@ def show_contact():
 
 
 def main():
-    st.set_page_config(page_title="Hospital Scheduler", layout="centered")
+    st.set_page_config(page_title="Hospital Scheduler", layout="wide", page_icon="🏥")
+    
+    # Custom CSS for better styling
+    st.markdown("""
+    <style>
+        .stButton button {
+            transition: all 0.3s ease;
+        }
+        .stButton button:hover {
+            transform: scale(1.05);
+            background-color: #4CAF50 !important;
+        }
+        .stDownloadButton button {
+            background-color: #2196F3 !important;
+            color: white !important;
+        }
+        .header-style {
+            font-size: 2em !important;
+            color: #2c3e50 !important;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .info-box {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+    """, unsafe_allow_html=True)
 
-        
     init_db()
-    home_tab , contact_tab = st.tabs(["Home", "Contact Us"])
+    home_tab, contact_tab = st.tabs(["🏠 Home", "📞 Contact"])
+    
     with home_tab:
-        with st.container(border=True):
-            # Simulate tabs using buttons/radio
-            selected_subtab = st.radio(
-                "Choose Mode:",
-                ["Manual", "Upload"],
-                horizontal=True,
-                label_visibility="collapsed"
-            )
-            if selected_subtab == "Manual":
-                with st.container(border=True):
-                    with st.expander("Add Task", expanded=False):
-                        task_input_form()
-                    with st.expander("Add Shift", expanded=False):
-                        shift_input_form()
+        st.markdown('<div class="header-style">Hospital Staff Scheduling System</div>', unsafe_allow_html=True)
+        
+        # Main Content Tabs
+        input_tab, visualize_tab, optimize_tab = st.tabs(["📥 Input Data", "📊 Visualization", "⚙️ Optimization"])
+        
+        with input_tab:
+            st.subheader("Data Input Methods")
+            manual_tab, upload_tab = st.tabs(["✍️ Manual Entry", "📤 Bulk Upload"])
+            
+            with manual_tab:
+                with st.expander("➕ Add New Task", expanded=True):
+                    task_input_form()
+                
+                with st.expander("👥 Add New Shift", expanded=True):
+                    shift_input_form()
+                
+                with st.expander("👩⚕️ Add New Worker", expanded=False):
+                    worker_input_form()
+                
+                st.markdown("---")
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("🧹 Clear All Tasks", use_container_width=True, type="secondary"):
+                        clear_all("TasksTable2")
+                        st.success("All tasks cleared!")
+                with col2:
+                    if st.button("🧹 Clear All Shifts", use_container_width=True, type="secondary"):
+                        clear_all("ShiftsTable5")
+                        st.success("All shifts cleared!")
 
-            # Upload "Tab" Content
-            elif selected_subtab == "Upload":
-                with st.container(border=True):
-                    st.subheader("Upload Files")
-                    colA, colB = st.columns(2)
-                    
-                    with colA:
-                        st.subheader("Tasks")
-                        upload_tasks_excel()
+            with upload_tab:
+                st.subheader("Bulk Data Upload")
+                up_col1, up_col2 = st.columns(2)
+                
+                with up_col1:
+                    st.markdown("### Tasks Upload")
+                    upload_tasks_excel()
+                    with st.expander("📁 Task Template"):
                         task_template_download()
-                    
-                    with colB:
-                        st.subheader("Shifts")
-                        upload_shifts_excel()
+                
+                with up_col2:
+                    st.markdown("### Shifts Upload")
+                    upload_shifts_excel()
+                    with st.expander("📁 Shift Template"):
                         shift_template_download()
 
-            with st.container(border=False):
-                col1, col2 = st.columns(2,gap="large")
-                with col1:
-                    if st.button("Clear All Tasks",use_container_width=True):
-                        clear_all("TasksTable2")
-                        st.success("All tasks have been cleared!")
-                with col2:
-                    if st.button("Clear All Shifts",use_container_width=True):
-                        clear_all("ShiftsTable5")
-                        st.success("All shifts have been cleared!")
+        with visualize_tab:
+            display_tasks_and_shifts()
 
-        with st.expander("Example Data", expanded=False):
-            # Buttons for example data
-            colA, colB = st.columns(2)
-            with colA:
-                if st.button("Small Data Example",use_container_width=True):
-                    insert()
-                    st.success("Small Data Example inserted!")
-            with colB:
-                if st.button("Large Data Example",use_container_width=True):
-                    insert2()
-                    st.success("Large Data Example inserted!")
+        with optimize_tab:
+            st.subheader("Optimization Engine")
+            col1, col2 = st.columns(2, gap="large")
+            
+            with col1:
+                st.markdown("### Task-Shift Assignment")
+                st.info("Assign tasks to shifts considering time windows and nurse requirements")
+                if st.button("🚀 Run Task Optimization", use_container_width=True):
+                    optimize_tasks_with_gurobi()
+            
+            with col2:
+                st.markdown("### Worker Scheduling")
+                st.info("Assign available workers to shifts based on their availability")
+                if st.button("🚀 Run Worker Optimization", use_container_width=True):
+                    optimize_workers_for_shifts()
+            
+            st.markdown("---")
+            st.markdown("### Example Datasets")
+            with st.expander("🔍 Load Example Data"):
+                ex_col1, ex_col2 = st.columns(2)
+                with ex_col1:
+                    if st.button("Small Dataset", help="Load a small demo dataset", use_container_width=True):
+                        insert()
+                        st.success("Small example data loaded!")
+                with ex_col2:
+                    if st.button("Large Dataset", help="Load a comprehensive demo dataset", use_container_width=True):
+                        insert2()
+                        st.success("Large example data loaded!")
 
- 
-        if st.button("Optimize Task Assignment"):
-            optimize_tasks_with_gurobi()
- 
-        # Visualization
-        display_tasks_and_shifts()
     with contact_tab:
         show_contact()
-
 if __name__ == "__main__":
     main()
