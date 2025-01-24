@@ -10,7 +10,7 @@ import io
 import base64
 import os
 import datetime as dt
-import numpy as np  
+
 
 DB_FILE = "tasksv2.db"
 
@@ -1623,122 +1623,125 @@ def show_contact():
 #                            Main App
 # ------------------------------------------------------------------
 
+
 def main():
     st.set_page_config(page_title="Hospital Scheduler", layout="wide", page_icon="🏥")
-    init_db()
-    # Clean, functional CSS
+    
+    # Custom CSS for better styling
     st.markdown("""
     <style>
-        /* Modern Minimalist Theme */
-        :root {
-            --primary: #3b82f6;
-            --hover: #2563eb;
-            --background: #f8fafc;
-            --card-bg: white;
-        }
-        
-        /* Enhanced Readability */
-        body {
-            font-family: 'Inter', sans-serif;
-            line-height: 1.6;
-            color: #1e293b;
-        }
-        
-        /* Functional Cards */
-        .stContainer {
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            background: var(--card-bg);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        }
-        
-        /* Clear Visual Hierarchy */
-        h1, h2, h3 {
-            color: #1e293b !important;
-            margin-bottom: 1rem !important;
-        }
-        
-        /* Intuitive Forms */
-        .stTextInput, .stNumberInput, .stSelectbox {
-            margin-bottom: 1rem;
-        }
-        
-        /* Responsive Columns */
-        .stColumn {
-            padding: 0 1rem !important;
-        }
-        
-        /* Clear Button States */
         .stButton button {
-            width: 100%;
-            transition: all 0.2s ease;
-            border-radius: 8px;
+            transition: all 0.3s ease;
         }
-        
         .stButton button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+            transform: scale(1.05);
+            /* background-color: #2196F3 !important;  */
         }
-        
-        /* Visible Table Borders */
-        .stDataFrame {
-            border: 1px solid #e2e8f0 !important;
-            border-radius: 8px !important;
+        /* Keep the rest of the CSS the same */
+        .stDownloadButton button {
+            background-color: #2196F3 !important;
+            color: white !important;
+        }
+        .header-style {
+            font-size: 2em !important;
+            color: #2c3e50 !important;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .info-box {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     """, unsafe_allow_html=True)
 
-    # Main Layout
-    st.title("🏥 Hospital Staff Scheduling")
-    st.caption("Optimize workforce management with AI-powered scheduling")
-
-    with st.container():
-        col1, col2 = st.columns([1, 2], gap="large")
+    init_db()
+    home_tab, contact_tab = st.tabs(["🏠 Home", "📞 Contact"])
+    
+    with home_tab:
+        header()
+                
+        # Main Content Tabs
+        input_tab, visualize_tab, optimize_tab = st.tabs(["📥 Input Data", "📊 Visualization", "⚙️ Optimization"])
         
-        # Left Panel - Inputs
-        with col1:
-            with st.container():
-                st.subheader("📥 Schedule Inputs")
+        with input_tab:
+            st.subheader("Data Input Methods")
+            manual_tab, upload_tab = st.tabs(["✍️ Manual Entry", "📤 Bulk Upload"])
+            
+            with manual_tab:
                 with st.expander("➕ Add New Task", expanded=True):
                     task_input_form()
                 
-                with st.expander("🕒 Create Shift"):
+                with st.expander("👥 Add New Shift", expanded=True):
                     shift_input_form()
                 
-                st.divider()
-                with st.expander("👥 Manage Staff"):
+                with st.expander("👩⚕️ Add New Worker", expanded=False):
                     worker_input_form()
-
-        # Right Panel - Outputs
-        with col2:
-            with st.container():
-                st.subheader("📊 Schedule Overview")
-                tab1, tab2 = st.tabs(["🗓 Calendar View", "📈 Analytics"])
                 
-                with tab1:
-                    display_tasks_and_shifts()
+                st.markdown("---")
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("🧹 Clear All Tasks", use_container_width=True, type="secondary"):
+                        clear_all("TasksTable2")
+                        st.success("All tasks cleared!")
+                with col2:
+                    if st.button("🧹 Clear All Shifts", use_container_width=True, type="secondary"):
+                        clear_all("ShiftsTable5")
+                        st.success("All shifts cleared!")
+
+            with upload_tab:
+                st.subheader("Bulk Data Upload")
+                up_col1, up_col2 = st.columns(2)
                 
-                with tab2:
-                    st.write("Staff Utilization Metrics")
-                    st.line_chart(np.random.randn(30, 3), use_container_width=True)
-                    st.progress(75, text="Current Schedule Efficiency")
+                with up_col1:
+                    st.markdown("### Tasks Upload")
+                    upload_tasks_excel()
+                    with st.expander("📁 Task Template"):
+                        task_template_download()
+                
+                with up_col2:
+                    st.markdown("### Shifts Upload")
+                    upload_shifts_excel()
+                    with st.expander("📁 Shift Template"):
+                        shift_template_download()
 
-                st.divider()
-                st.subheader("⚙️ Optimization Controls")
-                col_a, col_b = st.columns(2)
-                with col_a:
-                    if st.button("🚀 Run Schedule Optimization", use_container_width=True):
-                        optimize_tasks_with_gurobi()
-                with col_b:
-                    if st.button("🧑⚕️ Assign Staff Shifts", use_container_width=True):
-                        optimize_workers_for_shifts()
+        with visualize_tab:
+            display_tasks_and_shifts()
 
-    # Status Bar
-    st.divider()
-    st.caption("System Status: 🟢 Connected | Staff Members: 42 | Active Shifts: 15")
+        with optimize_tab:
+            st.subheader("Optimization Engine")
+            col1, col2 = st.columns(2, gap="large")
+            
+            with col1:
+                st.markdown("### Task-Shift Assignment")
+                st.info("Assign tasks to shifts considering time windows and nurse requirements")
+                if st.button("🚀 Run Task Optimization", use_container_width=True):
+                    optimize_tasks_with_gurobi()
+            
+            with col2:
+                st.markdown("### Worker Scheduling")
+                st.info("Assign available workers to shifts based on their availability")
+                if st.button("🚀 Run Worker Optimization", use_container_width=True):
+                    optimize_workers_for_shifts()
+            
+            st.markdown("---")
+            st.markdown("### Example Datasets")
+            with st.expander("🔍 Load Example Data"):
+                ex_col1, ex_col2 = st.columns(2)
+                with ex_col1:
+                    if st.button("Small Dataset", help="Load a small demo dataset", use_container_width=True):
+                        insert()
+                        st.success("Small example data loaded!")
+                with ex_col2:
+                    if st.button("Large Dataset", help="Load a comprehensive demo dataset", use_container_width=True):
+                        insert2()
+                        st.success("Large example data loaded!")
 
+    with contact_tab:
+        show_contact()
 if __name__ == "__main__":
     main()
