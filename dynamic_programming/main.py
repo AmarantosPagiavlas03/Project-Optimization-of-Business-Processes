@@ -327,7 +327,7 @@ def shift_input_form():
                     f"""
                     <div style="
                         position: relative;
-                        left: -12px;
+                        left: -14px;
                         top: 10px;
                         text-align: center;
                         width: 100%;
