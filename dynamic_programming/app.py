@@ -60,7 +60,7 @@ styles = {
         "background-color": "#e6000f",
         "color": "white",
         "font-weight": "500",
-        "padding": "18px 20px",  # Increased from 14px
+        "padding": "10px 20px",  # Increased from 14px
         "border-radius": "70%",   # Perfect circle
         "margin": "0 2px",        # Space between circle and other elements
         "transform": "scale(1.1)" # Slight enlargement
