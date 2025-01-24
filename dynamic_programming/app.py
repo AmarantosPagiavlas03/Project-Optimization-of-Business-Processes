@@ -38,17 +38,12 @@ styles = {
         "padding": "14px",
     }
 }
-options = {
-    "show_menu": False,
-    "show_sidebar": False,
-}
 # Setup navigation
 page = st_navbar(
     ["Home", "Contact"],
     options={"show_menu": False, "show_sidebar": False},
     logo_path=logo_path,
     styles=styles,
-    options=options,
 )
 
 # Route pages
