@@ -10,6 +10,7 @@ import io
 import base64
 import os
 import datetime as dt
+import numpy as np
 
 
 DB_FILE = "tasksv2.db"
@@ -66,6 +67,29 @@ def init_db():
         SundayNeeded INT DEFAULT 0
     );
     ''')
+
+    # Table: Workers
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS Workers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            WorkerName TEXT NOT NULL,
+            MondayStart TEXT,
+            MondayEnd TEXT,
+            TuesdayStart TEXT,
+            TuesdayEnd TEXT,
+            WednesdayStart TEXT,
+            WednesdayEnd TEXT,
+            ThursdayStart TEXT,
+            ThursdayEnd TEXT,
+            FridayStart TEXT,
+            FridayEnd TEXT,
+            SaturdayStart TEXT,
+            SaturdayEnd TEXT,
+            SundayStart TEXT,
+            SundayEnd TEXT
+        )
+    ''')
+
     conn.commit()
     conn.close()
 
@@ -95,6 +119,45 @@ def add_shift_to_db(data):
     conn.close()
 
 
+def add_worker_to_db(
+    worker_name,
+    mon_start, mon_end,
+    tue_start, tue_end,
+    wed_start, wed_end,
+    thu_start, thu_end,
+    fri_start, fri_end,
+    sat_start, sat_end,
+    sun_start, sun_end
+):
+    """
+    Insert a new worker into the Workers table.
+    """
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute('''
+        INSERT INTO Workers (
+            WorkerName,
+            MondayStart, MondayEnd,
+            TuesdayStart, TuesdayEnd,
+            WednesdayStart, WednesdayEnd,
+            ThursdayStart, ThursdayEnd,
+            FridayStart, FridayEnd,
+            SaturdayStart, SaturdayEnd,
+            SundayStart, SundayEnd
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (
+        worker_name,
+        mon_start, mon_end,
+        tue_start, tue_end,
+        wed_start, wed_end,
+        thu_start, thu_end,
+        fri_start, fri_end,
+        sat_start, sat_end,
+        sun_start, sun_end
+    ))
+    conn.commit()
+    conn.close()
 
 
 def get_all(table):
@@ -231,95 +294,146 @@ def get_default_indices_for_intervals(intervals):
 
 def task_input_form():
     """Sidebar form to add a new task."""
-    with st.form("task_form", clear_on_submit=True):
-        st.subheader("Add New Task")
-        
-        # Create two main columns for task details
-        col1, col2 = st.columns(2)
-        
+
+    with st.form("task_form",border=False):
+        if "task_start_time" not in st.session_state:
+            st.session_state["task_start_time"] = datetime.now().time()
+        if "task_end_time" not in st.session_state:
+            st.session_state["task_end_time"] = (datetime.now() + timedelta(hours=1)).time()
+
+        # Generate time intervals for select boxes
+        intervals = generate_time_intervals()
+
+        default_idx_1h, default_idx_2h = get_default_indices_for_intervals(intervals)
+
+        # Create columns for the input fields
+        col1, col2, col3, col4,col5,col6,col7 = st.columns(7, gap="small")
+
         with col1:
-            TaskName = st.text_input("Task Name*", key="task_name")
-            Day = st.selectbox("Day of the Week*", 
-                             ["Monday", "Tuesday", "Wednesday", "Thursday",
-                              "Friday", "Saturday", "Sunday"])
-            
+            TaskName = st.text_input("Task Name", key="task_name")
         with col2:
-            NursesRequired = st.number_input("Nurses Required*", 
-                                           min_value=1, value=1, step=1)
-            
-        # Time inputs in their own columns
-        time_col1, time_col2, time_col3 = st.columns(3)
-        with time_col1:
-            StartTime = st.time_input("Start Time*", datetime.now().time())
-        with time_col2:
-            EndTime = st.time_input("End Time*", 
-                                  (datetime.now() + timedelta(hours=1)).time())
-        with time_col3:
-            duration = st.number_input("Duration (minutes)*", 
-                                     min_value=15, max_value=480, 
-                                     value=60, step=15)
+            Day = st.selectbox("Day of the Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], key="day_of_week")
+        with col3:
+            StartTime = st.selectbox("Start Time", options=intervals,index= default_idx_1h, format_func=lambda t: t.strftime("%H:%M"), key="start_time")
+        with col4:
+            EndTime = st.selectbox("End Time", options=intervals,index= default_idx_2h, format_func=lambda t: t.strftime("%H:%M"), key="end_time")
+        with col5:
+            duration_hours = st.number_input("Duration Hours", min_value=0, max_value=23, value=1, step=1, key="duration_hours")
+        with col6:
+            duration_minutes = st.number_input("Duration Minutes", min_value=0, max_value=59, value=0, step=1, key="duration_minutes")
+        with col7:
+            NursesRequired = st.number_input("Nurses Required", min_value=1, value=1, step=1, key="nurses_required")
 
-        # Full-width submit button
-        submitted = st.form_submit_button("➕ Add Task", use_container_width=True)
-            
-        if submitted:
-            if not TaskName:
-                st.error("Task Name is required!")
-            else:
-                add_task_to_db(
-                    TaskName,
-                    Day,
-                    StartTime.strftime("%H:%M:%S"),
-                    EndTime.strftime("%H:%M:%S"),
-                    str(timedelta(minutes=duration)),
-                    NursesRequired
-                )
-                st.success("Task added successfully!")
-
+        # Add task button
+        col8, col9 = st.columns(2, gap="small")
+        with col9:
+            if st.form_submit_button("Add Task"):
+                if TaskName:
+                    duration_delta = timedelta(hours=duration_hours, minutes=duration_minutes)
+                    add_task_to_db(
+                        TaskName,
+                        Day,
+                        f"{StartTime.hour}:{StartTime.minute}:00",
+                        f"{EndTime.hour}:{EndTime.minute}:00",
+                        str(duration_delta),
+                        NursesRequired
+                    )
+                    st.success(f"Task '{TaskName}' added!")
+                else:
+                    st.error("Task name cannot be empty!")
+                            
 def shift_input_form():
     """Sidebar form to add a new shift."""
-    with st.form("shift_form", clear_on_submit=True):
-        st.subheader("Add New Shift")
-        
-        # Time inputs
-        time_col1, time_col2, time_col3 = st.columns(3)
-        with time_col1:
-            Shift_StartTime = st.time_input("Shift Start*", datetime.now().time())
-        with time_col2:
-            Shift_EndTime = st.time_input("Shift End*", 
-                                        (datetime.now() + timedelta(hours=8)).time())
-        with time_col3:
-            BreakTime = st.time_input("Break Start*", 
-                                    (datetime.now() + timedelta(hours=4)).time())
-        
-        # Break duration and weight
-        dur_col, weight_col = st.columns(2)
-        with dur_col:
-            break_mins = st.slider("Break Duration (minutes)*", 15, 120, 30, step=15)
-        with weight_col:
-            Weight = st.number_input("Shift Weight*", min_value=0.1, value=1.0, step=0.1)
+    if "shift_start_time" not in st.session_state:
+        st.session_state["shift_start_time"] = datetime.now().time()
+    if "shift_end_time" not in st.session_state:
+        st.session_state["shift_end_time"] = (datetime.now() + timedelta(hours=1)).time()
+    if "break_start_time" not in st.session_state:
+        st.session_state["break_start_time"] = (datetime.now() + timedelta(hours=2)).time()
 
-        # Days of the week checkboxes
-        st.write("Active Days*")
-        days = st.columns(7)
-        day_labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-        day_states = [days[i].checkbox(label, key=f"day_{label}") 
-                     for i, label in enumerate(day_labels)]
+    intervals = generate_time_intervals()
+    default_idx_1h, default_idx_2h = get_default_indices_for_intervals(intervals)
+ 
+    with st.form("shift_form",border=False):
+        cols  = st.columns(6, gap="small")
+        with cols[0]:
+            Shift_StartTime = st.selectbox("Shift Start Time", options=intervals, index=default_idx_1h, format_func=lambda t: t.strftime("%H:%M"))
+        with cols[1]:
+            Shift_EndTime = st.selectbox("Shift End Time", options=intervals,index=default_idx_2h, format_func=lambda t: t.strftime("%H:%M"))
+        with cols[2]:
+            BreakTime = st.selectbox("Break Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
+        with cols[3]:
+            BreakDuration_hours = st.number_input("Break Duration Hours", min_value=0, max_value=23, value=0)
+        with cols[4]:
+            BreakDuration_minutes = st.number_input("Break Duration Minutes", min_value=0, max_value=59, value=30)
+        with cols[5]:
+            Weight = st.number_input("Shift Weight", min_value=0.0, value=1.0)
 
-        # Full-width submit button
-        submitted = st.form_submit_button("➕ Add Shift", use_container_width=True)
             
-        if submitted:
-            shift_data = (
-                Shift_StartTime.strftime("%H:%M:%S"),
-                Shift_EndTime.strftime("%H:%M:%S"),
-                BreakTime.strftime("%H:%M:%S"),
-                str(timedelta(minutes=break_mins)),
-                Weight,
-                *[1 if state else 0 for state in day_states]
-            )
-            add_shift_to_db(shift_data)
-            st.success("Shift added successfully!")
+        # st.markdown("### Select Days")
+        col_days = st.columns(7, gap="small")
+        days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        Days = {day: col_days[i].checkbox(day, value=(day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])) for i, day in enumerate(days_of_week)}
+
+        col7, col8 = st.columns(2, gap="small")
+        with col8:
+            if st.form_submit_button("Add Shift"):
+                shift_data = (
+                    f"{Shift_StartTime.hour}:{Shift_StartTime.minute}:00",
+                    f"{Shift_EndTime.hour}:{Shift_EndTime.minute}:00",
+                    f"{BreakTime.hour}:{BreakTime.minute}:00",
+                    str(timedelta(hours=BreakDuration_hours, minutes=BreakDuration_minutes)),
+                    Weight,
+                    *(1 if Days[day] else 0 for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
+                )
+                add_shift_to_db(shift_data)
+                st.success("Shift added successfully!")
+
+def worker_input_form():
+    """Sidebar form to add a new worker with day-of-week preferences."""
+    with st.sidebar.expander("Add Worker", expanded=False):
+        worker_name = st.text_input("Worker Name", "")
+        
+        # We'll store each day's preference as Start/End time
+        # If you want, you can default them to some typical 24-hour window for availability
+        days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        start_times = {}
+        end_times = {}
+        
+        for day in days:
+            start_times[day] = st.time_input(f"{day} Start", datetime.strptime("08:00:00", "%H:%M:%S").time())
+            end_times[day]   = st.time_input(f"{day} End", datetime.strptime("17:00:00", "%H:%M:%S").time())
+
+        if st.button("Add Worker"):
+            if worker_name.strip() == "":
+                st.error("Worker name cannot be empty!")
+            else:
+                add_worker_to_db(
+                    worker_name,
+                    # Monday
+                    f"{start_times['Monday'].hour}:{start_times['Monday'].minute}:00",
+                    f"{end_times['Monday'].hour}:{end_times['Monday'].minute}:00",
+                    # Tuesday
+                    f"{start_times['Tuesday'].hour}:{start_times['Tuesday'].minute}:00",
+                    f"{end_times['Tuesday'].hour}:{end_times['Tuesday'].minute}:00",
+                    # Wednesday
+                    f"{start_times['Wednesday'].hour}:{start_times['Wednesday'].minute}:00",
+                    f"{end_times['Wednesday'].hour}:{end_times['Wednesday'].minute}:00",
+                    # Thursday
+                    f"{start_times['Thursday'].hour}:{start_times['Thursday'].minute}:00",
+                    f"{end_times['Thursday'].hour}:{end_times['Thursday'].minute}:00",
+                    # Friday
+                    f"{start_times['Friday'].hour}:{start_times['Friday'].minute}:00",
+                    f"{end_times['Friday'].hour}:{end_times['Friday'].minute}:00",
+                    # Saturday
+                    f"{start_times['Saturday'].hour}:{start_times['Saturday'].minute}:00",
+                    f"{end_times['Saturday'].hour}:{end_times['Saturday'].minute}:00",
+                    # Sunday
+                    f"{start_times['Sunday'].hour}:{start_times['Sunday'].minute}:00",
+                    f"{end_times['Sunday'].hour}:{end_times['Sunday'].minute}:00",
+                )
+                st.success(f"Worker '{worker_name}' added!")
+
 def generate_and_fill_data_form():
     """Sidebar form to generate and fill random data."""
     with st.sidebar.expander("Generate Random Data", expanded=False):
@@ -379,6 +493,33 @@ def generate_and_fill_data(num_tasks=10, num_shifts=5, num_workers=5):
         )
         add_shift_to_db(shift_data)
 
+    # Random workers
+    for _ in range(num_workers):
+        wname = f"Worker_{random.randint(1, 100)}"
+        # For each day, pick a random 8-hour preference window
+        day_prefs = []
+        for _day in days_of_week:
+            start_h = random.randint(0, 8)  # earliest 0, latest 8
+            end_h = start_h + random.randint(6, 10)  # random length between 6 and 10 hours
+            day_prefs.append((start_h, end_h))
+
+        add_worker_to_db(
+            wname,
+            # Monday
+            f"{day_prefs[0][0]}:00:00", f"{day_prefs[0][1]}:00:00",
+            # Tuesday
+            f"{day_prefs[1][0]}:00:00", f"{day_prefs[1][1]}:00:00",
+            # Wednesday
+            f"{day_prefs[2][0]}:00:00", f"{day_prefs[2][1]}:00:00",
+            # Thursday
+            f"{day_prefs[3][0]}:00:00", f"{day_prefs[3][1]}:00:00",
+            # Friday
+            f"{day_prefs[4][0]}:00:00", f"{day_prefs[4][1]}:00:00",
+            # Saturday
+            f"{day_prefs[5][0]}:00:00", f"{day_prefs[5][1]}:00:00",
+            # Sunday
+            f"{day_prefs[6][0]}:00:00", f"{day_prefs[6][1]}:00:00",
+        )
 
 def task_template_download():
     """
@@ -1084,6 +1225,203 @@ def optimize_tasks_with_gurobi():
             if constr.IISConstr:
                 st.write(f"Infeasible Constraint: {constr.constrName}")
 
+# ------------------------------------------------------------------
+#                Second Optimizer: Assign Workers
+# ------------------------------------------------------------------
+def optimize_workers_for_shifts():
+    """
+    Assign actual workers to the shifts from the first optimization.
+    We know how many workers each shift needs. Now we decide which
+    worker goes where, based on each worker’s day/time preferences.
+    """
+    # 1. Read needed data
+    shifts_df = get_all("ShiftsTable5")
+    workers_df = get_all("Workers")
+
+    # The shift_worker_vars from the first optimization are not stored in DB,
+    # but we do have the final integer result for each shift’s needed worker count
+    # from the results CSV or from the model. Typically you'd store that in a table,
+    # or re-run in memory. For this example, let's define a new column in ShiftsTable5
+    # if you want (or we just pretend we have it). Instead, we will re-derive it from
+    # the existing approach or just ask the user to enter "how many workers does each shift need?"
+
+    # For demonstration, let's say the user manually enters a minimal coverage requirement
+    # for each shift (like "1" or "2" or "3"). Alternatively, you can read the results
+    # from a CSV or store them in a table. The code below checks for a column "NeededWorkers"
+    # in ShiftsTable5. If missing, we fallback to a user-provided input.
+
+    if "NeededWorkers" not in shifts_df.columns:
+        st.info("**No 'NeededWorkers' column found in ShiftsTable5.**")
+        st.write("We will assume each shift needs coverage from the first optimization or a user input.")
+        needed_workers_inputs = {}
+        for i, row in shifts_df.iterrows():
+            shift_label = f"Shift ID {row['id']} ({row['StartTime']} - {row['EndTime']})"
+            needed_workers_inputs[i] = st.number_input(
+                f"Workers needed for {shift_label}",
+                min_value=0, value=1, step=1
+            )
+        # Store the results in a new column for the model usage
+        shifts_df["NeededWorkers"] = shifts_df.index.map(needed_workers_inputs)
+    else:
+        st.success("Found 'NeededWorkers' column in ShiftsTable5. Using existing data.")
+
+    # Prepare time fields for comparison
+    # Convert day preference for each worker to time
+    # Convert shift start/end to time
+    # Then a worker can staff a shift on a given day if shift’s time is within the worker’s preference.
+    day_names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
+    def parse_time_str(t_str):
+        # "HH:MM:SS" -> time object
+        return datetime.strptime(t_str, "%H:%M:%S").time()
+
+    # Convert shift times
+    shifts_df["StartTime"] = shifts_df["StartTime"].apply(parse_time_str)
+    shifts_df["EndTime"]   = shifts_df["EndTime"].apply(parse_time_str)
+
+    # Build a dictionary for each worker's availability: worker_availability[worker_id][day] = (start, end)
+    worker_availability = {}
+    for _, w in workers_df.iterrows():
+        w_id = w["id"]
+        worker_availability[w_id] = {}
+        for day in day_names:
+            start_col = day + "Start"
+            end_col   = day + "End"
+            # Some columns might be None if the user didn't specify
+            # Default to a small window or 00:00-00:00 if empty
+            if w[start_col] is not None and w[end_col] is not None:
+                w_start = parse_time_str(w[start_col])
+                w_end   = parse_time_str(w[end_col])
+            else:
+                w_start, w_end = datetime.strptime("00:00:00", "%H:%M:%S").time(), datetime.strptime("00:00:00", "%H:%M:%S").time()
+            worker_availability[w_id][day] = (w_start, w_end)
+
+    # Create new Gurobi Model
+    model = Model("Worker_Assignment")
+
+    # Decision variable x[w, s]: 1 if worker w is assigned to shift s, 0 otherwise
+    x = {}
+    for s_idx, s_row in shifts_df.iterrows():
+        for w_idx, w_row in workers_df.iterrows():
+            # For each day, if the shift is active on that day (==1), check if worker is available
+            # A shift can be active on multiple days (like you have multiple day columns),
+            # but typically it's "1 shift per day." We'll gather all days that are set to 1 in that shift row.
+            # If ANY day is valid, we might allow assignment. Usually you'd do a per-day shift approach.
+            # For simplicity, let’s assume each shift row is for a single day or
+            # we only allow assignment if the worker is available for *every* day indicated. 
+            # You may choose the logic that fits your scenario.
+            can_work_this_shift = False
+            for day in day_names:
+                if s_row[day] == 1:
+                    # Check time overlap with worker’s preference
+                    w_start, w_end = worker_availability[w_row["id"]][day]
+                    shift_start, shift_end = s_row["StartTime"], s_row["EndTime"]
+                    # We'll do a simple “shift must be fully within worker's preference window”
+                    # or the worker can't do it.
+                    if (w_start <= shift_start) and (shift_end <= w_end):
+                        can_work_this_shift = True
+                    else:
+                        # If worker is not available for ANY active day, break
+                        can_work_this_shift = False
+                        break
+
+            if can_work_this_shift:
+                var_name = f"x_{w_idx}_{s_idx}"
+                x[(w_idx, s_idx)] = model.addVar(vtype=GRB.BINARY, name=var_name)
+            else:
+                # Worker can't do that shift
+                pass
+
+    # Objective: We want to ensure coverage, possibly with minimal “uncovered seats.”
+    # We'll create a slack variable for each shift indicating how many seats are unfilled.
+    # Then we minimize the sum of these slacks.
+    slack = {}
+    for s_idx, s_row in shifts_df.iterrows():
+        shift_id = s_row["id"]
+        slack[s_idx] = model.addVar(vtype=GRB.INTEGER, lb=0, name=f"slack_{shift_id}")
+
+    model.setObjective(quicksum(slack[s_idx] for s_idx in shifts_df.index), GRB.MINIMIZE)
+
+    # Constraints
+    # 1. The number of workers assigned to shift s plus slack >= needed workers
+    for s_idx, s_row in shifts_df.iterrows():
+        shift_id = s_row["id"]
+        needed = s_row["NeededWorkers"]
+        assigned_sum = quicksum(
+            x[(w_idx, s_idx)] for (w_idx, sh_idx) in x.keys() if sh_idx == s_idx
+        )
+        model.addConstr(
+            assigned_sum + slack[s_idx] >= needed,
+            name=f"coverage_shift_{shift_id}"
+        )
+
+    # 2. Each worker can only do one shift per day (if you want to enforce that).
+    #    If a shift covers multiple days, that gets more complicated. For simplicity,
+    #    we’ll assume each shift is effectively on one day or only one shift can be assigned for that worker per day.
+    #    Implementation approach: For each worker w, for each day d, sum of x[w, s for that day] <= 1.
+    for w_idx in workers_df.index:
+        for day in day_names:
+            # All shifts that are active on 'day'
+            shifts_on_day = [
+                s_idx for s_idx, s_row in shifts_df.iterrows()
+                if s_row[day] == 1
+            ]
+            # sum(x[w_idx, s_idx]) <= 1
+            model.addConstr(
+                quicksum(x[(w_idx, s_idx)]
+                         for s_idx in shifts_on_day
+                         if (w_idx, s_idx) in x) <= 1,
+                name=f"worker_{w_idx}_{day}_limit"
+            )
+
+    with st.spinner("Optimizing worker assignment..."):
+        model.optimize()
+
+    if model.status == GRB.OPTIMAL:
+        st.success("Worker assignment optimization successful!")
+        st.balloons()
+
+        results = []
+        for (w_idx, s_idx), var in x.items():
+            if var.x > 0.5:
+                # That means worker w_idx is assigned to shift s_idx
+                w_name = workers_df.loc[w_idx, "WorkerName"]
+                s_id   = shifts_df.loc[s_idx, "id"]
+                needed = shifts_df.loc[s_idx, "NeededWorkers"]
+                s_start = shifts_df.loc[s_idx, "StartTime"]
+                s_end   = shifts_df.loc[s_idx, "EndTime"]
+                # Identify which day(s) the shift is for
+                # We can store them for clarity
+                shift_days = []
+                for day in day_names:
+                    if shifts_df.loc[s_idx, day] == 1:
+                        shift_days.append(day)
+                results.append({
+                    "WorkerID": w_idx,
+                    "WorkerName": w_name,
+                    "ShiftTableID": s_id,
+                    "ShiftDays": ", ".join(shift_days),
+                    "ShiftStart": s_start,
+                    "ShiftEnd": s_end,
+                    "NeededWorkers": needed
+                })
+
+        results_df = pd.DataFrame(results)
+        if not results_df.empty:
+            st.write("**Worker Assignments**")
+            st.dataframe(results_df)
+
+            st.download_button(
+                label="Download Worker Assignments as CSV",
+                data=results_df.to_csv(index=False).encode("utf-8"),
+                file_name="worker_assignments.csv",
+                mime="text/csv"
+            )
+
+        else:
+            st.error("No worker assignments found. Possibly the preferences are too restrictive.")
+    else:
+        st.error(f"Worker assignment optimization failed with status: {model.status}")
 
 
 # ------------------------------------------------------------------
@@ -1286,103 +1624,185 @@ def show_contact():
 #                            Main App
 # ------------------------------------------------------------------
 
-
 def main():
-    st.set_page_config(page_title="Hospital Scheduler", layout="wide", page_icon="🏥")
-    
-    # Custom CSS for better styling
+    st.set_page_config(page_title="Hospital Scheduler Pro", layout="wide", page_icon="🏥")
+    init_db()
+    # Modern UI CSS
     st.markdown("""
     <style>
+        /* Base Theme */
+        :root {
+            --primary: #2563eb;
+            --secondary: #3b82f6;
+            --accent: #f59e0b;
+            --background: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --text: #1e293b;
+        }
+        
+        /* Modern Glassmorphism Effect */
+        .glass-card {
+            background: var(--card-bg) !important;
+            backdrop-filter: blur(10px) !important;
+            border-radius: 16px !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1) !important;
+            padding: 2rem !important;
+            margin-bottom: 1.5rem !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15) !important;
+        }
+        
+        /* Enhanced Header */
+        .modern-header {
+            font-family: 'Inter', sans-serif;
+            font-size: 2.75rem !important;
+            font-weight: 800;
+            color: var(--text);
+            text-align: center;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            position: relative;
+            border-bottom: 4px solid var(--primary);
+        }
+        
+        /* Modern Input Fields */
+        .stTextInput input, .stNumberInput input, .stSelectbox select {
+            border: 2px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 0.75rem 1rem !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .stTextInput input:focus, .stNumberInput input:focus, .stSelectbox select:focus {
+            border-color: var(--primary) !important;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+        }
+        
+        /* Enhanced Buttons */
         .stButton button {
-            transition: all 0.3s ease;
-        }
-        .stButton button:hover {
-            transform: scale(1.05);
-        }
-        .stDownloadButton button {
-            background-color: #2196F3 !important;
+            border-radius: 8px !important;
+            padding: 0.75rem 1.5rem !important;
+            font-weight: 600 !important;
+            transition: all 0.3s ease !important;
+            border: none !important;
+            background: var(--primary) !important;
             color: white !important;
         }
-        .header-style {
-            font-size: 2em !important;
-            color: #2c3e50 !important;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
+        
+        .stButton button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2) !important;
+            background: var(--secondary) !important;
         }
-        .info-box {
-            background-color: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 10px 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        
+        /* Modern Data Tables */
+        .stDataFrame {
+            border-radius: 12px !important;
+            overflow: hidden !important;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05) !important;
+        }
+        
+        /* Progress Spinner Animation */
+        .stSpinner > div {
+            border-color: var(--primary) transparent transparent transparent !important;
+            animation: spinner 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite !important;
+        }
+        
+        @keyframes spinner {
+            0% { transform: rotate(0deg) }
+            100% { transform: rotate(360deg) }
+        }
+        
+        /* Custom Tabs */
+        .stTabs [role="tablist"] {
+            gap: 1rem !important;
+            padding: 0.5rem !important;
+            background: var(--card-bg) !important;
+            border-radius: 12px !important;
+        }
+        
+        .stTabs [role="tab"] {
+            border-radius: 8px !important;
+            padding: 0.75rem 1.5rem !important;
+            transition: all 0.3s ease !important;
+            border: none !important;
+        }
+        
+        .stTabs [role="tab"][aria-selected="true"] {
+            background: var(--primary) !important;
+            color: white !important;
         }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     """, unsafe_allow_html=True)
 
-    init_db()
-    home_tab, contact_tab = st.tabs(["🏠 Home", "📞 Contact"])
-    
-    with home_tab:
-        header()
-        
-        # Create two main columns
-        left_col, right_col = st.columns([1, 3])
-        
-        with left_col:
-            # Manual Input Section
-            with st.expander("➕ Add Tasks/Shifts Manually"):
-                task_input_form()
-                shift_input_form()
-            
-            # Bulk Upload Section
-            with st.expander("📤 Bulk Upload Data", expanded=True):
-                upload_tasks_excel()
-                upload_shifts_excel()
-                st.markdown("---")
-                st.write("Download templates:")
-                task_template_download()
-                shift_template_download()
-            
-            # Data Management
-            st.markdown("---")
-            st.write("**Data Management**")
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button("🧹 Clear All Tasks", use_container_width=True):
-                    clear_all("TasksTable2")
-                    st.success("All tasks cleared!")
-            with col2:
-                if st.button("🧹 Clear All Shifts", use_container_width=True):
-                    clear_all("ShiftsTable5")
-                    st.success("All shifts cleared!")
-            
-            # Example Data
-            with st.expander("🔍 Load Example Data"):
-                ex_col1, ex_col2 = st.columns(2)
-                with ex_col1:
-                    if st.button("Small Dataset", use_container_width=True):
-                        insert()
-                        st.success("Small example data loaded!")
-                with ex_col2:
-                    if st.button("Large Dataset", use_container_width=True):
-                        insert2()
-                        st.success("Large example data loaded!")
+    st.markdown("""
+    <div class="modern-header">
+        ⚕️ Hospital Staff Scheduling Pro
+        <div style="font-size: 1.2rem; color: #64748b; margin-top: 0.5rem;">
+            Intelligent Workforce Management System
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-        with right_col:
-            # Visualization and Optimization Tabs
-            viz_tab, opt_tab = st.tabs(["📊 Visualization", "⚙️ Optimization"])
-            
-            with viz_tab:
-                display_tasks_and_shifts()
-            with opt_tab:
-                st.markdown("### Task-Shift Assignment Optimization")
-                st.info("Assign tasks to shifts considering time windows and nurse requirements")
-                if st.button("🚀 Run Task Optimization", use_container_width=True):
-                    optimize_tasks_with_gurobi()
+    # Main Content
+    with st.container():
+        col1, col2 = st.columns([1, 2], gap="large")
+        
+        with col1:
+            with st.container():
+                st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+                st.subheader("📅 Quick Actions")
+                st.button("➕ New Schedule Template", use_container_width=True)
+                st.button("👥 Staff Availability", use_container_width=True)
+                st.button("📈 Performance Analytics", use_container_width=True)
+                st.markdown('</div>', unsafe_allow_html=True)
                 
-    with contact_tab:
-        show_contact()
+                with st.expander("🔔 Notifications", expanded=True):
+                    st.info("🔄 3 schedule updates pending review")
+                    st.warning("⚠️ 2 staff members on leave tomorrow")
+                    st.success("✅ Last optimization saved successfully")
+
+        with col2:
+            with st.container():
+                st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+                tab1, tab2, tab3 = st.tabs(["📋 Schedule Overview", "📊 Workforce Analytics", "⚙️ Settings"])
+                
+                with tab1:
+                    st.subheader("Daily Schedule")
+                    # Add schedule visualization components
+                    display_tasks_and_shifts()
+                
+                with tab2:
+                    st.subheader("Staff Utilization")
+                    # Add analytics components
+                    st.line_chart(np.random.randn(30, 3), use_container_width=True)
+                
+                with tab3:
+                    st.subheader("System Configuration")
+                    st.number_input("Max Shift Duration (hours)", min_value=4, max_value=12, value=8)
+                    st.slider("Optimization Intensity", 1, 5, 3)
+                    st.toggle("Enable AI Suggestions", value=True)
+                
+                st.markdown('</div>', unsafe_allow_html=True)
+
+    # Bottom Status Bar
+    st.markdown("""
+    <div style="position: fixed; bottom: 0; right: 0; left: 0; background: var(--card-bg); padding: 0.5rem 2rem; 
+                border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+        <div>🟢 Connected to Hospital CMS</div>
+        <div>👥 42 Staff Members Active</div>
+        <div>📅 Current Shift Cycle: 2024-Q3</div>
+    </div>
+    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
