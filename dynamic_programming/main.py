@@ -1613,8 +1613,8 @@ def main():
                     
                     with colB:
                         st.subheader("Shifts")
-                        shift_template_download()
                         upload_shifts_excel()
+                        shift_template_download()
 
             # with st.sidebar:
             #     st.markdown("---")  # Add a separator line
