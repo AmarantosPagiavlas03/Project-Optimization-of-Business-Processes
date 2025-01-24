@@ -78,10 +78,9 @@ page = st_navbar(
 st.markdown("""
 <style>
     [data-testid="stNavigationBar"] .active {
-        transform: none !important;
-        margin: 0 !important;
-        min-width: auto !important;
-        height: auto !important;
+        border-bottom: 3px solid #e6000f !important;
+        box-sizing: border-box !important;
+        margin-bottom: -3px !important;
     }
 </style>
 """, unsafe_allow_html=True)
