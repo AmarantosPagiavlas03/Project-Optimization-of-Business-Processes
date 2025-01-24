@@ -184,6 +184,105 @@ def shift_input_form():
             add_shift_to_db(shift_data)
             st.success("Shift added!")
 
+
+# Add these functions after the shift_input_form function
+# ------------------------------------------------------------------
+#                     Upload Functions
+# ------------------------------------------------------------------
+def task_template_download():
+    template_df = pd.DataFrame({
+        "TaskName": ["Morning Rounds", "Medication"],
+        "Day": ["Monday", "Tuesday"],
+        "StartTime": ["08:00:00", "14:00:00"],
+        "EndTime": ["10:00:00", "16:00:00"],
+        "Duration": ["2:00:00", "2:00:00"],
+        "NursesRequired": [3, 2]
+    })
+    with st.expander("📁 Task Template"):
+        st.download_button(
+            label="Download Task Template",
+            data=template_df.to_csv(index=False),
+            file_name="tasks_template.csv",
+            mime="text/csv"
+        )
+
+def shift_template_download():
+    template_df = pd.DataFrame({
+        "StartTime": ["07:00:00", "19:00:00"],
+        "EndTime": ["15:00:00", "07:00:00"],
+        "BreakTime": ["12:00:00", "02:00:00"],
+        "BreakDuration": ["0:30:00", "1:00:00"],
+        "Weight": [1.0, 1.5],
+        "Monday": [1, 1],
+        "Tuesday": [1, 0],
+        "Wednesday": [1, 0],
+        "Thursday": [1, 0],
+        "Friday": [1, 0],
+        "Saturday": [0, 1],
+        "Sunday": [0, 1]
+    })
+    with st.expander("📁 Shift Template"):
+        st.download_button(
+            label="Download Shift Template",
+            data=template_df.to_csv(index=False),
+            file_name="shifts_template.csv",
+            mime="text/csv"
+        )
+
+def upload_tasks_excel():
+    uploaded_file = st.file_uploader("Upload Tasks", type=["csv", "xlsx"], key="task_upload")
+    if uploaded_file:
+        try:
+            if uploaded_file.name.endswith(".csv"):
+                df = pd.read_csv(uploaded_file)
+            else:
+                df = pd.read_excel(uploaded_file)
+            
+            required_cols = {"TaskName", "Day", "StartTime", "EndTime", "Duration", "NursesRequired"}
+            if not required_cols.issubset(df.columns):
+                st.error(f"Missing columns: {required_cols - set(df.columns)}")
+                return
+                
+            for _, row in df.iterrows():
+                add_task_to_db(
+                    row["TaskName"], row["Day"],
+                    row["StartTime"], row["EndTime"],
+                    row["Duration"], row["NursesRequired"]
+                )
+            st.success(f"Successfully uploaded {len(df)} tasks!")
+        except Exception as e:
+            st.error(f"Error: {str(e)}")
+
+def upload_shifts_excel():
+    uploaded_file = st.file_uploadizer("Upload Shifts", type=["csv", "xlsx"], key="shift_upload")
+    if uploaded_file:
+        try:
+            if uploaded_file.name.endswith(".csv"):
+                df = pd.read_csv(uploaded_file)
+            else:
+                df = pd.read_excel(uploaded_file)
+            
+            required_cols = {"StartTime", "EndTime", "BreakTime", "BreakDuration", "Weight",
+                            "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"}
+            if not required_cols.issubset(df.columns):
+                st.error(f"Missing columns: {required_cols - set(df.columns)}")
+                return
+            
+            for _, row in df.iterrows():
+                shift_data = (
+                    row["StartTime"], row["EndTime"],
+                    row["BreakTime"], row["BreakDuration"],
+                    row["Weight"],
+                    row["Monday"], row["Tuesday"], row["Wednesday"],
+                    row["Thursday"], row["Friday"], row["Saturday"], row["Sunday"]
+                )
+                add_shift_to_db(shift_data)
+            st.success(f"Successfully uploaded {len(df)} shifts!")
+        except Exception as e:
+            st.error(f"Error: {str(e)}")
+
+
+
 # ------------------------------------------------------------------
 #                         Optimization
 # ------------------------------------------------------------------
@@ -310,46 +409,42 @@ def main():
     
     tab1, tab2, tab3 = st.tabs(["📥 Data Input", "📊 Schedule View", "⚙️ Optimization"])
     
+    # Update the input_tab section to include upload functionality
     with tab1:
-        col1, col2 = st.columns(2)
-        with col1:
-            task_input_form()
-            st.markdown("---")
-            with st.expander("📁 Task Templates"):
-                st.download_button("Download Task Template", pd.DataFrame({
-                    "TaskName": ["Checkup", "Surgery"], 
-                    "Day": ["Monday", "Tuesday"],
-                    "StartTime": ["09:00:00", "14:00:00"],
-                    "EndTime": ["10:00:00", "16:00:00"],
-                    "Duration": ["1:00:00", "2:00:00"],
-                    "NursesRequired": [2, 4]
-                }).to_csv(), "tasks_template.csv")
+        st.subheader("Data Input Methods")
+        manual_tab, upload_tab = st.tabs(["✍️ Manual Entry", "📤 Bulk Upload"])
         
-        with col2:
-            shift_input_form()
+        with manual_tab:
+            with st.expander("➕ Add New Task", expanded=True):
+                task_input_form()
+            
+            with st.expander("👥 Add New Shift", expanded=True):
+                shift_input_form()
+            
             st.markdown("---")
-            with st.expander("📁 Shift Templates"):
-                st.download_button("Download Shift Template", pd.DataFrame({
-                    "StartTime": ["08:00:00", "20:00:00"],
-                    "EndTime": ["16:00:00", "08:00:00"],
-                    "BreakTime": ["12:00:00", "02:00:00"],
-                    "BreakDuration": ["0:30:00", "1:00:00"],
-                    "Weight": [1.0, 1.5],
-                    "Monday": [1, 1],
-                    "Tuesday": [1, 0]
-                }).to_csv(), "shifts_template.csv")
-                
-        st.markdown("---")
-        st.subheader("Database Management")
-        col_clear1, col_clear2 = st.columns(2)
-        with col_clear1:
-            if st.button("❌ Clear All Tasks", use_container_width=True):
-                clear_all("TasksTable2")
-                st.success("Tasks cleared!")
-        with col_clear2:
-            if st.button("❌ Clear All Shifts", use_container_width=True):
-                clear_all("ShiftsTable5")
-                st.success("Shifts cleared!")
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("🧹 Clear All Tasks", use_container_width=True, type="secondary"):
+                    clear_all("TasksTable2")
+                    st.success("All tasks cleared!")
+            with col2:
+                if st.button("🧹 Clear All Shifts", use_container_width=True, type="secondary"):
+                    clear_all("ShiftsTable5")
+                    st.success("All shifts cleared!")
+
+        with upload_tab:
+            st.subheader("Bulk Data Upload")
+            up_col1, up_col2 = st.columns(2)
+            
+            with up_col1:
+                st.markdown("### Tasks Upload")
+                upload_tasks_excel()
+                task_template_download()
+            
+            with up_col2:
+                st.markdown("### Shifts Upload")
+                upload_shifts_excel()
+                shift_template_download()
     
     with tab2:
         display_timeline()
