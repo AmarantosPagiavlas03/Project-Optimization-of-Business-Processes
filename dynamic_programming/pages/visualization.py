@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from database import get_all
+from .database import get_all
 
 # ------------------------------------------------------------------
 #                          Visualization
