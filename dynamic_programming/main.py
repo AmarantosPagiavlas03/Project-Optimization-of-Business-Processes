@@ -1602,11 +1602,11 @@ def main():
             with st.container(border=False):
                 col1, col2 = st.columns(2,gap="large")
                 with col1:
-                    if st.button("Clear All Tasks"):
+                    if st.button("Clear All Tasks",use_container_width=True):
                         clear_all("TasksTable2")
                         st.success("All tasks have been cleared!")
                 with col2:
-                    if st.button("Clear All Shifts"):
+                    if st.button("Clear All Shifts",use_container_width=True):
                         clear_all("ShiftsTable5")
                         st.success("All shifts have been cleared!")
 
