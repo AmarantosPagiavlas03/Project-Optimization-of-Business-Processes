@@ -23,26 +23,38 @@ styles = {
     "nav": {
         "background-color": "royalblue",
         "justify-content": "left",
-        "padding-left": "20px",  # Add space from left edge
-        "gap": "40px",  # Space between logo and menu items
+        "padding-left": "30px",
+        "gap": "80px",  # Increased space between logo and menu items
     },
     "img": {
-        "padding-right": "50px",  # Increased right padding for logo
-        "padding-left": "20px",  # Add left padding to logo
-        "width": "200px",  # Set explicit width for logo container
+        "width": "400px",  # Match SVG's aspect ratio (551x91 = ~6:1)
+        "min-width": "400px",  # Prevent compression
+        "padding-right": "100px",  # Right margin for logo
+        "object-fit": "contain",  # Maintain aspect ratio
+        "margin-left": "-20px",  # Compensate for SVG's internal padding
     },
     "span": {
         "color": "white",
-        "padding": "14px",
-        "font-size": "18px",  # Make text slightly larger
+        "padding": "18px",
+        "font-size": "20px",
+        "letter-spacing": "1px",  # Improve menu item readability
     },
     "active": {
         "background-color": "white",
         "color": "var(--text-color)",
-        "font-weight": "normal",
-        "padding": "14px",
+        "padding": "18px",
     }
 }
+st.markdown("""
+<style>
+    [data-testid="stNavigationBar"] {
+        height: 85px !important;  # Match logo height
+    }
+    [data-testid="stNavigationBar"] img {
+        margin-top: -5px;  # Vertical centering adjustment
+    }
+</style>
+""", unsafe_allow_html=True)
 # Setup navigation
 page = st_navbar(
     ["Home", "Contact"],
