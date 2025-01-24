@@ -258,6 +258,41 @@ def generate_time_intervals():
     intervals.append(time(0, 0))  # Add 24:00 as 00:00
     return intervals
 
+def get_default_indices_for_intervals(intervals):
+    """
+    Given a list of 15-minute interval times (e.g., [datetime.time(0,0), datetime.time(0,15), ...]),
+    this function returns two indexes:
+      - One for (current time + 1 hour), rounded to the nearest 15 minutes
+      - One for (current time + 2 hours), rounded to the nearest 15 minutes
+    If either rounded time does not appear in the intervals list, default index = 0.
+    
+    Returns:
+        (default_idx_1h, default_idx_2h) : (int, int)
+    """
+    # 1) Compute times
+    now_plus_1h = (dt.datetime.now() + dt.timedelta(hours=1)).time()
+    now_plus_2h = (dt.datetime.now() + dt.timedelta(hours=2)).time()
+
+    # 2) Round each to the nearest 15 minutes
+    nearest_15_1h = (now_plus_1h.minute // 15) * 15
+    default_time_1h = now_plus_1h.replace(minute=nearest_15_1h, second=0, microsecond=0)
+
+    nearest_15_2h = (now_plus_2h.minute // 15) * 15
+    default_time_2h = now_plus_2h.replace(minute=nearest_15_2h, second=0, microsecond=0)
+
+    # 3) Find indexes in the intervals list (or use 0 if not found)
+    if default_time_1h in intervals:
+        default_idx_1h = intervals.index(default_time_1h)
+    else:
+        default_idx_1h = 0
+
+    if default_time_2h in intervals:
+        default_idx_2h = intervals.index(default_time_2h)
+    else:
+        default_idx_2h = 0
+
+    return default_idx_1h, default_idx_2h
+
 def task_input_form():
     """Sidebar form to add a new task."""
     with st.expander("Add Task", expanded=False):
@@ -270,24 +305,9 @@ def task_input_form():
             # Generate time intervals for select boxes
             intervals = generate_time_intervals()
 
-            now_plus_1h = (dt.datetime.now() + dt.timedelta(hours=1)).time()
-            now_plus_2h = (dt.datetime.now() + dt.timedelta(hours=2)).time()
-            # Round to nearest 15 minutes (optional)
-            nearest_15_1h = (now_plus_1h.minute // 15) * 15
-            default_time_1h = now_plus_1h.replace(minute=nearest_15_1h, second=0, microsecond=0)
-            nearest_15_2h = (now_plus_2h.minute // 15) * 15
-            default_time_2h = now_plus_2h.replace(minute=nearest_15_2h, second=0, microsecond=0)
-            # Ensure that default_time is in the intervals list
-            if default_time_1h in intervals:
-                default_idx_1h = intervals.index(default_time_1h)
-            else:
-                default_idx_1h = 0 
-            if default_time_2h in intervals:
-                default_idx_2h = intervals.index(default_time_2h)
-            else:
-                default_idx_2h = 0 
+            default_idx_1h, default_idx_2h = get_default_indices_for_intervals(intervals)
 
-            # Create columns for horizontal layout within the expander
+            # Create columns for the input fields
             col1, col2, col3, col4,col5,col6,col7 = st.columns(7, gap="small")
 
             with col1:
@@ -305,8 +325,8 @@ def task_input_form():
             with col7:
                 NursesRequired = st.number_input("Nurses Required", min_value=1, value=1, step=1, key="nurses_required")
 
-            col8, col9 = st.columns(2, gap="small")
             # Add task button
+            col8, col9 = st.columns(2, gap="small")
             with col9:
                 if st.form_submit_button("Add Task"):
                     if TaskName:
@@ -333,14 +353,15 @@ def shift_input_form():
         st.session_state["break_start_time"] = (datetime.now() + timedelta(hours=2)).time()
 
     intervals = generate_time_intervals()
-    
+    default_idx_1h, default_idx_2h = get_default_indices_for_intervals(intervals)
+
     with st.expander("Add Shift"):
         with st.form("shift_form",border=False):
             cols  = st.columns(6, gap="small")
             with cols[0]:
-                Shift_StartTime = st.selectbox("Shift Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
+                Shift_StartTime = st.selectbox("Shift Start Time", options=intervals, index=default_idx_1h, format_func=lambda t: t.strftime("%H:%M"))
             with cols[1]:
-                Shift_EndTime = st.selectbox("Shift End Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
+                Shift_EndTime = st.selectbox("Shift End Time", options=intervals,index=default_idx_2h, format_func=lambda t: t.strftime("%H:%M"))
             with cols[2]:
                 BreakTime = st.selectbox("Break Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"))
             with cols[3]:
