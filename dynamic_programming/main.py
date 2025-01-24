@@ -1190,25 +1190,26 @@ def optimize_tasks_with_gurobi():
             # Selection widgets
             col1, col2 = st.columns(2)
             
+            # In the shift selector section
             with col1:
-                # Shift selector
-                current_shift_idx = np.where(unique_shifts == ss.selected_shift)[0][0] if ss.selected_shift in unique_shifts else 0
+                # Convert numpy index to Python int
+                current_shift_idx = int(np.where(unique_shifts == ss.selected_shift)[0][0]) if ss.selected_shift in unique_shifts else 0
                 new_shift = st.selectbox(
                     "Select Shift ID",
                     options=unique_shifts,
-                    index=current_shift_idx,
+                    index=current_shift_idx,  # Now a Python int
                     key="shift_selector"
                 )
                 ss.selected_shift = new_shift
 
+            # In the day selector section
             with col2:
-                # Day selector (filtered by shift)
-                valid_days = results_df[results_df["Shift ID"] == ss.selected_shift]["Day"].unique()
-                current_day_idx = np.where(valid_days == ss.selected_day)[0][0] if ss.selected_day in valid_days else 0
+                # Convert numpy index to Python int
+                current_day_idx = int(np.where(valid_days == ss.selected_day)[0][0]) if ss.selected_day in valid_days else 0
                 new_day = st.selectbox(
                     "Select Day",
                     options=valid_days,
-                    index=current_day_idx,
+                    index=current_day_idx,  # Now a Python int
                     key="day_selector"
                 )
                 ss.selected_day = new_day
