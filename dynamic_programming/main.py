@@ -17,7 +17,7 @@ from streamlit_option_menu import option_menu
 from streamlit_extras.switch_page_button import switch_page
 
 
-st.set_page_config(page_title="Home", layout="wide")
+
 DB_FILE = "tasksv2.db"
 
 
@@ -1601,7 +1601,7 @@ def navigation_bar():
             contact_page() 
 
 def main():
-    st.set_page_config(page_title="Home", layout="wide")
+    st.set_page_config(page_title="Hospital Scheduler", layout="wide")
     # header()
     navigation_bar()
         
