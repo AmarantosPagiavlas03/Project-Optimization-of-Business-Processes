@@ -1,10 +1,16 @@
-import os
-import streamlit as st
-from streamlit_navigation_bar import st_navbar
-import pages as pg
-from database import init_db
+# Add this FIRST in app.py
 import sys
 import os
+
+# Get the path to the project root (parent of dynamic_programming folder)
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, project_root)  # Insert at start of path list
+
+# Now import other modules
+import streamlit as st
+from streamlit_navigation_bar import st_navbar
+from dynamic_programming.pages import home, contact  # Use absolute import
+from database import init_db
 
 # Add this at the top of app.py
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
