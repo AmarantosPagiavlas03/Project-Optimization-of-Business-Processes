@@ -1553,7 +1553,7 @@ def footer():
         "This app was made for the VU Amsterdam Hospital.",
         br(),
         image('https://raw.githubusercontent.com/AmarantosPagiavlas03/Project-Optimization-of-Business-Processes/main/dynamic_programming/vu_mc_logo.png',
-        width=px(551), height=px(91)),
+        width=px(200), height=px(33)),
     ]
     layout(*myargs)
 
