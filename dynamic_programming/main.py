@@ -1512,7 +1512,35 @@ def display_tasks_and_shifts():
     except Exception as e:
         st.warning(f"Plotly is required for Gantt charts: {e}")
 
- 
+def show_contact():
+    st.title("Contact Us1")
+
+    # Add a description or introductory text
+    st.write("We'd love to hear from you! Please use the form below to get in touch with us.")
+
+    # Contact form
+    with st.form("contact_form"):
+        # Name input
+        name = st.text_input("Name", placeholder="Enter your name")
+        # Email input
+        email = st.text_input("Email", placeholder="Enter your email address")
+        # Message input
+        message = st.text_area("Message", placeholder="Write your message here", height=150)
+        # Submit button
+        submitted = st.form_submit_button("Submit")
+
+        # Handle form submission
+        if submitted:
+            if name and email and message:
+                st.success("Thank you for your message! We'll get back to you shortly.")
+                # You can add email sending functionality here, e.g., using an API like SendGrid
+            else:
+                st.error("Please fill in all fields before submitting.")
+
+    # Additional contact information
+    st.write("### Other Ways to Reach Us")
+    st.write("📧 Email: support@vuamsterdamscheduling.com")
+    st.write("📍 Address: De Boelelaan 1105, 1081 HV Amsterdam, North Holland, Netherlands")
 # ------------------------------------------------------------------
 #                            Main App
 # ------------------------------------------------------------------
@@ -1523,74 +1551,75 @@ def main():
 
         
     init_db()
- 
-    # Input forms
-    task_input_form()
-    shift_input_form()
-    # worker_input_form()
- 
-    with st.sidebar:
-        st.markdown("---")  # Add a separator line
-        col1, col2 = st.columns(2)
+    home_tab , contact_tab = st.tabs(["Home", "Contact"])
+    with home_tab:
+        # Input forms
+        task_input_form()
+        shift_input_form()
+        # worker_input_form()
+    
+        with st.sidebar:
+            st.markdown("---")  # Add a separator line
+            col1, col2 = st.columns(2)
 
-        with col1:
-            if st.button("Clear All Tasks"):
-                clear_all("TasksTable2")
-                st.success("All tasks have been cleared!")
+            with col1:
+                if st.button("Clear All Tasks"):
+                    clear_all("TasksTable2")
+                    st.success("All tasks have been cleared!")
 
-        with col2:
-            if st.button("Clear All Shifts"):
-                clear_all("ShiftsTable5")
-                st.success("All shifts have been cleared!")
+            with col2:
+                if st.button("Clear All Shifts"):
+                    clear_all("ShiftsTable5")
+                    st.success("All shifts have been cleared!")
 
-    with st.sidebar.expander("Task Data Import/Export"):
-        # 1. Download Template
-        st.subheader("Download Template")
-        task_template_download()
+        with st.sidebar.expander("Task Data Import/Export"):
+            # 1. Download Template
+            st.subheader("Download Template")
+            task_template_download()
 
-        st.markdown("---")
+            st.markdown("---")
 
-        # 2. Upload user file
-        st.subheader("Upload Your Tasks")
-        upload_tasks_excel()
+            # 2. Upload user file
+            st.subheader("Upload Your Tasks")
+            upload_tasks_excel()
 
-        # if st.button("Clear All Workers"):
-        #     clear_all("Workers")
-        #     st.success("All workers have been cleared!")
+            # if st.button("Clear All Workers"):
+            #     clear_all("Workers")
+            #     st.success("All workers have been cleared!")
 
-    with st.sidebar.expander("Shift Data Import/Export"):
-        st.subheader("Download Example Shift Template")
-        shift_template_download()
+        with st.sidebar.expander("Shift Data Import/Export"):
+            st.subheader("Download Example Shift Template")
+            shift_template_download()
 
-        st.markdown("---")
-        
-        st.subheader("Upload Your Shifts File")
-        upload_shifts_excel()
+            st.markdown("---")
+            
+            st.subheader("Upload Your Shifts File")
+            upload_shifts_excel()
 
-    # Buttons for example data
-    colA, colB = st.columns(2)
-    with colA:
-        if st.button("Data Example"):
-            insert()
-            st.success("Data Example 1 inserted!")
-    with colB:
-        if st.button("Data Example2"):
-            insert2()
-            st.success("Data Example 2 inserted!")
+        # Buttons for example data
+        colA, colB = st.columns(2)
+        with colA:
+            if st.button("Data Example"):
+                insert()
+                st.success("Data Example 1 inserted!")
+        with colB:
+            if st.button("Data Example2"):
+                insert2()
+                st.success("Data Example 2 inserted!")
 
-    # First optimization
-    if st.button("Optimize Task Assignment"):
-        optimize_tasks_with_gurobi()
+        # First optimization
+        if st.button("Optimize Task Assignment"):
+            optimize_tasks_with_gurobi()
 
-    ## Second optimization: Assign workers to shifts
-    # if st.button("Assign Workers to Shifts"):
-    #     optimize_workers_for_shifts()
-
-
-    # Visualization
-    display_tasks_and_shifts()
+        ## Second optimization: Assign workers to shifts
+        # if st.button("Assign Workers to Shifts"):
+        #     optimize_workers_for_shifts()
 
 
+        # Visualization
+        display_tasks_and_shifts()
+    with contact_tab:
+        show_contact()
 
 if __name__ == "__main__":
     main()
