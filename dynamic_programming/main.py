@@ -10,7 +10,7 @@ import io
 import base64
 import os
 import datetime as dt
-
+import numpy as np
 
 DB_FILE = "tasksv2.db"
 
