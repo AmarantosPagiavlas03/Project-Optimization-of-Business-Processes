@@ -270,11 +270,28 @@ def task_input_form():
             # Generate time intervals for select boxes
             intervals = generate_time_intervals()
 
-            # Generate placeholder
-            one_hour_later = dt.datetime.now() + dt.timedelta(hours=1)
-            rounded_minutes = (one_hour_later.minute // 15) * 15
-            placeholder_dt = one_hour_later.replace(minute=rounded_minutes, second=0, microsecond=0)
-            placeholder_time = placeholder_dt.time()
+        def generate_15_min_intervals():
+            intervals = []
+            for hour in range(24):
+                for minute in [0, 15, 30, 45]:
+                    intervals.append(dt.time(hour=hour, minute=minute))
+            return intervals
+
+        intervals = generate_15_min_intervals()
+
+        # Suppose you want the default to be 'current time + 1 hour'
+        now_plus_1h = (dt.datetime.now() + dt.timedelta(hours=1)).time()
+
+        # Round to nearest 15 minutes (optional)
+        nearest_15 = (now_plus_1h.minute // 15) * 15
+        default_time = now_plus_1h.replace(minute=nearest_15, second=0, microsecond=0)
+
+        # Ensure that default_time is in your intervals list
+        # For this example, it should be after rounding.
+        if default_time in intervals:
+            default_idx = intervals.index(default_time)
+        else:
+            default_idx = 0 
 
             # Create columns for horizontal layout within the expander
             col1, col2, col3, col4,col5,col6,col7 = st.columns(7, gap="small")
@@ -284,7 +301,7 @@ def task_input_form():
             with col2:
                 Day = st.selectbox("Day of the Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], key="day_of_week")
             with col3:
-                StartTime = st.selectbox("Start Time", options=intervals, placeholder=placeholder_time, format_func=lambda t: t.strftime("%H:%M"), key="start_time")
+                StartTime = st.selectbox("Start Time", options=intervals,index= default_idx, format_func=lambda t: t.strftime("%H:%M"), key="start_time")
             with col4:
                 EndTime = st.selectbox("End Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"), key="end_time")
             with col5:
