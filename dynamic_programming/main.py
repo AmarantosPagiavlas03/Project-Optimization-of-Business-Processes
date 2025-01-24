@@ -613,26 +613,27 @@ def shift_template_download():
         "Saturday": [0, 1],
         "Sunday": [0, 1]
     })
-
-    # --- CSV version ---
-    csv_data = template_df.to_csv(index=False)
-    st.download_button(
-        label="Download Shift Template (CSV)",
-        data=csv_data.encode("utf-8"),
-        file_name="shift_template.csv",
-        mime="text/csv"
-    )
-
-    # --- Excel version ---
-    excel_buffer = io.BytesIO()
-    with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
-        template_df.to_excel(writer, index=False, sheet_name='ShiftTemplate')
-    st.download_button(
-        label="Download Shift Template (Excel)",
-        data=excel_buffer.getvalue(),
-        file_name="shift_template.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+    colA, colB = st.columns(2)
+    with colA:
+        # --- CSV version ---
+        csv_data = template_df.to_csv(index=False)
+        st.download_button(
+            label="Download Shift Template (CSV)",
+            data=csv_data.encode("utf-8"),
+            file_name="shift_template.csv",
+            mime="text/csv"
+        )
+    with colB:
+        # --- Excel version ---
+        excel_buffer = io.BytesIO()
+        with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
+            template_df.to_excel(writer, index=False, sheet_name='ShiftTemplate')
+        st.download_button(
+            label="Download Shift Template (Excel)",
+            data=excel_buffer.getvalue(),
+            file_name="shift_template.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
 def upload_shifts_excel():
     """
@@ -1560,8 +1561,6 @@ def main():
                 horizontal=True,
                 label_visibility="collapsed"
             )
-        
-    
             if selected_subtab == "Manual":
                 with st.container(border=True):
                     with st.expander("Add Task", expanded=False):
