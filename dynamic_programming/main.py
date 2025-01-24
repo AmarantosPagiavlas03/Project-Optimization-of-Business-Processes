@@ -1536,6 +1536,11 @@ COMMON_STYLE = """
       margin-top: 70px; /* Adjust if header is taller or smaller */
       margin-bottom: 60px; /* to accommodate the footer */
   }
+    /* Also push down the sidebar to clear the fixed header */
+  [data-testid="stSidebar"] {
+      margin-top: 70px;
+      z-index: 9999; /* ensures sidebar is on top if it overlaps header */
+  }
 
   /* Remove any default border/line from hr */
   hr {
