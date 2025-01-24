@@ -40,6 +40,7 @@ if not os.path.exists(logo_path):
 # Simplified styles focusing on logo spacing
 styles = {
     "nav": {
+        "justify-content": "left",
         "padding-left": "2rem",
         "gap": "4rem",
         "background-color": theme_config["primaryColor"]
@@ -57,7 +58,7 @@ styles = {
     },
     "active": {
         "background-color": "#FFFFFF33",  # Semi-transparent white
-        "border-radius": "0.5rem"
+        "border-radius": "0.7rem"
     }
 }
 
