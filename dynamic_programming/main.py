@@ -1531,7 +1531,7 @@ def display_tasks_and_shifts():
 
 # def main():
 # st.set_page_config(page_title="Hospital Scheduler", layout="wide")
-page = st_navbar(["Home", "Analytics", "Contact"])
+page = st_navbar(["rat", "sgs", "sgg"])
 st.write(page)
         
     # init_db()
