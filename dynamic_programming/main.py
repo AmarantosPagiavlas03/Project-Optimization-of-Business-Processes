@@ -613,27 +613,46 @@ def shift_template_download():
         "Saturday": [0, 1],
         "Sunday": [0, 1]
     })
-    colA, colB = st.columns(2,vertical_alignment = "center",gap="large")
-    with colA:
-        # --- CSV version ---
-        csv_data = template_df.to_csv(index=False)
-        st.download_button(
-            label="Download Shift Template (CSV)",
-            data=csv_data.encode("utf-8"),
-            file_name="shift_template.csv",
-            mime="text/csv"
-        )
-    with colB:
-        # --- Excel version ---
-        excel_buffer = io.BytesIO()
-        with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
-            template_df.to_excel(writer, index=False, sheet_name='ShiftTemplate')
-        st.download_button(
-            label="Download Shift Template (Excel)",
-            data=excel_buffer.getvalue(),
-            file_name="shift_template.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+    st.markdown("""
+    <style>
+        /* Center align content in columns */
+        div[data-testid="column"] {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    with st.container(border=True):
+        st.subheader("Download Shift Template")
+        
+        # Create columns with large gap
+        colA, colB = st.columns(2, gap="large")
+        
+        with colA:
+            # --- CSV version ---
+            csv_data = template_df.to_csv(index=False)
+            st.download_button(
+                label="Download Shift Template (CSV)",
+                data=csv_data.encode("utf-8"),
+                file_name="shift_template.csv",
+                mime="text/csv",
+                use_container_width=True  # Make button fill column width
+            )
+        
+        with colB:
+            # --- Excel version ---
+            excel_buffer = io.BytesIO()
+            with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
+                template_df.to_excel(writer, index=False, sheet_name='ShiftTemplate')
+            st.download_button(
+                label="Download Shift Template (Excel)",
+                data=excel_buffer.getvalue(),
+                file_name="shift_template.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                use_container_width=True  # Make button fill column width
+            )
 
 def upload_shifts_excel():
     """
