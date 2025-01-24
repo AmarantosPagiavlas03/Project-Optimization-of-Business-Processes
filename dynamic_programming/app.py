@@ -13,6 +13,11 @@ logo_path = os.path.join(parent_dir, "vu_mc_logo_text.svg")
 
 # Initialize app
 st.set_page_config(initial_sidebar_state="collapsed", layout="wide")
+st._config.set_option("theme.primaryColor", "#E53935")  # Red color
+st._config.set_option("theme.backgroundColor", "#FFFFFF")  # White background
+st._config.set_option("theme.secondaryBackgroundColor", "#F5F5F5")  # Light gray
+st._config.set_option("theme.textColor", "#000000")  # Black text
+st._config.set_option("theme.font", "sans serif")
 init_db()
 
 # Verify logo exists
