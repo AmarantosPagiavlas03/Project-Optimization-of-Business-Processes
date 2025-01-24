@@ -1609,17 +1609,17 @@ def main():
                     if st.button("Clear All Shifts",use_container_width=True):
                         clear_all("ShiftsTable5")
                         st.success("All shifts have been cleared!")
-
-        # Buttons for example data
-        colA, colB = st.columns(2)
-        with colA:
-            if st.button("Data Example"):
-                insert()
-                st.success("Data Example 1 inserted!")
-        with colB:
-            if st.button("Data Example2"):
-                insert2()
-                st.success("Data Example 2 inserted!")
+        with st.expander("Example Data", expanded=False):
+            # Buttons for example data
+            colA, colB = st.columns(2)
+            with colA:
+                if st.button("Data Example"):
+                    insert()
+                    st.success("Data Example 1 inserted!")
+            with colB:
+                if st.button("Data Example2"):
+                    insert2()
+                    st.success("Data Example 2 inserted!")
 
         # First optimization
         if st.button("Optimize Task Assignment"):
