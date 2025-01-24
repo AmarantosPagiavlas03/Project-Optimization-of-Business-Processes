@@ -1763,7 +1763,7 @@ def main():
 
     # Visualization
     display_tasks_and_shifts()
-    footer()
+    # footer()
 
 
 
