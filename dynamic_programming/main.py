@@ -352,6 +352,10 @@ def shift_input_form():
         if submitted:
             errors = []
             
+            # New validation: Check if at least one day is selected
+            if not any(day_states.values()):
+                errors.append("At least one day must be selected for the shift.")
+            
             # Validate time sequence
             if Shift_StartTime >= Shift_EndTime:
                 errors.append("Shift end time must be after start time")
@@ -391,7 +395,6 @@ def shift_input_form():
                 )
                 add_shift_to_db(shift_data)
                 st.success("Shift added successfully!")
- 
 
 def generate_and_fill_data_form():
     """Sidebar form to generate and fill random data."""
