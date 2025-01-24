@@ -1613,23 +1613,18 @@ def main():
             # Buttons for example data
             colA, colB = st.columns(2)
             with colA:
-                if st.button("Data Example"):
+                if st.button("Small Data Example",use_container_width=True):
                     insert()
-                    st.success("Data Example 1 inserted!")
+                    st.success("Small Data Example inserted!")
             with colB:
-                if st.button("Data Example2"):
+                if st.button("Large Data Example",use_container_width=True):
                     insert2()
-                    st.success("Data Example 2 inserted!")
+                    st.success("Large Data Example inserted!")
 
-        # First optimization
+ 
         if st.button("Optimize Task Assignment"):
             optimize_tasks_with_gurobi()
-
-        ## Second optimization: Assign workers to shifts
-        # if st.button("Assign Workers to Shifts"):
-        #     optimize_workers_for_shifts()
-
-
+ 
         # Visualization
         display_tasks_and_shifts()
     with contact_tab:
