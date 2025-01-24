@@ -1207,24 +1207,6 @@ def optimize_tasks_with_gurobi():
         col3.metric("🔗 Constraints", stats["Total Constraints"])
         col4.metric("🎯 Objective", stats["Objective Value"])
 
-        with st.expander("📋 Detailed Assignments", expanded=True):
-            # Add shift details to results
-            merged_df = results_df.merge(shifts_df[["id", "ShiftName", "Weight"]], 
-                                        left_on="Shift ID", right_on="id")
-            merged_df["Shift Cost"] = merged_df["Weight"] * merged_df["Workers Assigned"]
-            from st_aggrid import AgGrid, GridOptionsBuilder
-            # Formatting
-            gb = GridOptionsBuilder.from_dataframe(merged_df)
-            gb.configure_pagination()
-            gb.configure_side_bar()
-            gb.configure_default_column(groupable=True, value=True, enableRowGroup=True)
-            grid_options = gb.build()
-            
-            AgGrid(merged_df, 
-                gridOptions=grid_options,
-                height=400,
-                theme="streamlit",
-                custom_css={"#gridToolBar": {"padding-bottom": "0px !important"}})
     else:
         st.error(f"Optimization failed with status: {model.status}")
         # Optional: Add infeasibility diagnostics

@@ -8,4 +8,3 @@ xlsxwriter
 streamlit-navigation-bar==3.3.0
 numpy
 streamlit-timeline
-st-aggrid
