@@ -12,6 +12,7 @@ import os
 from htbuilder import HtmlElement, div, ul, li, br, hr, a, p, img, styles, classes, fonts
 from htbuilder.units import percent, px
 from htbuilder.funcs import rgba, rgb
+import datetime as dt
 
 DB_FILE = "tasksv2.db"
 
@@ -269,6 +270,12 @@ def task_input_form():
             # Generate time intervals for select boxes
             intervals = generate_time_intervals()
 
+            # Generate placeholder
+            one_hour_later = dt.datetime.now() + dt.timedelta(hours=1)
+            rounded_minutes = (one_hour_later.minute // 15) * 15
+            placeholder_dt = one_hour_later.replace(minute=rounded_minutes, second=0, microsecond=0)
+            placeholder_time = placeholder_dt.time()
+
             # Create columns for horizontal layout within the expander
             col1, col2, col3, col4,col5,col6,col7 = st.columns(7, gap="small")
 
@@ -277,7 +284,7 @@ def task_input_form():
             with col2:
                 Day = st.selectbox("Day of the Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], key="day_of_week")
             with col3:
-                StartTime = st.selectbox("Start Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"), key="start_time")
+                StartTime = st.selectbox("Start Time", options=intervals, placeholder=placeholder_time, format_func=lambda t: t.strftime("%H:%M"), key="start_time")
             with col4:
                 EndTime = st.selectbox("End Time", options=intervals, format_func=lambda t: t.strftime("%H:%M"), key="end_time")
             with col5:
@@ -1476,8 +1483,8 @@ def display_tasks_and_shifts():
         st.warning(f"Plotly is required for Gantt charts: {e}")
 
 # ------------------------------------------------------------------
-
-
+#                        Header and footer
+# ------------------------------------------------------------------
 def image(src_as_string, **style):
     return img(src=src_as_string, style=styles(**style))
 
@@ -1627,6 +1634,7 @@ def footer():
         br()
     ]
     layout_footer(*my_footer_args)
+
 # ------------------------------------------------------------------
 #                            Main App
 # ------------------------------------------------------------------
