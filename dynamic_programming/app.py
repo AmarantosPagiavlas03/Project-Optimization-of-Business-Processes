@@ -61,7 +61,7 @@ styles = {
     "active": {
         "background-color": "transparent",
         "color": "#e6000f",
-        "font-weight": "800",
+        "font-weight": "500",
         "transform": "none", 
     }
 }
