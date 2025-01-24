@@ -1163,157 +1163,153 @@ def optimize_tasks_with_gurobi():
 #                          Visualization
 # ------------------------------------------------------------------
 def display_tasks_and_shifts():
-    """Modern interactive visualization of tasks and shifts with duration fixes."""
-    st.header("📅 Schedule Visualization Dashboard", divider="rainbow")
-
-    with st.spinner("Loading scheduling data..."):
-        tasks_df = get_all("TasksTable2")
-        shifts_df = get_all("ShiftsTable5")
+    """Display tasks and shifts as interactive Gantt charts with enhanced visuals."""
+    st.header("Weekly Schedule Visualization")
+    
+    tasks_df = get_all("TasksTable2")
+    shifts_df = get_all("ShiftsTable5")
 
     if tasks_df.empty and shifts_df.empty:
-        st.info("🌟 No tasks or shifts found. Add data to get started!")
+        st.info("No tasks or shifts found in the database")
         return
 
-    # Convert duration to timedelta and handle errors
-    if not tasks_df.empty:
-        try:
-            tasks_df['Duration'] = pd.to_timedelta(tasks_df['Duration'])
-            tasks_df['DurationHours'] = tasks_df['Duration'].dt.total_seconds() / 3600
-        except Exception as e:
-            st.error(f"⚠️ Error processing durations: {str(e)}")
-            st.warning("Ensure durations are in HH:MM:SS format (e.g., '01:30:00' for 1.5 hours)")
-            return
-
-    # Metrics cards with safe duration calculation
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("📋 Total Tasks", len(tasks_df))
-    with col2:
-        st.metric("👥 Total Shifts", len(shifts_df))
-    with col3:
-        avg_duration = tasks_df['DurationHours'].mean().round(1) if not tasks_df.empty else 0
-        st.metric("⏳ Avg Task Duration", f"{avg_duration} hours")
-
-    tab1, tab2 = st.tabs(["📊 Gantt Charts", "📁 Raw Data"])
+    # Configure color schemes
+    task_color_scale = px.colors.qualitative.Pastel
+    shift_color_scale = px.colors.qualitative.Dark24
+    day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", 
+                "Friday", "Saturday", "Sunday"]
+    
+    # Create tabs for separate task/shift views
+    tab1, tab2 = st.tabs(["📋 Tasks Schedule", "👥 Shifts Schedule"])
 
     with tab1:
-        try:
-            import plotly.express as px
-            
-            day_order = ["Monday", "Tuesday", "Wednesday", "Thursday",
-                        "Friday", "Saturday", "Sunday"]
-            time_range = ["2023-01-01 00:00:00", "2023-01-01 23:59:59"]
+        if not tasks_df.empty:
+            # Prepare tasks data
+            tasks_df = tasks_df.assign(
+                Start=lambda df: pd.to_datetime("2023-01-01 " + df["StartTime"]),
+                End=lambda df: pd.to_datetime("2023-01-01 " + df["EndTime"]),
+                Day=pd.Categorical(tasks_df["Day"], categories=day_order, ordered=True),
+                HoverText=lambda df: "Task: " + df["TaskName"] + "<br>" +
+                                    "Start: " + df["StartTime"] + "<br>" +
+                                    "End: " + df["EndTime"] + "<br>" +
+                                    "Nurses Required: " + df["NursesRequired"].astype(str)
+            )
 
-            if not tasks_df.empty:
-                st.subheader("🔧 Task Schedule", divider="blue")
-                tasks_df = tasks_df.assign(
-                    Start=lambda df: pd.to_datetime("2023-01-01 " + df['StartTime']),
-                    End=lambda df: pd.to_datetime("2023-01-01 " + df['EndTime']),
-                    Day=lambda df: pd.Categorical(df['Day'], categories=day_order, ordered=True),
-                    DurationLabel=lambda df: df['Duration'].apply(
-                        lambda x: f"{int(x.total_seconds()//3600)}h {int((x.total_seconds()%3600)//60)}m"
-                    )
-                )
+            # Create interactive Gantt chart
+            fig_tasks = px.timeline(
+                tasks_df,
+                x_start="Start",
+                x_end="End",
+                y="Day",
+                color="TaskName",
+                color_discrete_sequence=task_color_scale,
+                title="<b>Task Schedule</b> - Drag to zoom, hover for details",
+                hover_name="TaskName",
+                hover_data={"Start": "|%H:%M", "End": "|%H:%M", "Day": True},
+                labels={"Start": "Start Time", "End": "End Time"},
+                height=600
+            )
 
-                fig_tasks = px.timeline(
-                    tasks_df,
-                    x_start="Start",
-                    x_end="End",
-                    y="Day",
-                    color="TaskName",
-                    color_discrete_sequence=px.colors.qualitative.Pastel,
-                    hover_data={
-                        "NursesRequired": True,
-                        "DurationLabel": "Duration",
-                        "StartTime": False,
-                        "EndTime": False
-                    },
-                    title="<b>Task Distribution by Day</b>",
-                    template="plotly_white"
-                )
-                fig_tasks.update_layout(
-                    height=600,
-                    xaxis_title="Time",
-                    yaxis_title="Day",
-                    legend_title="Tasks",
-                    font=dict(family="Arial", size=12)
-                )
-                fig_tasks.update_xaxes(
+            # Customize layout
+            fig_tasks.update_layout(
+                xaxis_title="Time",
+                yaxis_title="Day",
+                xaxis=dict(
                     tickformat="%H:%M",
-                    dtick=3600000,
-                    range=time_range
-                )
-                st.plotly_chart(fig_tasks, use_container_width=True)
-
-            if not shifts_df.empty:
-                st.subheader("👥 Shift Schedule", divider="green")
-                shifts_expanded = []
-                for _, row in shifts_df.iterrows():
-                    for day in day_order:
-                        if row[day] == 1:
-                            start = pd.to_datetime(f"2023-01-01 {row['StartTime']}")
-                            end = pd.to_datetime(f"2023-01-01 {row['EndTime']}")
-                            duration = (end - start).total_seconds()/3600
-                            
-                            shifts_expanded.append({
-                                "ShiftID": row["id"],
-                                "Day": day,
-                                "Start": start,
-                                "End": end,
-                                "DurationHours": duration
-                            })
-
-                shifts_expanded_df = pd.DataFrame(shifts_expanded)
-                shifts_expanded_df["Day"] = pd.Categorical(shifts_expanded_df["Day"], 
-                                                         categories=day_order, 
-                                                         ordered=True)
-
-                fig_shifts = px.timeline(
-                    shifts_expanded_df,
-                    x_start="Start",
-                    x_end="End",
-                    y="Day",
-                    color="ShiftID",
-                    color_continuous_scale=px.colors.sequential.Magma,
-                    hover_data={
-                        "DurationHours": ":.1f hours",
-                        "ShiftID": True
-                    },
-                    title="<b>Shift Distribution by Day</b>",
-                    template="plotly_dark"
-                )
-                fig_shifts.update_layout(
-                    height=600,
-                    xaxis_title="Time",
-                    yaxis_title="Day",
-                    font=dict(family="Arial", size=12)
-                )
-                fig_shifts.update_xaxes(
-                    tickformat="%H:%M",
-                    dtick=3600000,
-                    range=time_range
-                )
-                st.plotly_chart(fig_shifts, use_container_width=True)
-
-        except Exception as e:
-            st.error(f"🚨 Visualization error: {str(e)}")
+                    range=[pd.Timestamp("2023-01-01 00:00"), 
+                          pd.Timestamp("2023-01-01 23:59")],
+                    dtick=3600000  # 1 hour intervals
+                ),
+                hoverlabel=dict(bgcolor="white", font_size=14),
+                showlegend=True,
+                legend=dict(orientation="h", yanchor="bottom", y=1.02),
+                margin=dict(l=20, r=20, t=40, b=20)
+            )
+            st.plotly_chart(fig_tasks, use_container_width=True)
+        else:
+            st.info("No tasks found in the database")
 
     with tab2:
-        if not tasks_df.empty:
-            with st.expander("📋 Task Details", expanded=True):
-                styled_tasks = tasks_df.style.format({
-                    "StartTime": lambda x: pd.to_datetime(x).strftime("%H:%M"),
-                    "EndTime": lambda x: pd.to_datetime(x).strftime("%H:%M"),
-                    "Duration": lambda x: str(x).split()[-1]
-                })
-                st.dataframe(styled_tasks, use_container_width=True)
-                
         if not shifts_df.empty:
-            with st.expander("👥 Shift Details", expanded=True):
-                st.dataframe(shifts_df, use_container_width=True)
+            # Prepare shifts data
+            shift_records = []
+            for _, shift in shifts_df.iterrows():
+                for day in day_order:
+                    if shift[day]:
+                        shift_records.append({
+                            "ShiftID": shift["id"],
+                            "Day": day,
+                            "Start": pd.to_datetime("2023-01-01 " + shift["StartTime"]),
+                            "End": pd.to_datetime("2023-01-01 " + shift["EndTime"]),
+                            "BreakTime": shift["BreakTime"],
+                            "BreakDuration": shift["BreakDuration"],
+                            "Weight": shift["Weight"]
+                        })
+            
+            shifts_expanded_df = pd.DataFrame(shift_records).assign(
+                Day=pd.Categorical(pd.DataFrame(shift_records)["Day"], 
+                                 categories=day_order, ordered=True),
+                HoverText=lambda df: "Shift ID: " + df["ShiftID"].astype(str) + "<br>" +
+                                    "Hours: " + df["Start"].dt.strftime("%H:%M") + " - " + 
+                                    df["End"].dt.strftime("%H:%M") + "<br>" +
+                                    "Break: " + df["BreakTime"] + " (" + df["BreakDuration"] + ")" + "<br>" +
+                                    "Weight: " + df["Weight"].astype(str)
+            )
 
+            # Create interactive Gantt chart
+            fig_shifts = px.timeline(
+                shifts_expanded_df,
+                x_start="Start",
+                x_end="End",
+                y="Day",
+                color="ShiftID",
+                color_discrete_sequence=shift_color_scale,
+                title="<b>Shift Schedule</b> - Drag to zoom, click legend to filter",
+                hover_name="ShiftID",
+                hover_data={"Start": "|%H:%M", "End": "|%H:%M", "Day": True},
+                labels={"Start": "Start Time", "End": "End Time"},
+                height=600
+            )
+
+            # Customize layout
+            fig_shifts.update_layout(
+                xaxis_title="Time",
+                yaxis_title="Day",
+                xaxis=dict(
+                    tickformat="%H:%M",
+                    range=[pd.Timestamp("2023-01-01 00:00"), 
+                          pd.Timestamp("2023-01-01 23:59")],
+                    dtick=3600000  # 1 hour intervals
+                ),
+                hoverlabel=dict(bgcolor="white", font_size=14),
+                showlegend=True,
+                legend=dict(orientation="h", yanchor="bottom", y=1.02),
+                margin=dict(l=20, r=20, t=40, b=20)
+            )
+            st.plotly_chart(fig_shifts, use_container_width=True)
+        else:
+            st.info("No shifts found in the database")
+
+    # Data download section
     st.markdown("---")
-    st.caption("💡 Tip: Hover over chart elements for detailed timing information.")
+    col1, col2 = st.columns(2)
+    with col1:
+        if not tasks_df.empty:
+            st.download_button(
+                label="Download Task Data",
+                data=tasks_df.to_csv(index=False),
+                file_name="tasks_export.csv",
+                mime="text/csv"
+            )
+    with col2:
+        if not shifts_df.empty:
+            st.download_button(
+                label="Download Shift Data",
+                data=shifts_df.to_csv(index=False),
+                file_name="shifts_export.csv",
+                mime="text/csv"
+            )
+
 def header():
         st.markdown("""
         <style>
