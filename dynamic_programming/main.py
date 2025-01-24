@@ -277,7 +277,7 @@ def task_input_form():
                 st.success("Task added successfully!")
 
 def shift_input_form():
-    """Sidebar form to add new shifts with enhanced time selection and validation."""
+    """Sidebar form to add new shifts with proper day labels and weight sync."""
     with st.form("shift_form", clear_on_submit=True):
         st.subheader("Add New Shift")
         
@@ -292,7 +292,7 @@ def shift_input_form():
                                          help="Select shift start time")
         with time_col2:
             Shift_EndTime = st.selectbox("Shift End*", intervals,
-                                       index=min(len(intervals)-1, intervals.index(Shift_StartTime) + 32),  # 8 hours later
+                                       index=min(len(intervals)-1, intervals.index(Shift_StartTime) + 32),
                                        format_func=lambda t: t.strftime("%H:%M"),
                                        help="Select shift end time")
 
@@ -307,29 +307,33 @@ def shift_input_form():
             break_durations = [15, 30, 45, 60, 75, 90, 105, 120]
             BreakDuration = st.selectbox("Break Duration (minutes)*",
                                        options=break_durations,
-                                       index=1,  # Default to 30 minutes
+                                       index=1,
                                        format_func=lambda x: f"{x} minutes")
 
-        # --- Shift Weight with Dual Input ---
+        # --- Shift Weight with Synced Display ---
         st.markdown("### Shift Preferences")
-        weight_col1, weight_col2 = st.columns([3, 1])
-        with weight_col1:
-            Weight = st.slider("Shift Weight*", 0.1, 5.0, 1.0, 0.1,
-                             help="Higher weight means more expensive to schedule")
-        with weight_col2:
-            st.metric("Selected Weight", f"{Weight:.1f}")
-
-        # --- Days of Week Selection with Toggle Buttons ---
-        st.markdown("### Active Days*")
-        days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-        day_states = {}
+        Weight = st.slider("Shift Weight*", 0.1, 5.0, 1.0, 0.1,
+                         help="Higher weight means more expensive to schedule")
         
-        # Create a grid of toggle buttons
+        # Display weight in same column to ensure sync
+        st.metric("Selected Weight", f"{Weight:.1f}")
+
+        # --- Days of Week Selection with Labels Below ---
+        st.markdown("### Active Days*")
+        days_full = ["Monday", "Tuesday", "Wednesday", "Thursday", 
+                   "Friday", "Saturday", "Sunday"]
+        abbreviations = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
+        
         cols = st.columns(7)
-        for i, (col, day) in enumerate(zip(cols, days)):
+        day_states = {}
+        for i, col in enumerate(cols):
             with col:
-                day_states[day] = st.toggle(day, key=f"day_{day}",
-                                          help=f"Active on {days[i]}")
+                # Toggle button with invisible label
+                state = st.toggle("", key=f"day_{days_full[i]}")
+                # Display abbreviation below toggle
+                st.markdown(f"<div style='text-align: center'>{abbreviations[i]}</div>", 
+                          unsafe_allow_html=True)
+                day_states[days_full[i]] = state
 
         # --- Validation & Submission ---
         submitted = st.form_submit_button("➕ Add Shift", 
@@ -357,18 +361,9 @@ def shift_input_form():
                 for error in errors:
                     st.error(error)
             else:
-                # Convert days to original format (Monday, Tuesday...)
-                day_mapping = {
-                    "Mon": "Monday",
-                    "Tue": "Tuesday",
-                    "Wed": "Wednesday",
-                    "Thu": "Thursday",
-                    "Fri": "Friday",
-                    "Sat": "Saturday",
-                    "Sun": "Sunday"
-                }
-                active_days = [1 if day_states[abbr] else 0 
-                             for abbr in days]
+                # Convert days to database format
+                active_days = [1 if day_states[day] else 0 
+                             for day in days_full]
                 
                 shift_data = (
                     Shift_StartTime.strftime("%H:%M:%S"),
@@ -381,6 +376,7 @@ def shift_input_form():
                 add_shift_to_db(shift_data)
                 st.success("Shift added successfully!")
  
+
 def generate_and_fill_data_form():
     """Sidebar form to generate and fill random data."""
     with st.sidebar.expander("Generate Random Data", expanded=False):
