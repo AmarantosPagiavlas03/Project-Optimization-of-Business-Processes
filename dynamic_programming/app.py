@@ -9,7 +9,7 @@ from database import init_db
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, project_root)
 parent_dir = os.path.dirname(os.path.abspath(__file__))
-logo_path = os.path.join(parent_dir, "vu_mc_logo_icon.svg")
+logo_path = os.path.join(parent_dir, "vu_mc_logo_text.svg")
 
 # Initialize app
 st.set_page_config(initial_sidebar_state="collapsed", layout="wide")
