@@ -330,8 +330,7 @@ def shift_input_form():
                 )
                 day_states[i] = st.toggle(
                     "",  # Empty label
-                    key=f"day_{days[i]}",
-                    help=f"Toggle for {days[i]}"
+                    key=f"day_{days[i]}" 
                 )
                 st.markdown(
                     f"<div style='text-align: center; margin-top: -5px;'>"
