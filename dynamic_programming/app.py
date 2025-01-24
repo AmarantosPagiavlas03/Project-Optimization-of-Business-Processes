@@ -46,10 +46,11 @@ styles = {
         "background-color": theme_config["primaryColor"]
     },
     "img": {
-        "width": "320px",  # Increased from 200px
-        "min-width": "320px",
+        "width": "200px",  # Reduced base size
+        "max-width": "100%",  # Add responsive constraint
+        "min-width": "120px",
         "padding-right": "3rem",
-        "margin-left": "-1rem"  # Compensate for SVG spacing
+        "margin-left": "-1rem"
     },
     "span": {
         "color": "white",
@@ -57,6 +58,15 @@ styles = {
         "font-weight": "500"
     },
     "active": {
+        "background-color": "#e6000f",
+        "color": "white",
+        "font-weight": "500",
+        "padding": "20px 24px",  # Increased from 14px
+        "border-radius": "50%",   # Perfect circle
+        "margin": "0 8px",        # Space between circle and other elements
+        "transform": "scale(1.1)" # Slight enlargement
+    },
+    "hover": {
         "background-color": "#e6000f",
         "color": "white",
         "font-weight": "500",
