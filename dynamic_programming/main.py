@@ -1204,6 +1204,7 @@ def optimize_tasks_with_gurobi():
 
             # In the day selector section
             with col2:
+                valid_days = results_df[results_df["Shift ID"] == ss.selected_shift]["Day"].unique()
                 # Convert numpy index to Python int
                 current_day_idx = int(np.where(valid_days == ss.selected_day)[0][0]) if ss.selected_day in valid_days else 0
                 new_day = st.selectbox(
