@@ -1600,8 +1600,68 @@ def main():
     home_tab, contact_tab = st.tabs(["🏠 Home", "📞 Contact"])
     
     with home_tab:
-        st.markdown('<div class="header-style">Hospital Staff Scheduling System</div>', unsafe_allow_html=True)
-        
+        st.markdown("""
+        <style>
+            .modern-header {
+                font-family: 'Poppins', sans-serif;
+                font-size: 2.5rem !important;
+                font-weight: 700;
+                color: #ffffff;
+                text-align: center;
+                padding: 1.5rem;
+                margin: 2rem 0;
+                background: linear-gradient(135deg, #0066ff 0%, #00ccff 100%);
+                border-radius: 15px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                position: relative;
+                overflow: hidden;
+                transition: transform 0.3s ease;
+            }
+            
+            .modern-header:before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(
+                    120deg,
+                    transparent,
+                    rgba(255, 255, 255, 0.3),
+                    transparent
+                );
+                transition: 0.5s;
+            }
+            
+            .modern-header:hover {
+                transform: translateY(-2px);
+            }
+            
+            .modern-header:hover:before {
+                left: 100%;
+            }
+            
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(-20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            
+            .header-container {
+                animation: fadeIn 0.8s ease-out;
+            }
+        </style>
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+        """, unsafe_allow_html=True)
+
+        st.markdown("""
+        <div class="header-container">
+            <div class="modern-header">
+                🏥 Hospital Staff Scheduling System
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+                
         # Main Content Tabs
         input_tab, visualize_tab, optimize_tab = st.tabs(["📥 Input Data", "📊 Visualization", "⚙️ Optimization"])
         
