@@ -1150,8 +1150,7 @@ def optimize_tasks_with_gurobi():
             with col1:
                 # Ensure we have data to plot
                 if not results_df.empty:
-                    fig = px.pie(results_df, names='Day', values='Task Cost ($)', 
-                                title='<b>Cost Distribution by Day</b>')
+                    fig = px.pie(results_df, names='Day', values='Task Cost ($)', title='<b>Cost Distribution by Day</b>')
                     fig.update_layout(showlegend=False)
                     st.plotly_chart(fig, use_container_width=True)
                 else:
@@ -1170,10 +1169,6 @@ def optimize_tasks_with_gurobi():
         else:
             st.warning("No results to visualize") 
 
-        # Add at the top with other imports
-        import plotly.express as px
-        from streamlit import session_state as ss
-        import numpy as np
 
         # Inside your optimize_tasks_with_gurobi function, after initial results processing
         if not results_df.empty:
