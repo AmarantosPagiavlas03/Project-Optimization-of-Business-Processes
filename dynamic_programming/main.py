@@ -1602,7 +1602,6 @@ def navigation_bar():
 
 def main():
     st.set_page_config(page_title="Hospital Scheduler", layout="wide")
-    # header()
     navigation_bar()
         
     init_db()
@@ -1672,7 +1671,7 @@ def main():
 
     # Visualization
     display_tasks_and_shifts()
-    # footer()
+
 
 
 
