@@ -1490,6 +1490,10 @@ def layout(*args):
       # MainMenu {visibility: hidden;}
       footer {visibility: hidden;}
      .stApp { bottom: 105px; }
+     hr {
+         border: none;
+         height: 0;
+     }
     </style>
     """
 
