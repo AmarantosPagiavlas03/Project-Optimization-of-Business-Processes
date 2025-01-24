@@ -547,7 +547,7 @@ def task_template_download():
                 label="Download Task Template (CSV)",
                 data=csv_data.encode("utf-8"),
                 file_name="task_template.csv",
-                mime="text/csv".capitalize,
+                mime="text/csv",
                 use_container_width=True
             )
         with colB:
