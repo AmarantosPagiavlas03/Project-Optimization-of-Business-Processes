@@ -1552,18 +1552,40 @@ def main():
     init_db()
     home_tab , contact_tab = st.tabs(["Home", "Contact"])
     with home_tab:
+        with st.container(border=True):
+            # Simulate tabs using buttons/radio
+            selected_subtab = st.radio(
+                "Choose Mode:",
+                ["Manual", "Upload"],
+                horizontal=True,
+                label_visibility="collapsed"
+            )
         
-        manual , upload = st.tabs(["manual", "upload"])
- 
-        with manual:
-            with st.container(border=True):
-                # Input forms
-                with st.expander("Add Task", expanded=False):
-                    task_input_form()
-                with st.expander("Add Task", expanded=False):
-                    shift_input_form()
-                # worker_input_form()
-        
+            manual , upload = st.tabs(["manual", "upload"])
+    
+            if selected_subtab == "Manual":
+                with st.container(border=True):
+                    with st.expander("Add Task", expanded=False):
+                        task_input_form()
+                    with st.expander("Add Shift", expanded=False):
+                        shift_input_form()
+
+            # Upload "Tab" Content
+            elif selected_subtab == "Upload":
+                with st.container(border=True):
+                    st.subheader("Upload Files")
+                    colA, colB = st.columns(2)
+                    
+                    with colA:
+                        st.subheader("Tasks")
+                        upload_tasks_excel()
+                        task_template_download()
+                    
+                    with colB:
+                        st.subheader("Shifts")
+                        shift_template_download()
+                        upload_shifts_excel()
+
             # with st.sidebar:
             #     st.markdown("---")  # Add a separator line
             #     col1, col2 = st.columns(2)
@@ -1577,29 +1599,6 @@ def main():
             #         if st.button("Clear All Shifts"):
             #             clear_all("ShiftsTable5")
             #             st.success("All shifts have been cleared!")
-
-        with upload:
-            with st.container(border=True):
-                colA, colB = st.columns(2)
-                with colA:
-                    # 1. Download Template
-                    st.subheader("Download Template")
-                    task_template_download()
-
- 
-
-                    # 2. Upload user file
-                    st.subheader("Upload Your Tasks")
-                    upload_tasks_excel()
-                with colB:
-                    st.subheader("Download Example Shift Template")
-                    shift_template_download()
-
-        
-                    
-                    st.subheader("Upload Your Shifts File")
-                    upload_shifts_excel()
-
         # Buttons for example data
         colA, colB = st.columns(2)
         with colA:
