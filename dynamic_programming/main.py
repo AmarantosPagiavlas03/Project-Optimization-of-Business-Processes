@@ -372,13 +372,13 @@ def shift_input_form():
             else:
                 # Convert days to database format
                 active_days = [
-                day_states["Mon"],  # Monday
-                day_states["Tue"],  # Tuesday
-                day_states["Wed"],  # Wednesday
-                day_states["Thu"],  # Thursday
-                day_states["Fri"],  # Friday
-                day_states["Sat"],  # Saturday
-                day_states["Sun"]   # Sunday
+                day_states[0],  # Monday
+                day_states[1],  # Tuesday
+                day_states[2],  # Wednesday
+                day_states[3],  # Thursday
+                day_states[4],  # Friday
+                day_states[5],  # Saturday
+                day_states[6]   # Sunday
                 ]
                 
                 shift_data = (
