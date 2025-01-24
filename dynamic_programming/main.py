@@ -230,7 +230,7 @@ def get_default_indices_for_intervals(intervals):
     return default_idx_1h, default_idx_2h
 
 def task_input_form():
-    """Sidebar form to add a new task with enhanced time selection."""
+    """Sidebar form to add a new task."""
     with st.form("task_form", clear_on_submit=True):
         st.subheader("Add New Task")
         
@@ -239,35 +239,25 @@ def task_input_form():
         
         with col1:
             TaskName = st.text_input("Task Name*", key="task_name")
-            Day = st.selectbox("Day of the Week*", 
-                             ["Monday", "Tuesday", "Wednesday", "Thursday",
-                              "Friday", "Saturday", "Sunday"])
             
         with col2:
             NursesRequired = st.number_input("Nurses Required*", 
                                            min_value=1, value=1, step=1)
             
-        # Time inputs with 15-minute intervals
-        intervals = generate_time_intervals()
-        default_start_idx, default_end_idx = get_default_indices_for_intervals(intervals)
-        
+        Day = st.selectbox("Day of the Week*", 
+                            ["Monday", "Tuesday", "Wednesday", "Thursday",
+                            "Friday", "Saturday", "Sunday"])
+        # Time inputs in their own columns
         time_col1, time_col2, time_col3 = st.columns(3)
         with time_col1:
-            StartTime = st.selectbox("Start Time*", 
-                                   intervals, 
-                                   index=default_start_idx,
-                                   format_func=lambda t: t.strftime("%H:%M"))
+            StartTime = st.time_input("Start Time*", datetime.now().time())
         with time_col2:
-            EndTime = st.selectbox("End Time*", 
-                                 intervals, 
-                                 index=default_end_idx,
-                                 format_func=lambda t: t.strftime("%H:%M"))
+            EndTime = st.time_input("End Time*", 
+                                  (datetime.now() + timedelta(hours=1)).time())
         with time_col3:
             duration = st.number_input("Duration (minutes)*", 
-                                     min_value=15, 
-                                     max_value=480, 
-                                     value=60, 
-                                     step=15)
+                                     min_value=15, max_value=480, 
+                                     value=60, step=15)
 
         # Full-width submit button
         submitted = st.form_submit_button("➕ Add Task", use_container_width=True)
@@ -275,8 +265,6 @@ def task_input_form():
         if submitted:
             if not TaskName:
                 st.error("Task Name is required!")
-            elif StartTime >= EndTime:
-                st.error("End Time must be after Start Time!")
             else:
                 add_task_to_db(
                     TaskName,
@@ -287,6 +275,7 @@ def task_input_form():
                     NursesRequired
                 )
                 st.success("Task added successfully!")
+
 def shift_input_form():
     """Sidebar form to add a new shift."""
     with st.form("shift_form", clear_on_submit=True):
