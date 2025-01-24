@@ -315,49 +315,27 @@ def shift_input_form():
         Weight = st.slider("Shift Weight*", 0.1, 10.0, 1.0, 0.1,
                          help="Higher weight means more expensive to schedule")
         
-        # --- Days of Week Selection with Labels Below ---
+        # --- Days of Week Selection ---
         st.markdown("### Active Days*")
-        days_full = ["Monday", "Tuesday", "Wednesday", "Thursday", 
-                   "Friday", "Saturday", "Sunday"]
-        abbreviations = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
-        
+        days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
         cols = st.columns(7)
         day_states = {}
-        
+
         for i, col in enumerate(cols):
             with col:
-                # Container with fixed height and centered content
-                st.markdown(
-                    f"""
-                    <div style="
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        justify-content: space-between;
-                        height: 80px;
-                        margin: 0 -10px;
-                    ">
-                        <div style="margin-top: 8px;">
-                            {st.toggle("", key=f"day_{days_full[i]}")}
-                        </div>
-                        <div style="
-                            margin-top: 4px;
-                            font-weight: 500;
-                            font-size: 0.8em;
-                        ">
-                            {abbreviations[i]}
-                        </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
+                # Toggle button with centered layout
+                day_states[days[i]] = st.toggle(
+                    "",  # Empty label
+                    key=f"day_{days[i]}",
+                    help=f"Toggle for {days[i]}"
                 )
-                day_states[days_full[i]] = st.session_state[f"day_{days_full[i]}"]
+                # Centered label below toggle
+                st.markdown(f"<div style='text-align: center'>{days[i]}</div>", 
+                          unsafe_allow_html=True)
+                
+        # --- Form Submission ---
+        submitted = st.form_submit_button("➕ Add Shift", use_container_width=True)
 
-        # --- Validation & Submission ---
-        submitted = st.form_submit_button("➕ Add Shift", 
-                                        use_container_width=True,
-                                        type="primary")
-            
         if submitted:
             errors = []
             
