@@ -323,15 +323,21 @@ def shift_input_form():
 
         for i, col in enumerate(cols):
             with col:
-                # Toggle button with centered layout
-                day_states[days[i]] = st.toggle(
-                    "",  # Empty label
-                    key=f"day_{days[i]}"
+                st.markdown(
+                    f"<div style='text-align: center; margin-bottom: -15px;'>"
+                    f"</div>", 
+                    unsafe_allow_html=True
                 )
-                # Centered label below toggle
-                st.markdown(f"<div style='text-align: center'>{days[i]}</div>", 
-                          unsafe_allow_html=True)
-                
+                day_states[i] = st.toggle(
+                    "",  # Empty label
+                    key=f"day_{days[i]}",
+                    help=f"Toggle for {days[i]}"
+                )
+                st.markdown(
+                    f"<div style='text-align: center; margin-top: -5px;'>"
+                    f"<strong>{days[i]}</strong></div>", 
+                    unsafe_allow_html=True
+                )
         # --- Form Submission ---
         submitted = st.form_submit_button("➕ Add Shift", use_container_width=True)
 
