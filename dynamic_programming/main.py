@@ -10,6 +10,7 @@ import io
 import base64
 import os
 import datetime as dt
+from gurobipy import GurobiError
 
 from streamlit import session_state as ss
 import numpy as np
@@ -1067,10 +1068,14 @@ def optimize_tasks_with_gurobi():
     #         ) <= 1,
     #         name=f"Shift_{shift_id}_{day_str}"
     #     )
-
+   
     # --- 7. Solve the model ---
     with st.spinner("Optimizing tasks and shifts. Please wait..."):
-        model.optimize()
+        try:
+            model.optimize()
+        except GurobiError as e:
+            st.error(f"Gurobi error occurred: {e}")
+            return
 
     if model.status == GRB.OPTIMAL:
         # Phase 1: Collect raw assignment data and calculate contributions
@@ -1613,7 +1618,6 @@ def header():
         /* Enhanced input fields */
         .stTextInput input, .stNumberInput input, .stSelectbox select {
             transition: all 0.3s ease !important;
-            border: 1px solid #e0e0e0 !important;
             border-radius: 8px !important;
         }
 
