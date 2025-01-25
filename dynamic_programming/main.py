@@ -1514,13 +1514,60 @@ def header():
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
         """, unsafe_allow_html=True)
 
-        st.markdown("""
-        <div class="header-container">
-            <div class="modern-header">
-                🏥 Hospital Staff Scheduling System
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        # Configuration for PNG
+ 
+        HEADER_LOGO_PATH = "56566395.png"  # Can use same file if appropriate size
+ 
+        def get_png_header():
+            try:
+                with open(HEADER_LOGO_PATH, "rb") as f:
+                    b64 = base64.b64encode(f.read()).decode()
+                return f'''
+                <div class="header-container">
+                    <div class="modern-header">
+                        <img src="data:image/png;base64,{b64}" class="header-logo"/>
+                        <span class="header-text">Hospital Staff Scheduling System</span>
+                    </div>
+                </div>
+                '''
+            except FileNotFoundError:
+                st.error(f"Header logo missing: {HEADER_LOGO_PATH}")
+                st.stop()
+
+        # CSS optimized for PNG
+        st.markdown('''
+        <style>
+        .header-container {
+            border-bottom: 2px solid #2b5876;
+            padding: 1rem 0;
+            margin: -1rem 0 2rem 0;
+            background: #f8f9fa;
+        }
+
+        .modern-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 0 2rem;
+        }
+
+        .header-logo {
+            height: 4rem;  /* Increased for PNG clarity */
+            width: auto;
+        }
+
+        .header-text {
+            color: #2b5876;
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            font-family: 'Helvetica Neue', sans-serif;
+        }
+        </style>
+        ''', unsafe_allow_html=True)
+
+        # Display header
+        st.markdown(get_png_header(), unsafe_allow_html=True)
 
 def show_contact():
     st.title("Contact Us")
@@ -1561,7 +1608,6 @@ def main():
     logo_path = os.path.join(parent_dir, "56566395.png")
  
     st.set_page_config(page_title="Hospital Scheduler", layout="wide", page_icon=logo_path)
-    st.write("Current directory contents:", os.listdir())
     
     # Custom CSS for better styling
     st.markdown("""
