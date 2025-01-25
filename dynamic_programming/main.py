@@ -1666,7 +1666,7 @@ def header():
             left: 0;
             right: 0;
             height: 3px;
-            background: #2196F3;
+            background: "transparent";
             border-radius: 2px;
             animation: tabSlide 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
