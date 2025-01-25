@@ -1015,37 +1015,31 @@ def optimize_tasks_with_gurobi():
                         vtype=GRB.BINARY, name=var_name
                     )
 
-    # --- 5. Objective: Minimize total cost = sum(workers * weight) across (shift, day) ---
+    # 4.3. Shift-day used flags (NEW: Binary per shift-day)
+    shift_used = model.addVars(
+        [(s_id, day) for (s_id, day) in shift_worker_vars.keys()],
+        vtype=GRB.BINARY,
+        name="shift_used"
+    )
+
+    # --- 5. Objective Function with Daily Shift Penalty ---
+    PENALTY_PER_SHIFT_DAY = 50  # Tune this based on your cost structure
     model.setObjective(
         quicksum(
             shift_worker_vars[(s_id, d)] * shifts_df.loc[s_id, "Weight"]
             for (s_id, d) in shift_worker_vars
-        ),
+        ) + PENALTY_PER_SHIFT_DAY * quicksum(shift_used),
         GRB.MINIMIZE
     )
 
     # --- 6. Constraints ---
+    # 6.1. Task coverage
+    for task_id in tasks_df.index:
+        feasible = [task_shift_vars[key] for key in task_shift_vars if key[0] == task_id]
+        if feasible:
+            model.addConstr(quicksum(feasible) >= 1, name=f"Task_{task_id}_Coverage")
 
-    # 6.1. Coverage: each task is assigned to at least one feasible (shift, day)
-    for task_id, task_row in tasks_df.iterrows():
-        # Gather all feasible assignment variables for this task
-        feasible_assignments = [
-            task_shift_vars[key]
-            for key in task_shift_vars
-            if key[0] == task_id  # same task
-        ]
-        # If there's at least one feasible shift-day, require that sum >= 1
-        if feasible_assignments:
-            model.addConstr(
-                quicksum(feasible_assignments) >= 1,
-                name=f"Task_{task_id}_Coverage"
-            )
-        else:
-            # No feasible shift-day found: either data problem or the model is infeasible
-            pass
-
-    # 6.2. Worker capacity: for each (shift, day), total nurses required
-    #     by tasks assigned cannot exceed the # of workers assigned
+    # 6.2. Worker capacity
     for (shift_id, day_str) in shift_worker_vars:
         model.addConstr(
             quicksum(
@@ -1054,6 +1048,14 @@ def optimize_tasks_with_gurobi():
                 if s_id == shift_id and d == day_str
             ) <= shift_worker_vars[(shift_id, day_str)],
             name=f"Shift_{shift_id}_{day_str}_WorkerCap"
+        )
+
+    # 6.3. Link shift-day usage to workers (NEW: Per-day activation)
+    total_nurses = tasks_df["NursesRequired"].sum()  # Big-M value
+    for (shift_id, day_str) in shift_worker_vars:
+        model.addConstr(
+            shift_worker_vars[(shift_id, day_str)] <= total_nurses * shift_used[shift_id, day_str],
+            name=f"ShiftUsed_{shift_id}_{day_str}"
         )
 
     # # 6.2. Worker capacity: for each (shift, day), total nurses required
