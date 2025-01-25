@@ -1649,14 +1649,12 @@ def header():
         .stTabs [role="tab"]:hover {
             background: rgba(33, 150, 243, 0.1) !important;
             color: #2196F3 !important;
-            transform: translateY(-0.5px) !important;
         }
 
         .stTabs [aria-selected="true"] {
             background: #2196F3 !important;
             color: white !important;
             border-color: #2196F3 !important;
-            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3) !important;
         }
     </style>
     """, unsafe_allow_html=True)
