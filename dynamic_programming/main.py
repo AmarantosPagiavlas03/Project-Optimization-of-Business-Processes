@@ -1611,95 +1611,109 @@ def main():
  
     st.set_page_config(page_title="Hospital Scheduler", layout="wide", page_icon=logo_path)
     
+    # Custom CSS for better styling
     st.markdown("""
     <style>
-        /* Base transitions for all interactive elements */
-        .stButton button, .stDownloadButton button, .stMetric, 
-        .stDataFrame, .stExpander, .element-container {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        /* Global smooth transitions */
+        * {
+            transition: all 0.4s cubic-bezier(0.215, 0.61, 0.355, 1);
         }
 
-        /* Enhanced button hover effects */
+        /* Button hover effects */
         .stButton button {
-            transition: all 0.3s ease;
+            transition: all 0.3s ease, transform 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
             transform-origin: center;
         }
         .stButton button:hover {
-            transform: scale(1.05) translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: scale(1.08) translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2) !important;
+            filter: brightness(1.1);
         }
 
-        /* Download button specific hover effect */
-        .stDownloadButton button {
-            background-color: #2196F3 !important;
-            color: white !important;
-            transition: all 0.3s ease, transform 0.2s ease;
-        }
-        .stDownloadButton button:hover {
-            transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
-        }
-
-        /* Metric card hover effects */
+        /* Metric card hover animation */
         .stMetric {
             padding: 15px;
-            border-radius: 10px;
-            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            border: 2px solid transparent;
+            background: linear-gradient(145deg, #ffffff, #f8f9fa);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
         .stMetric:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            transform: translateY(-8px) scale(1.02);
+            border-color: #2196F3;
+            box-shadow: 0 12px 24px rgba(33, 150, 243, 0.15);
         }
 
-        /* DataFrame row hover effects */
+        /* Data table hover effects */
+        .stDataFrame {
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .stDataFrame tbody tr {
+            transition: all 0.3s ease;
+        }
         .stDataFrame tbody tr:hover {
             transform: scale(1.02);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             background-color: #f8f9fa !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         /* Expander hover effects */
-        .stExpander:hover {
-            transform: translateX(5px);
+        .stExpander {
+            border: 2px solid transparent;
+            border-radius: 12px;
         }
-        .stExpander .stExpanderHeader:hover {
-            background-color: #f8f9fa;
+        .stExpander:hover {
+            transform: translateX(8px);
+            border-color: #2196F3;
+            background-color: rgba(33, 150, 243, 0.05);
         }
 
-        /* Form container hover effects */
+        /* Form container effects */
         .stForm {
-            border: 1px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 15px;
+            border: 2px solid #e0e0e0 !important;
+            border-radius: 15px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
         }
         .stForm:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+            transform: translateY(-5px);
+            border-color: #2196F3 !important;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
         }
 
         /* Chart hover effects */
+        .plotly-graph-div {
+            border-radius: 15px;
+            overflow: hidden;
+            transform-origin: center;
+        }
         .plotly-graph-div:hover {
-            transform: scale(1.01);
-            filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.1));
+            transform: scale(1.02);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
         }
 
-        /* Custom header animation */
+        /* Header animation */
         .modern-header {
-            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            animation: headerFloat 3s ease-in-out infinite alternate;
+        }
+        @keyframes headerFloat {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-8px); }
         }
 
-        /* Enhanced metric icons */
-        .stMetric label {
-            transition: color 0.3s ease;
+        /* Pulse animation for important elements */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
-        .stMetric:hover label {
-            color: #2196F3 !important;
+        .stButton button[type="primary"] {
+            animation: pulse 2s ease-in-out infinite;
         }
 
     </style>
     """, unsafe_allow_html=True)
- 
 
     init_db()
     home_tab, contact_tab = st.tabs(["🏠 Home", "📞 Contact"])
