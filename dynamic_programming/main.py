@@ -1557,7 +1557,7 @@ def show_contact():
 
 
 def main():
-    st.set_page_config(page_title="Hospital Scheduler", layout="wide", page_icon="vu_mc_log.svg")
+    st.set_page_config(page_title="Hospital Scheduler", layout="wide", page_icon="vu_mc_logo_icon.svg")
     
     # Custom CSS for better styling
     st.markdown("""
