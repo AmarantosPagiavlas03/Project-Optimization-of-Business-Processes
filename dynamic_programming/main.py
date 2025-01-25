@@ -1209,12 +1209,9 @@ def optimize_tasks_with_gurobi():
         total_tasks = len(results_df)
 
         col1, col2, col3 = st.columns(3)
-        with col1:
-            st.markdown('<div class="metric-box">📋 Total Tasks</div>', unsafe_allow_html=True)
-        with col2:
-            st.markdown('<div class="metric-box">👥 Total Shifts</div>', unsafe_allow_html=True)
-        with col3:
-            st.markdown('<div class="metric-box">⏳ Avg Task Duration</div>', unsafe_allow_html=True)
+        col1.metric("Total Cost", f"${total_cost:,.2f}")
+        col2.metric("Total Workers Assigned", total_workers)
+        col3.metric("Total Tasks Assigned", total_tasks)
 
         # Detailed Assignments
         with st.expander("📋 View Detailed Task Assignments", expanded=True):
@@ -1467,23 +1464,85 @@ def header():
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
         
-        /* Enhanced header transitions */
         .modern-header {
-            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            background: linear-gradient(135deg, #0066ff 0%, #00ccff 100%);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 102, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
+
         .modern-header:hover {
-            transform: translateY(-3px) scale(1.005);
-            box-shadow: 0 12px 40px rgba(0, 102, 255, 0.3), 0 8px 24px rgba(0, 102, 255, 0.2) !important;
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 102, 255, 0.3);
+        }
+
+        .modern-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(
+                to right,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.2) 50%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            transform: skewX(-20deg);
+            transition: left 0.8s ease-out;
+        }
+
+        .modern-header:hover::before {
+            left: 200%;
         }
 
         .header-logo {
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), filter 0.3s ease !important;
+            height: 5rem;
+            width: auto;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+            transition: transform 0.3s ease;
         }
 
-        .modern-header:hover .header-logo {
-            transform: rotate(-5deg) scale(1.1);
-            filter: drop-shadow(0 4px 8px rgba(255, 255, 255, 0.3)) !important;
+        .header-text {
+            color: #ffffff;
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(90deg, #fff, #e6f3ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-container {
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @media (max-width: 768px) {
+            .modern-header {
+                flex-direction: column;
+                padding: 1rem;
+            }
+            
+            .header-text {
+                font-size: 2rem;
+                text-align: center;
+            }
+            
+            .header-logo {
+                height: 4rem;
+            }
         }
 
         /* Enhanced general transitions */
