@@ -1611,35 +1611,95 @@ def main():
  
     st.set_page_config(page_title="Hospital Scheduler", layout="wide", page_icon=logo_path)
     
-    # Custom CSS for better styling
     st.markdown("""
     <style>
+        /* Base transitions for all interactive elements */
+        .stButton button, .stDownloadButton button, .stMetric, 
+        .stDataFrame, .stExpander, .element-container {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Enhanced button hover effects */
         .stButton button {
             transition: all 0.3s ease;
+            transform-origin: center;
         }
         .stButton button:hover {
-            transform: scale(1.05);
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
+
+        /* Download button specific hover effect */
         .stDownloadButton button {
             background-color: #2196F3 !important;
             color: white !important;
+            transition: all 0.3s ease, transform 0.2s ease;
         }
-        .header-style {
-            font-size: 2em !important;
-            color: #2c3e50 !important;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
+        .stDownloadButton button:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
         }
-        .info-box {
-            background-color: #f8f9fa;
+
+        /* Metric card hover effects */
+        .stMetric {
+            padding: 15px;
             border-radius: 10px;
-            padding: 20px;
-            margin: 10px 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: 1px solid #e0e0e0;
         }
+        .stMetric:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        }
+
+        /* DataFrame row hover effects */
+        .stDataFrame tbody tr:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background-color: #f8f9fa !important;
+        }
+
+        /* Expander hover effects */
+        .stExpander:hover {
+            transform: translateX(5px);
+        }
+        .stExpander .stExpanderHeader:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* Form container hover effects */
+        .stForm {
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+        }
+        .stForm:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Chart hover effects */
+        .plotly-graph-div:hover {
+            transform: scale(1.01);
+            filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.1));
+        }
+
+        /* Custom header animation */
+        .modern-header {
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        /* Enhanced metric icons */
+        .stMetric label {
+            transition: color 0.3s ease;
+        }
+        .stMetric:hover label {
+            color: #2196F3 !important;
+        }
+
     </style>
     """, unsafe_allow_html=True)
+ 
 
     init_db()
     home_tab, contact_tab = st.tabs(["🏠 Home", "📞 Contact"])
