@@ -1481,7 +1481,7 @@ def header():
         }
 
         .modern-header:hover {
-            transform: translateY(-3px);
+            transform: translateY(-5px);
             box-shadow: 0 12px 40px rgba(0, 102, 255, 0.3);
         }
 
@@ -1523,17 +1523,10 @@ def header():
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
-            transition: all 0.3s ease;
-        }
-
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
         }
 
         .header-container {
-            animation: fadeIn 0.8s ease-out, float 4s ease-in-out infinite;
+            animation: fadeIn 0.8s ease-out;
         }
 
         @media (max-width: 768px) {
