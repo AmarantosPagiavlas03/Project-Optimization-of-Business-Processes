@@ -1637,7 +1637,7 @@ def header():
         .stTabs [role="tablist"] {
             gap: 8px !important;
             margin: 16px 0 !important;
-            border-bottom: 1px solid #eee; /* Inactive line */
+             t
         }
 
         .stTabs [role="tab"] {
