@@ -1637,13 +1637,16 @@ def header():
         .stTabs [role="tablist"] {
             gap: 8px !important;
             margin: 16px 0 !important;
+            border-bottom: 1px solid #eee; /* Inactive line */
         }
 
         .stTabs [role="tab"] {
             transition: all 0.3s ease !important;
-            border-radius: 8px !important;
+            border-radius: 8px 8px 0 0 !important;
             padding: 12px 24px !important;
-            border: 1px solid #e0e0e0 !important;
+            border: none !important;
+            position: relative;
+            background: transparent !important;
         }
 
         .stTabs [role="tab"]:hover {
@@ -1652,9 +1655,36 @@ def header():
         }
 
         .stTabs [aria-selected="true"] {
-            background: #2196F3 !important;
-            color: white !important;
-            border-color: #2196F3 !important;
+            color: #2196F3 !important;
+        }
+
+        /* Smooth animated underline */
+        .stTabs [aria-selected="true"]::after {
+            content: "";
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #2196F3;
+            border-radius: 2px;
+            animation: tabSlide 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes tabSlide {
+            from {
+                transform: scaleX(0.8);
+                opacity: 0;
+            }
+            to {
+                transform: scaleX(1);
+                opacity: 1;
+            }
+        }
+
+        /* Remove default indicator */
+        .stTabs [role="tablist"] button[aria-selected="true"] {
+            box-shadow: none !important;
         }
     </style>
     """, unsafe_allow_html=True)
