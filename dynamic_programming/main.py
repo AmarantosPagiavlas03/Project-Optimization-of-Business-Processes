@@ -1557,8 +1557,9 @@ def show_contact():
 
 
 def main():
-    page_icon="vu_mc_log.svg" if os.path.exists("vu_mc_log.svg") else "🏥"
-    st.set_page_config(page_title="Hospital Scheduler", layout="wide", page_icon=page_icon)
+    parent_dir = os.path.dirname(os.path.abspath(__file__))
+    logo_path = os.path.join(parent_dir, "vu_mc_logo_icon.svg")
+    st.set_page_config(page_title="Hospital Scheduler", layout=logo_path, page_icon=page_icon)
     st.write("Current directory contents:", os.listdir())
     
     # Custom CSS for better styling
