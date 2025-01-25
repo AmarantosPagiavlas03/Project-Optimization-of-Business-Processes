@@ -1558,7 +1558,7 @@ def show_contact():
 
 def main():
     parent_dir = os.path.dirname(os.path.abspath(__file__))
-    logo_path = os.path.join(parent_dir, "vu_mc_logo_icon.svg")
+    logo_path = os.path.join(parent_dir, "56566395.png")
  
     st.set_page_config(page_title="Hospital Scheduler", layout="wide", page_icon=logo_path)
     st.write("Current directory contents:", os.listdir())
