@@ -1209,9 +1209,12 @@ def optimize_tasks_with_gurobi():
         total_tasks = len(results_df)
 
         col1, col2, col3 = st.columns(3)
-        col1.metric("Total Cost", f"${total_cost:,.2f}")
-        col2.metric("Total Workers Assigned", total_workers)
-        col3.metric("Total Tasks Assigned", total_tasks)
+        with col1:
+            st.markdown('<div class="metric-box">📋 Total Tasks</div>', unsafe_allow_html=True)
+        with col2:
+            st.markdown('<div class="metric-box">👥 Total Shifts</div>', unsafe_allow_html=True)
+        with col3:
+            st.markdown('<div class="metric-box">⏳ Avg Task Duration</div>', unsafe_allow_html=True)
 
         # Detailed Assignments
         with st.expander("📋 View Detailed Task Assignments", expanded=True):
@@ -1464,85 +1467,137 @@ def header():
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
         
+        /* Enhanced header transitions */
         .modern-header {
-            font-family: 'Poppins', sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 1.5rem;
-            padding: 1.5rem;
-            margin: 2rem 0;
-            background: linear-gradient(135deg, #0066ff 0%, #00ccff 100%);
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0, 102, 255, 0.2);
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
         }
-
+        
         .modern-header:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 40px rgba(0, 102, 255, 0.3);
-        }
-
-        .modern-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 50%;
-            height: 100%;
-            background: linear-gradient(
-                to right,
-                rgba(255, 255, 255, 0) 0%,
-                rgba(255, 255, 255, 0.2) 50%,
-                rgba(255, 255, 255, 0) 100%
-            );
-            transform: skewX(-20deg);
-            transition: left 0.8s ease-out;
-        }
-
-        .modern-header:hover::before {
-            left: 200%;
+            transform: translateY(-3px) scale(1.005);
+            box-shadow: 0 12px 40px rgba(0, 102, 255, 0.3), 0 8px 24px rgba(0, 102, 255, 0.2) !important;
         }
 
         .header-logo {
-            height: 5rem;
-            width: auto;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-            transition: transform 0.3s ease;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), filter 0.3s ease !important;
         }
 
-        .header-text {
-            color: #ffffff;
-            font-size: 2.5rem;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            background: linear-gradient(90deg, #fff, #e6f3ff);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .modern-header:hover .header-logo {
+            transform: rotate(-5deg) scale(1.1);
+            filter: drop-shadow(0 4px 8px rgba(255, 255, 255, 0.3)) !important;
         }
 
-        .header-container {
-            animation: fadeIn 0.8s ease-out;
+        /* Enhanced general transitions */
+        .stButton button, .stDownloadButton button, .stExpander, .metric-box {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            will-change: transform, box-shadow;
         }
 
-        @media (max-width: 768px) {
-            .modern-header {
-                flex-direction: column;
-                padding: 1rem;
-            }
-            
-            .header-text {
-                font-size: 2rem;
-                text-align: center;
-            }
-            
-            .header-logo {
-                height: 4rem;
-            }
+        .stButton button {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        .stButton button:hover {
+            transform: translateY(-2px) scale(1.02) !important;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        .stExpander {
+            border: 1px solid #e0e0e0 !important;
+            border-radius: 12px !important;
+            padding: 8px !important;
+            margin: 12px 0 !important;
+        }
+
+        .stExpander:hover {
+            border-color: #2196F3 !important;
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.1) !important;
+        }
+
+        .stExpander .streamlit-expanderHeader {
+            transition: color 0.2s ease, background 0.3s ease !important;
+            border-radius: 8px !important;
+        }
+
+        .stExpander .streamlit-expanderHeader:hover {
+            color: #2196F3 !important;
+            background: rgba(33, 150, 243, 0.05) !important;
+        }
+
+        /* Enhanced dataframe styling */
+        .stDataFrame {
+            border-radius: 12px !important;
+            overflow: hidden !important;
+            transition: box-shadow 0.3s ease !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        .stDataFrame:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        /* Modern metric cards */
+        .metric-box {
+            background: linear-gradient(135deg, #ffffff, #f8f9fa) !important;
+            border: 1px solid #e0e0e0 !important;
+            border-radius: 12px !important;
+            padding: 20px !important;
+            margin: 10px 0 !important;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        .metric-box:hover {
+            transform: translateY(-5px) !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1) !important;
+            border-color: #2196F3 !important;
+        }
+
+        /* Enhanced input fields */
+        .stTextInput input, .stNumberInput input, .stSelectbox select {
+            transition: all 0.3s ease !important;
+            border: 1px solid #e0e0e0 !important;
+            border-radius: 8px !important;
+        }
+
+        .stTextInput input:focus, .stNumberInput input:focus, .stSelectbox select:focus {
+            border-color: #2196F3 !important;
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2) !important;
+        }
+
+        /* Chart hover effects */
+        .plotly-graph-div {
+            transition: transform 0.3s ease !important;
+            border-radius: 16px !important;
+            overflow: hidden !important;
+        }
+
+        .plotly-graph-div:hover {
+            transform: translateY(-3px) scale(1.005) !important;
+        }
+
+        /* Enhanced tabs */
+        .stTabs [role="tablist"] {
+            gap: 8px !important;
+            margin: 16px 0 !important;
+        }
+
+        .stTabs [role="tab"] {
+            transition: all 0.3s ease !important;
+            border-radius: 8px !important;
+            padding: 12px 24px !important;
+            border: 1px solid #e0e0e0 !important;
+        }
+
+        .stTabs [role="tab"]:hover {
+            background: rgba(33, 150, 243, 0.1) !important;
+            color: #2196F3 !important;
+            transform: translateY(-2px) !important;
+        }
+
+        .stTabs [aria-selected="true"] {
+            background: #2196F3 !important;
+            color: white !important;
+            border-color: #2196F3 !important;
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3) !important;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -1614,104 +1669,30 @@ def main():
     # Custom CSS for better styling
     st.markdown("""
     <style>
-        /* Global smooth transitions */
-        * {
-            transition: all 0.4s cubic-bezier(0.215, 0.61, 0.355, 1);
-        }
-
-        /* Button hover effects */
         .stButton button {
-            transition: all 0.3s ease, transform 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-            transform-origin: center;
-        }
-        .stButton button:hover {
-            transform: scale(1.08) translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2) !important;
-            filter: brightness(1.1);
-        }
-
-        /* Metric card hover animation */
-        .stMetric {
-            padding: 15px;
-            border-radius: 12px;
-            border: 2px solid transparent;
-            background: linear-gradient(145deg, #ffffff, #f8f9fa);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-        .stMetric:hover {
-            transform: translateY(-8px) scale(1.02);
-            border-color: #2196F3;
-            box-shadow: 0 12px 24px rgba(33, 150, 243, 0.15);
-        }
-
-        /* Data table hover effects */
-        .stDataFrame {
-            border-radius: 12px;
-            overflow: hidden;
-        }
-        .stDataFrame tbody tr {
             transition: all 0.3s ease;
         }
-        .stDataFrame tbody tr:hover {
-            transform: scale(1.02);
-            background-color: #f8f9fa !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        .stButton button:hover {
+            transform: scale(1.05);
         }
-
-        /* Expander hover effects */
-        .stExpander {
-            border: 2px solid transparent;
-            border-radius: 12px;
+        .stDownloadButton button {
+            background-color: #2196F3 !important;
+            color: white !important;
         }
-        .stExpander:hover {
-            transform: translateX(8px);
-            border-color: #2196F3;
-            background-color: rgba(33, 150, 243, 0.05);
+        .header-style {
+            font-size: 2em !important;
+            color: #2c3e50 !important;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
         }
-
-        /* Form container effects */
-        .stForm {
-            border: 2px solid #e0e0e0 !important;
-            border-radius: 15px;
+        .info-box {
+            background-color: #f8f9fa;
+            border-radius: 10px;
             padding: 20px;
-            background: rgba(255, 255, 255, 0.9);
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .stForm:hover {
-            transform: translateY(-5px);
-            border-color: #2196F3 !important;
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Chart hover effects */
-        .plotly-graph-div {
-            border-radius: 15px;
-            overflow: hidden;
-            transform-origin: center;
-        }
-        .plotly-graph-div:hover {
-            transform: scale(1.02);
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Header animation */
-        .modern-header {
-            animation: headerFloat 3s ease-in-out infinite alternate;
-        }
-        @keyframes headerFloat {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(-8px); }
-        }
-
-        /* Pulse animation for important elements */
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        .stButton button[type="primary"] {
-            animation: pulse 2s ease-in-out infinite;
-        }
-
     </style>
     """, unsafe_allow_html=True)
 
