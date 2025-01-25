@@ -1460,115 +1460,123 @@ def display_tasks_and_shifts():
     st.caption("💡 Tip: Hover over charts for detailed information. Click legend items to filter categories.")
 
 def header():
-        st.markdown("""
-        <style>
-            .modern-header {
-                font-family: 'Poppins', sans-serif;
-                font-size: 2.5rem !important;
-                font-weight: 700;
-                color: #ffffff;
-                text-align: center;
-                padding: 1.5rem;
-                margin: 2rem 0;
-                background: linear-gradient(135deg, #0066ff 0%, #00ccff 100%);
-                border-radius: 15px;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                position: relative;
-                overflow: hidden;
-                transition: transform 0.3s ease;
-            }
-            
-            .modern-header:before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: -100%;
-                width: 100%;
-                height: 100%;
-                background: linear-gradient(
-                    120deg,
-                    transparent,
-                    rgba(255, 255, 255, 0.3),
-                    transparent
-                );
-                transition: 0.5s;
-            }
-            
-            .modern-header:hover {
-                transform: translateY(-2px);
-            }
-            
-            .modern-header:hover:before {
-                left: 100%;
-            }
-            
-            @keyframes fadeIn {
-                from { opacity: 0; transform: translateY(-20px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-            
-            .header-container {
-                animation: fadeIn 0.8s ease-out;
-            }
-        </style>
-        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
-        """, unsafe_allow_html=True)
-
-        # Configuration for PNG
- 
-        HEADER_LOGO_PATH = "56566395.png"  # Can use same file if appropriate size
-        parent_dir = os.path.dirname(os.path.abspath(__file__))
-        logo_path = os.path.join(parent_dir, "56566395.png")
-        def get_png_header():
-            try:
-                with open(logo_path, "rb") as f:
-                    b64 = base64.b64encode(f.read()).decode()
-                return f'''
-                <div class="header-container">
-                    <div class="modern-header">
-                        <img src="data:image/png;base64,{b64}" class="header-logo"/>
-                        <span class="header-text">Hospital Staff Scheduling System</span>
-                    </div>
-                </div>
-                '''
-            except FileNotFoundError:
-                st.error(f"Header logo missing: {logo_path}")
-                st.stop()
-
-        # CSS optimized for PNG
-        st.markdown('''
-        <style>
-        .header-container {
-            border-bottom: 2px solid #2b5876;
-            padding: 1rem 0;
-            margin: -1rem 0 2rem 0;
-            background: #f8f9fa;
-        }
-
+    st.markdown("""
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+        
         .modern-header {
+            font-family: 'Poppins', sans-serif;
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 1.5rem;
-            padding: 0 2rem;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            background: linear-gradient(135deg, #0066ff 0%, #00ccff 100%);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 102, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .modern-header:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(0, 102, 255, 0.3);
+        }
+
+        .modern-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(
+                to right,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.2) 50%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            transform: skewX(-20deg);
+            transition: left 0.8s ease-out;
+        }
+
+        .modern-header:hover::before {
+            left: 200%;
         }
 
         .header-logo {
-            height: 4rem;  /* Increased for PNG clarity */
+            height: 5rem;
             width: auto;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+            transition: transform 0.3s ease;
         }
 
         .header-text {
-            color: #2b5876;
-            font-size: 2.2rem;
+            color: #ffffff;
+            font-size: 2.5rem;
             font-weight: 700;
             letter-spacing: -0.5px;
-            font-family: 'Helvetica Neue', sans-serif;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(90deg, #fff, #e6f3ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            transition: all 0.3s ease;
         }
-        </style>
-        ''', unsafe_allow_html=True)
 
-        # Display header
-        st.markdown(get_png_header(), unsafe_allow_html=True)
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .header-container {
+            animation: fadeIn 0.8s ease-out, float 4s ease-in-out infinite;
+        }
+
+        @media (max-width: 768px) {
+            .modern-header {
+                flex-direction: column;
+                padding: 1rem;
+            }
+            
+            .header-text {
+                font-size: 2rem;
+                text-align: center;
+            }
+            
+            .header-logo {
+                height: 4rem;
+            }
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Configuration for PNG
+    HEADER_LOGO_PATH = "56566395.png"
+    parent_dir = os.path.dirname(os.path.abspath(__file__))
+    logo_path = os.path.join(parent_dir, "56566395.png")
+
+    def get_png_header():
+        try:
+            with open(logo_path, "rb") as f:
+                b64 = base64.b64encode(f.read()).decode()
+            return f'''
+            <div class="header-container">
+                <div class="modern-header">
+                    <img src="data:image/png;base64,{b64}" class="header-logo"/>
+                    <span class="header-text">Hospital Staff Scheduling System</span>
+                </div>
+            </div>
+            '''
+        except FileNotFoundError:
+            st.error(f"Header logo missing: {logo_path}")
+            st.stop()
+
+    # Display header
+    st.markdown(get_png_header(), unsafe_allow_html=True)
 
 def show_contact():
     st.title("Contact Us")
