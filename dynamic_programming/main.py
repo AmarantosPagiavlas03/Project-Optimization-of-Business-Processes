@@ -1293,7 +1293,12 @@ def display_tasks_and_shifts():
         st.info("🌟 No tasks or shifts found. Add data to get started!")
         _,_, col, _, _ = st.columns([1, 1, 1,1,1])  # Ratio creates centered middle column
         with col:
-            st.image("https://cdn-icons-png.flaticon.com/512/7486/7486744.png", width=200)
+            st.markdown(
+            '<div style="display: flex; justify-content: center;">'
+            '<img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" width="200"/>'
+            '</div>',
+            unsafe_allow_html=True
+            )
         return
 
     # Metrics cards at the top
