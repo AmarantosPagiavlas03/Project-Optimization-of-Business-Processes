@@ -1756,16 +1756,6 @@ def main():
     # Custom CSS for better styling
     st.markdown("""
     <style>
-        .stButton button {
-            transition: all 0.3s ease;
-        }
-        .stButton button:hover {
-            transform: scale(1.05);
-        }
-        .stDownloadButton button {
-            background-color: #2196F3 !important;
-            color: white !important;
-        }
         .header-style {
             font-size: 2em !important;
             color: #2c3e50 !important;
