@@ -1023,7 +1023,7 @@ def optimize_tasks_with_gurobi():
     )
 
     # --- 5. Objective Function with Daily Shift Penalty ---
-    PENALTY_PER_SHIFT_DAY = 50  # Tune this based on your cost structure
+    PENALTY_PER_SHIFT_DAY = 100  # Tune this based on your cost structure
     model.setObjective(
         quicksum(
             shift_worker_vars[(s_id, d)] * shifts_df.loc[s_id, "Weight"]
