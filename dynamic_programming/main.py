@@ -1517,10 +1517,11 @@ def header():
         # Configuration for PNG
  
         HEADER_LOGO_PATH = "56566395.png"  # Can use same file if appropriate size
- 
+        parent_dir = os.path.dirname(os.path.abspath(__file__))
+        logo_path = os.path.join(parent_dir, "56566395.png")
         def get_png_header():
             try:
-                with open(HEADER_LOGO_PATH, "rb") as f:
+                with open(logo_path, "rb") as f:
                     b64 = base64.b64encode(f.read()).decode()
                 return f'''
                 <div class="header-container">
@@ -1531,7 +1532,7 @@ def header():
                 </div>
                 '''
             except FileNotFoundError:
-                st.error(f"Header logo missing: {HEADER_LOGO_PATH}")
+                st.error(f"Header logo missing: {logo_path}")
                 st.stop()
 
         # CSS optimized for PNG
