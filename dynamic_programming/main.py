@@ -1618,7 +1618,6 @@ def header():
         /* Enhanced input fields */
         .stTextInput input, .stNumberInput input, .stSelectbox select {
             transition: all 0.3s ease !important;
-            border-radius: 8px !important;
         }
 
         .stTextInput input:focus, .stNumberInput input:focus, .stSelectbox select:focus {
