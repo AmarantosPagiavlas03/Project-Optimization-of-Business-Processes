@@ -1173,14 +1173,14 @@ def optimize_tasks_with_gurobi():
                 min_cost (float): The minimum cost for assigning the task.
             """
             # Convert times to minutes for easier manipulation
-            task_start = pd.to_datetime(task_row["StartTime"], format="%H:%M:%S").hour * 60 + \
-                        pd.to_datetime(task_row["StartTime"], format="%H:%M:%S").minute
-            task_end = pd.to_datetime(task_row["EndTime"], format="%H:%M:%S").hour * 60 + \
-                    pd.to_datetime(task_row["EndTime"], format="%H:%M:%S").minute
-            shift_start = pd.to_datetime(shift_row["StartTime"], format="%H:%M:%S").hour * 60 + \
-                        pd.to_datetime(shift_row["StartTime"], format="%H:%M:%S").minute
-            shift_end = pd.to_datetime(shift_row["EndTime"], format="%H:%M:%S").hour * 60 + \
-                        pd.to_datetime(shift_row["EndTime"], format="%H:%M:%S").minute
+            def time_to_minutes(time_str):
+                time = pd.to_datetime(time_str, format="%H:%M:%S").time()
+                return time.hour * 60 + time.minute
+
+            task_start = time_to_minutes(task_row["StartTime"])
+            task_end = time_to_minutes(task_row["EndTime"])
+            shift_start = time_to_minutes(shift_row["StartTime"])
+            shift_end = time_to_minutes(shift_row["EndTime"])
 
             # Ensure Duration is numeric (convert from string if needed)
             try:
@@ -1208,11 +1208,14 @@ def optimize_tasks_with_gurobi():
                 # Temporarily update time_slots to test the assignment
                 temp_time_slots = time_slots.copy()
                 for t in range(interval_start, interval_end):
-                    temp_time_slots[t] += task_row["nurses_required"]
+                    if t in temp_time_slots:
+                        temp_time_slots[t] += task_row["nurses_required"]
+                    else:
+                        temp_time_slots[t] = task_row["nurses_required"]
 
                 # Calculate the cost for this interval
-                max_nurses = max(temp_time_slots[t] for t in range(shift_start, shift_end))
-                shift_cost = shift_row["cost"]
+                max_nurses = max(temp_time_slots[t] for t in range(shift_start, shift_end) if t in temp_time_slots)
+                shift_cost = shift_row["Weight"]
                 cost = max_nurses * shift_cost
 
                 # Update if this interval has a lower cost
@@ -1221,8 +1224,6 @@ def optimize_tasks_with_gurobi():
                     optimal_interval = (interval_start, interval_end)
 
             return optimal_interval, min_cost
-
-
 
         results = []
         for entry in temp_results:
