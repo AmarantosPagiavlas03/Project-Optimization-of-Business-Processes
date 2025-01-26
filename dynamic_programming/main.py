@@ -965,8 +965,9 @@ def insert3():
             NursesRequired
         )
         VALUES
-            ('task 1', 'Monday', '09:00:00', '10:00:00', 30, 20),
-            ('task 2', 'Monday', '09:00:00', '10:00:00', 30, 5);
+            ('task 1', 'Monday', '09:00:00', '10:00:00', 30, 4),
+            ('task 2', 'Monday', '09:00:00', '10:00:00', 30, 20);
+            ('task 3', 'Monday', '09:00:00', '10:00:00', 30, 5);
     ''')
     conn.commit()
     c.execute('''
