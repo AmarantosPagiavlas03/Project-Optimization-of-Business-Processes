@@ -965,9 +965,7 @@ def insert3():
             NursesRequired
         )
         VALUES
-            ('task 1', 'Monday', '10:00:00', '15:00:00', 60, 30),
-            ('task 2', 'Monday', '10:00:00', '15:00:00', 60, 8),
-            ('task 3', 'Monday', '10:00:00', '15:00:00', 60, 7);
+            ('task 1', 'Monday', '10:00:00', '15:00:00', 60, 30);
     ''')
     conn.commit()
     c.execute('''
@@ -1027,8 +1025,6 @@ def optimize_tasks_with_gurobi():
 
     # --- 3. Create Gurobi Model ---
     model = Model("Task_Assignment")
-    model.Params.OutputFlag = 1
-
 
     # --- 4. Decision Variables ---
     # 4.1. Worker variables: (shift, day) -> integer # of workers
