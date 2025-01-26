@@ -1027,6 +1027,8 @@ def optimize_tasks_with_gurobi():
 
     # --- 3. Create Gurobi Model ---
     model = Model("Task_Assignment")
+    model.Params.OutputFlag = 1
+
 
     # --- 4. Decision Variables ---
     # 4.1. Worker variables: (shift, day) -> integer # of workers
