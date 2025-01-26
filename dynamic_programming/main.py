@@ -1170,8 +1170,11 @@ def optimize_tasks_with_gurobi():
             total_cost = 0
 
             for index, shift_row in shifts_df.iterrows():
-                shift_start = int(shift_row["StartTime"].split(":")[0]) * 60 + int(shift_row["StartTime"].split(":")[1])
-                shift_end = int(shift_row["EndTime"].split(":")[0]) * 60 + int(shift_row["EndTime"].split(":")[1])
+                # Convert shift times to minutes since start of the day
+                shift_start = pd.to_datetime(f"2023-01-01 {shift_row['StartTime']}").hour * 60 + \
+                            pd.to_datetime(f"2023-01-01 {shift_row['StartTime']}").minute
+                shift_end = pd.to_datetime(f"2023-01-01 {shift_row['EndTime']}").hour * 60 + \
+                            pd.to_datetime(f"2023-01-01 {shift_row['EndTime']}").minute
                 weight = shift_row["Weight"]
 
                 # Find the maximum nurses assigned during this shift
@@ -1193,21 +1196,11 @@ def optimize_tasks_with_gurobi():
             results = []  # Store the final task assignments
 
             for task_index, task_row in tasks_df.iterrows():
-                start_time_raw = task_row["StartTime"]  # Example: "09:00:00"
-                end_time_raw = task_row["EndTime"]  # Example: "10:00:00"
-                task_duration = task_row["Duration"]
+                # Extract start and end times in minutes since midnight
+                task_start_window = task_row["Start"].hour * 60 + task_row["Start"].minute
+                task_end_window = task_row["End"].hour * 60 + task_row["End"].minute
+                task_duration = task_row["Duration"]  # Duration in minutes
                 nurses_required = task_row["NursesRequired"]
-
-                # Convert start and end times to minutes
-                if isinstance(start_time_raw, str) and ":" in start_time_raw:
-                    task_start_window = int(start_time_raw.split(":")[0]) * 60 + int(start_time_raw.split(":")[1])
-                else:
-                    raise ValueError(f"Invalid StartTime format: {start_time_raw}")
-
-                if isinstance(end_time_raw, str) and ":" in end_time_raw:
-                    task_end_window = int(end_time_raw.split(":")[0]) * 60 + int(end_time_raw.split(":")[1])
-                else:
-                    raise ValueError(f"Invalid EndTime format: {end_time_raw}")
 
                 # Initialize variables to track the best assignment
                 best_cost = float("inf")
@@ -1242,18 +1235,15 @@ def optimize_tasks_with_gurobi():
 
                     # Add the result to the list
                     results.append({
-                        "Task ID": task_row["id"],
-                        "Task Name": task_row["TaskName"],
+                        "Task ID": task_row["TaskName"],
                         "Day": task_row["Day"],
                         "Task Start": task_row["StartTime"],
                         "Task End": task_row["EndTime"],
                         "Begin Task": begin_task.strftime("%H:%M"),
                         "End Task": end_task.strftime("%H:%M"),
-                        "Shift ID": None,  # Optional: Set shift ID if available
                         "Workers Assigned": nurses_required,
                         "Hourly Rate ($)": shifts_df.loc[0, "Weight"],  # Assume first shift weight for now
-                        "Task Cost ($)": round(min_cost, 2),
-                        "Cost %": None  # Optional: Calculate cost percentage
+                        "Task Cost ($)": round(min_cost, 2)
                     })
 
             # Return the results as a DataFrame
@@ -1261,8 +1251,13 @@ def optimize_tasks_with_gurobi():
 
 
         # Example usage:
+        # Assume tasks_df and shifts_df are loaded correctly as per the format provided
         results_df = assign_tasks(tasks_df, shifts_df)
-        
+
+
+
+
+
 
 
        
