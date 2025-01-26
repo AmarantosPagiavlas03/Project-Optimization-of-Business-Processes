@@ -1288,7 +1288,7 @@ def optimize_tasks_with_gurobi():
             if not results_df.empty:
                 st.dataframe(
                     results_df,
-                    column_order=("Task ID", "Task Name", "Day", "Task Start", "Task End",
+                    column_order=("Task ID", "Task Name", "Day", "Task Start", "Task End","Begin Task","End Task",
                                   "Shift ID", "Shift Start", "Shift End", "Workers Assigned"),
                     hide_index=True
                 )
