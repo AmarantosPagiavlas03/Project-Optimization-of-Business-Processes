@@ -1188,21 +1188,7 @@ def optimize_tasks_with_gurobi():
         # --- Enhanced Display ---
         results_df = pd.DataFrame(results)
 
-###########################################################################################################
-        # Debugging code to inspect `results_df`
-        print("Debug: Columns in results_df before groupby:", results_df.columns)
-        print("Debug: First few rows of results_df:")
-        print(results_df.head())
-
-        # Verify if required columns exist
-        required_columns = {"Shift ID", "Day"}
-        if not required_columns.issubset(results_df.columns):
-            missing_columns = required_columns - set(results_df.columns)
-            print(f"Error: Missing required columns: {missing_columns}")
-            return  # Exit the function gracefully
-###########################################################################################################
-
-        
+       
         # 1. Cost Validation Check
         validation = results_df.groupby(["Shift ID", "Day"]).agg(
             Total_Cost=("Task Cost ($)", "sum"),
