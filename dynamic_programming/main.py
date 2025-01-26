@@ -1192,6 +1192,10 @@ def optimize_tasks_with_gurobi():
             """
             Assign tasks to the best time slots and calculate costs.
             """
+            tasks_df = tasks_df.assign(
+                Start=lambda df: pd.to_datetime("2023-01-01 " + df['StartTime']),
+                End=lambda df: pd.to_datetime("2023-01-01 " + df['EndTime'])
+            )
             time_slots = {}  # Tracks the nurses assigned at each minute
             results = []  # Store the final task assignments
 
