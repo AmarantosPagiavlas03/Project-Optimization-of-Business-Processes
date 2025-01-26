@@ -1166,15 +1166,28 @@ def optimize_tasks_with_gurobi():
             key = (entry["shift_id"], entry["day"])
             total_contribution = shift_day_contributions[key]
             task_cost = (entry["contribution"] / total_contribution) * shift_day_cost[key] if total_contribution > 0 else 0
-
-            # Get the exact time range for the task based on the shift assignment
-            begin_task_time = max(entry["workers"], tasks_df.loc[entry["task_id"], "StartTime"])
-            end_task_time = min(entry["workers"], tasks_df.loc[entry["task_id"], "EndTime"])
-
             
             # Format results
             task_row = tasks_df.loc[entry["task_id"]]
             shift_row = shifts_df.loc[entry["shift_id"]]
+
+            task_start_time = datetime.combine(datetime.min, task_row["StartTime"])
+            task_end_time = datetime.combine(datetime.min, task_row["EndTime"])
+            shift_start_time = datetime.combine(datetime.min, shift_row["StartTime"])
+            shift_end_time = datetime.combine(datetime.min, shift_row["EndTime"])   
+            begin_task_time = max(task_start_time, shift_start_time)
+            end_task_time = min(task_end_time, shift_end_time) 
+
+            duration = (end_task_time - begin_task_time).total_seconds() / 60  # Duration in minutes
+
+    # Ensure duration matches the original task's specified duration
+            if duration != pd.to_timedelta(task_row["Duration"]).total_seconds() / 60:
+                st.warning(
+                    f"Task {task_row['TaskName']} on {entry['day']} may have mismatched durations. "
+                    f"Expected {task_row['Duration']}, but calculated {duration} minutes."
+        )
+
+
             results.append({
                 "Task ID": task_row["id"],
                 "Task Name": task_row["TaskName"],
