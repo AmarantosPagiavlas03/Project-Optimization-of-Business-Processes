@@ -1161,35 +1161,48 @@ def optimize_tasks_with_gurobi():
                 shift_day_contributions[(shift_id, d)] += contribution
 
         # Phase 2: Calculate proportional costs
-        results = []
+
         def calculate_cost_for_intervals(task_row, shift_row, weight, interval_minutes=15):
             """
-            Calculate costs for all 15-minute intervals within the task's time window.
+            Calculate the cost for all 15-minute intervals within the task's and shift's time overlap.
+            Returns the optimal interval and its cost.
             """
+            # Convert times to datetime for manipulation
             task_start = pd.to_datetime(task_row["StartTime"], format="%H:%M:%S")
             task_end = pd.to_datetime(task_row["EndTime"], format="%H:%M:%S")
             shift_start = pd.to_datetime(shift_row["StartTime"], format="%H:%M:%S")
             shift_end = pd.to_datetime(shift_row["EndTime"], format="%H:%M:%S")
 
-            # Generate 15-minute intervals within the overlap of task and shift times
-            intervals = pd.date_range(
-                max(task_start, shift_start),
-                min(task_end, shift_end),
-                freq=f"{interval_minutes}min"
-            )
+            # Ensure Duration is numeric (convert from string if needed)
+            try:
+                duration_minutes = int(task_row["Duration"])  # Ensure it's an integer
+            except ValueError:
+                # If "Duration" is a string like "0:15:00", convert to minutes
+                duration_td = pd.to_timedelta(task_row["Duration"])
+                duration_minutes = int(duration_td.total_seconds() / 60)
 
+            # Find the overlap between task and shift times
+            start_time = max(task_start, shift_start)
+            end_time = min(task_end, shift_end)
+
+            # Generate intervals (15-minute steps)
+            intervals = pd.date_range(start=start_time, end=end_time, freq=f"{interval_minutes}min")
+
+            # Initialize variables for tracking the optimal interval
             optimal_interval = None
             min_cost = float("inf")
 
+            # Loop through intervals to find the minimum cost
             for interval_start in intervals:
-                interval_end = interval_start + pd.Timedelta(minutes=task_row["Duration"])
+                interval_end = interval_start + pd.Timedelta(minutes=duration_minutes)
                 if interval_end > shift_end:
                     continue  # Skip intervals that extend beyond the shift's end
 
-                # Calculate cost: (task duration in hours) * weight
-                duration_in_hours = task_row["Duration"] / 60
+                # Calculate cost for this interval
+                duration_in_hours = duration_minutes / 60
                 cost = duration_in_hours * weight
 
+                # Update if this interval has a lower cost
                 if cost < min_cost:
                     min_cost = cost
                     optimal_interval = (interval_start, interval_end)
@@ -1197,6 +1210,8 @@ def optimize_tasks_with_gurobi():
             return optimal_interval, min_cost
 
 
+
+        results = []
         for entry in temp_results:
             task_row = tasks_df.loc[entry["task_id"]]
             shift_row = shifts_df.loc[entry["shift_id"]]
