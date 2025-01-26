@@ -1166,6 +1166,11 @@ def optimize_tasks_with_gurobi():
             key = (entry["shift_id"], entry["day"])
             total_contribution = shift_day_contributions[key]
             task_cost = (entry["contribution"] / total_contribution) * shift_day_cost[key] if total_contribution > 0 else 0
+
+            # Get the exact time range for the task based on the shift assignment
+            begin_task_time = max(entry["workers"], tasks_df.loc[entry["task_id"], "StartTime"])
+            end_task_time = min(entry["workers"], tasks_df.loc[entry["task_id"], "EndTime"])
+
             
             # Format results
             task_row = tasks_df.loc[entry["task_id"]]
@@ -1176,6 +1181,8 @@ def optimize_tasks_with_gurobi():
                 "Day": entry["day"],
                 "Task Start": task_row["StartTime"].strftime("%H:%M"),
                 "Task End": task_row["EndTime"].strftime("%H:%M"),
+                "Begin Task": begin_task_time.strftime("%H:%M"),
+                "End Task": end_task_time.strftime("%H:%M"),
                 "Shift ID": shift_row["id"],
                 "Shift Start": shift_row["StartTime"].strftime("%H:%M"),
                 "Shift End": shift_row["EndTime"].strftime("%H:%M"),
