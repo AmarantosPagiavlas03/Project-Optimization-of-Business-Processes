@@ -948,6 +948,50 @@ def insert2():
     conn.commit()
     conn.close()
 
+def insert3():
+    """
+    Insert a small example data set into Tasks and Shifts.
+    (For demonstration)
+    """
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute('''
+        INSERT INTO TasksTable3 (
+            TaskName,
+            Day,
+            StartTime,
+            EndTime,
+            Duration,
+            NursesRequired
+        )
+        VALUES
+            ('task 1', 'Monday', '10:00:00', '15:00:00', 60, 30),
+            ('task 2', 'Monday', '10:00:00', '15:00:00', 60, 8),
+            ('task 3', 'Monday', '10:00:00', '15:00:00', 60, 7);
+    ''')
+    conn.commit()
+    c.execute('''
+        INSERT INTO ShiftsTable6 (
+            StartTime,
+            EndTime,
+            BreakTime,
+            BreakDuration,
+            Weight,
+            Monday,
+            Tuesday,
+            Wednesday,
+            Thursday,
+            Friday,
+            Saturday,
+            Sunday
+        )
+        VALUES
+            ('00:00:00', '12:00:00', '08:00:00', '0:30:00', 1200, 1, 0, 0, 0, 0, 0, 0),
+            ('11:30:00', '23:00:00', '21:00:00', '0:30:00', 1500, 1, 0, 0, 0, 0, 0, 0);
+    ''')
+    conn.commit()
+    conn.close()
+
 # ------------------------------------------------------------------
 #                     First Optimizer: Tasks-Shifts
 # ------------------------------------------------------------------
@@ -1820,7 +1864,7 @@ def main():
             
             # Example Data
             with st.expander("🔍 Load Example Data"):
-                ex_col1, ex_col2 = st.columns(2)
+                ex_col1, ex_col2, ex_col3 = st.columns(3)
                 with ex_col1:
                     if st.button("Small Dataset", use_container_width=True):
                         insert()
@@ -1829,6 +1873,11 @@ def main():
                     if st.button("Large Dataset", use_container_width=True):
                         insert2()
                         st.success("Large example data loaded!")
+                with ex_col3:
+                    if st.button("Large Dataset", use_container_width=True):
+                        insert3()
+                        st.success("Large example data loaded!")
+                
 
         with right_col:
             # Visualization and Optimization Tabs
