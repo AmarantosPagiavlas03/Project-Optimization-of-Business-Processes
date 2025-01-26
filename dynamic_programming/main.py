@@ -1177,8 +1177,8 @@ def optimize_tasks_with_gurobi():
 
         for entry in temp_results:
             key = (entry["shift_id"], entry["day"])
-            #total_contribution = shift_day_contributions[key]
-            #task_cost = (entry["contribution"] / total_contribution) * shift_day_cost[key] if total_contribution > 0 else 0
+            total_contribution = shift_day_contributions[key]
+            task_cost = (entry["contribution"] / total_contribution) * shift_day_cost[key] if total_contribution > 0 else 0
             
             # Format results
             task_row = tasks_df.loc[entry["task_id"]]
@@ -1242,9 +1242,9 @@ def optimize_tasks_with_gurobi():
                 "Shift Start": shift_row["StartTime"].strftime("%H:%M"),
                 "Shift End": shift_row["EndTime"].strftime("%H:%M"),
                 "Workers Assigned": entry["workers"],
-                # "Hourly Rate ($)": entry["shift_weight"],
-                # "Task Cost ($)": round(task_cost, 2),
-                # "Cost %": round((task_cost / shift_day_cost[key]) * 100, 1) if shift_day_cost[key] > 0 else 0
+                "Hourly Rate ($)": entry["shift_weight"],
+                "Task Cost ($)": round(task_cost, 2),
+                "Cost %": round((task_cost / shift_day_cost[key]) * 100, 1) if shift_day_cost[key] > 0 else 0
             })
 
         # --- Enhanced Display ---
