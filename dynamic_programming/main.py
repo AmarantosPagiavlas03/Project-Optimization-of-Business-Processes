@@ -1161,7 +1161,6 @@ def optimize_tasks_with_gurobi():
                 shift_day_contributions[(shift_id, d)] += contribution
 
         # Phase 2: Calculate proportional costs
-
         def calculate_cost_for_intervals(task_row, shift_row, weight, interval_minutes=15):
             """
             Calculate the cost for all 15-minute intervals within the task's and shift's time overlap.
@@ -1192,15 +1191,29 @@ def optimize_tasks_with_gurobi():
             optimal_interval = None
             min_cost = float("inf")
 
+            # Simulated "time slots" for the duration of the shift
+            time_slots = {minute: 0 for minute in range(int(shift_start.timestamp() // 60), int(shift_end.timestamp() // 60))}
+
+            # Helper function to calculate shift costs based on max nurses in each interval
+            def calculate_shift_cost(temp_slots, interval_start, interval_end):
+                max_nurses = 0
+                for t in range(int(interval_start.timestamp() // 60), int(interval_end.timestamp() // 60)):
+                    max_nurses = max(max_nurses, temp_slots.get(t, 0))
+                return max_nurses * weight
+
             # Loop through intervals to find the minimum cost
             for interval_start in intervals:
                 interval_end = interval_start + pd.Timedelta(minutes=duration_minutes)
                 if interval_end > shift_end:
                     continue  # Skip intervals that extend beyond the shift's end
 
+                # Temporarily update time slots to test this interval
+                temp_slots = time_slots.copy()
+                for t in range(int(interval_start.timestamp() // 60), int(interval_end.timestamp() // 60)):
+                    temp_slots[t] += 1
+
                 # Calculate cost for this interval
-                duration_in_hours = duration_minutes / 60
-                cost = duration_in_hours * weight
+                cost = calculate_shift_cost(temp_slots, interval_start, interval_end)
 
                 # Update if this interval has a lower cost
                 if cost < min_cost:
@@ -1210,8 +1223,8 @@ def optimize_tasks_with_gurobi():
             return optimal_interval, min_cost
 
 
-
         results = []
+
         for entry in temp_results:
             task_row = tasks_df.loc[entry["task_id"]]
             shift_row = shifts_df.loc[entry["shift_id"]]
