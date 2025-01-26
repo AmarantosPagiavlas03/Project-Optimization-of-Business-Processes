@@ -950,7 +950,7 @@ def insert2():
 
 def insert3():
     """
-    Insert a small example data set into Tasks and Shifts.
+    Insert a really small example data set into Tasks and Shifts.
     (For demonstration)
     """
     conn = sqlite3.connect(DB_FILE)
@@ -1874,9 +1874,9 @@ def main():
                         insert2()
                         st.success("Large example data loaded!")
                 with ex_col3:
-                    if st.button("Large Dataset", use_container_width=True):
+                    if st.button("Really small Dataset", use_container_width=True):
                         insert3()
-                        st.success("Large example data loaded!")
+                        st.success("Really small example data loaded!")
                 
 
         with right_col:
