@@ -1161,108 +1161,99 @@ def optimize_tasks_with_gurobi():
                 shift_day_contributions[(shift_id, d)] += contribution
 
         # Phase 2: Calculate proportional costs
-
-        # Define calculate_shift_cost
-        def calculate_shift_cost(temp_time_slots, shifts_df):
+        def calculate_cost_for_intervals(task_row, shift_row, weight, interval_minutes=15):
             """
-            Calculate the total cost for all shifts based on the maximum nurses assigned per shift.
+            Calculate the cost for all 15-minute intervals within the task's and shift's time overlap.
+            Returns the optimal interval and its cost.
             """
-            total_cost = 0
+            # Convert times to datetime for manipulation
+            task_start = pd.to_datetime(task_row["StartTime"], format="%H:%M:%S")
+            task_end = pd.to_datetime(task_row["EndTime"], format="%H:%M:%S")
+            shift_start = pd.to_datetime(shift_row["StartTime"], format="%H:%M:%S")
+            shift_end = pd.to_datetime(shift_row["EndTime"], format="%H:%M:%S")
 
-            for index, shift_row in shifts_df.iterrows():
-                # Convert shift times to minutes since start of the day
-                shift_start = pd.to_datetime(f"2023-01-01 {shift_row['StartTime']}").hour * 60 + \
-                            pd.to_datetime(f"2023-01-01 {shift_row['StartTime']}").minute
-                shift_end = pd.to_datetime(f"2023-01-01 {shift_row['EndTime']}").hour * 60 + \
-                            pd.to_datetime(f"2023-01-01 {shift_row['EndTime']}").minute
-                weight = shift_row["Weight"]
+            # Ensure Duration is numeric (convert from string if needed)
+            try:
+                duration_minutes = int(task_row["Duration"])  # Ensure it's an integer
+            except ValueError:
+                # If "Duration" is a string like "0:15:00", convert to minutes
+                duration_td = pd.to_timedelta(task_row["Duration"])
+                duration_minutes = int(duration_td.total_seconds() / 60)
 
-                # Find the maximum nurses assigned during this shift
-                max_nurses = max(
-                    temp_time_slots.get(t, 0) for t in range(shift_start, shift_end)
-                )
+            # Find the overlap between task and shift times
+            start_time = max(task_start, shift_start)
+            end_time = min(task_end, shift_end)
 
-                # Add the cost for this shift
-                total_cost += max_nurses * weight
+            # Generate intervals (15-minute steps)
+            intervals = pd.date_range(start=start_time, end=end_time, freq=f"{interval_minutes}min")
 
-            return total_cost
+            # Initialize variables for tracking the optimal interval
+            optimal_interval = None
+            min_cost = float("inf")
 
+            # Simulated "time slots" for the duration of the shift
+            time_slots = {minute: 0 for minute in range(int(shift_start.timestamp() // 60), int(shift_end.timestamp() // 60))}
 
-        def assign_tasks(tasks_df, shifts_df):
-            """
-            Assign tasks to the best time slots and calculate costs.
-            """
-            tasks_df = tasks_df.assign(
-                Start=lambda df: pd.to_datetime("2023-01-01 " + df['StartTime']),
-                End=lambda df: pd.to_datetime("2023-01-01 " + df['EndTime'])
-            )
-            time_slots = {}  # Tracks the nurses assigned at each minute
-            results = []  # Store the final task assignments
+            # Helper function to calculate shift costs based on max nurses in each interval
+            def calculate_shift_cost(temp_slots, interval_start, interval_end):
+                max_nurses = 0
+                for t in range(int(interval_start.timestamp() // 60), int(interval_end.timestamp() // 60)):
+                    max_nurses = max(max_nurses, temp_slots.get(t, 0))
+                return max_nurses * weight
 
-            for task_index, task_row in tasks_df.iterrows():
-                # Extract start and end times in minutes since midnight
-                task_start_window = task_row["Start"].hour * 60 + task_row["Start"].minute
-                task_end_window = task_row["End"].hour * 60 + task_row["End"].minute
-                task_duration = task_row["Duration"]  # Duration in minutes
-                nurses_required = task_row["NursesRequired"]
+            # Loop through intervals to find the minimum cost
+            for interval_start in intervals:
+                interval_end = interval_start + pd.Timedelta(minutes=duration_minutes)
+                if interval_end > shift_end:
+                    continue  # Skip intervals that extend beyond the shift's end
 
-                # Initialize variables to track the best assignment
-                best_cost = float("inf")
-                best_start = None
+                # Temporarily update time slots to test this interval
+                temp_slots = time_slots.copy()
+                for t in range(int(interval_start.timestamp() // 60), int(interval_end.timestamp() // 60)):
+                    temp_slots[t] += 1
 
-                # Check all valid start times within the task's time window
-                for start_time in range(task_start_window, task_end_window - task_duration + 1):
-                    end_time = start_time + task_duration
+                # Calculate cost for this interval
+                cost = calculate_shift_cost(temp_slots, interval_start, interval_end)
 
-                    # Temporarily update time_slots to test the assignment
-                    temp_time_slots = time_slots.copy()
-                    for t in range(start_time, end_time):
-                        temp_time_slots[t] = temp_time_slots.get(t, 0) + nurses_required
+                # Update if this interval has a lower cost
+                if cost < min_cost:
+                    min_cost = cost
+                    optimal_interval = (interval_start, interval_end)
 
-                    # Calculate the cost for this potential assignment
-                    cost = calculate_shift_cost(temp_time_slots, shifts_df)
-
-                    # Update the best cost and start time if this interval is better
-                    if cost < best_cost:
-                        best_cost = cost
-                        best_start = start_time
-
-                # Assign the task to the best interval if found
-                if best_start is not None:
-                    begin_task = pd.Timestamp(f"2023-01-01 {best_start // 60:02}:{best_start % 60:02}:00")
-                    end_task = pd.Timestamp(f"2023-01-01 {(best_start + task_duration) // 60:02}:{(best_start + task_duration) % 60:02}:00")
-                    min_cost = best_cost
-
-                    # Update time slots with the assigned task
-                    for t in range(best_start, best_start + task_duration):
-                        time_slots[t] = time_slots.get(t, 0) + nurses_required
-
-                    # Add the result to the list
-                    results.append({
-                        "Task ID": task_row["TaskName"],
-                        "Day": task_row["Day"],
-                        "Task Start": task_row["StartTime"],
-                        "Task End": task_row["EndTime"],
-                        "Begin Task": begin_task.strftime("%H:%M"),
-                        "End Task": end_task.strftime("%H:%M"),
-                        "Workers Assigned": nurses_required,
-                        "Hourly Rate ($)": shifts_df.loc[0, "Weight"],  # Assume first shift weight for now
-                        "Task Cost ($)": round(min_cost, 2)
-                    })
-
-            # Return the results as a DataFrame
-            return pd.DataFrame(results)
+            return optimal_interval, min_cost
 
 
-        # Example usage:
-        # Assume tasks_df and shifts_df are loaded correctly as per the format provided
-        results_df = assign_tasks(tasks_df, shifts_df)
+        results = []
 
+        for entry in temp_results:
+            task_row = tasks_df.loc[entry["task_id"]]
+            shift_row = shifts_df.loc[entry["shift_id"]]
+            weight = shift_row["Weight"]
+            key = (entry["shift_id"], entry["day"])
 
+            # Calculate optimal interval
+            optimal_interval, min_cost = calculate_cost_for_intervals(task_row, shift_row, weight)
+            begin_task, end_task = optimal_interval
 
+            results.append({
+                "Task ID": task_row["id"],
+                "Task Name": task_row["TaskName"],
+                "Day": entry["day"],
+                "Task Start": task_row["StartTime"].strftime("%H:%M"),
+                "Task End": task_row["EndTime"].strftime("%H:%M"),
+                "Begin Task": begin_task.strftime("%H:%M"),
+                "End Task": end_task.strftime("%H:%M"),
+                "Shift ID": shift_row["id"],
+                "Shift Start": shift_row["StartTime"].strftime("%H:%M"),
+                "Shift End": shift_row["EndTime"].strftime("%H:%M"),
+                "Workers Assigned": entry["workers"],
+                "Hourly Rate ($)": entry["shift_weight"],
+                "Task Cost ($)": round(min_cost, 2),
+                "Cost %": round((min_cost / shift_day_cost[key]) * 100, 1) if shift_day_cost[key] > 0 else 0
+            })
 
-
-
+        # --- Enhanced Display ---
+        results_df = pd.DataFrame(results)
 
        
         # 1. Cost Validation Check
