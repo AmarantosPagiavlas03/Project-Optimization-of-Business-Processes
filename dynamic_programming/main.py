@@ -1162,30 +1162,72 @@ def optimize_tasks_with_gurobi():
 
         # Phase 2: Calculate proportional costs
         results = []
+
+        time_slots = {minute: 0 for minute in range(24 * 60)}  # Tracks nurses assigned per minute
+
+        # Helper function to calculate shift costs based on current time slots
+        def calculate_shift_cost(temp_time_slots):
+            shift_costs = []
+            for _, shift_row in shifts_df.iterrows():
+                shift_start = int(shift_row["StartTime"].hour * 60 + shift_row["StartTime"].minute)
+                shift_end = int(shift_row["EndTime"].hour * 60 + shift_row["EndTime"].minute)
+                max_nurses = max(temp_time_slots.get(t, 0) for t in range(shift_start, shift_end))
+                shift_costs.append(max_nurses * shift_row["Weight"])
+            return sum(shift_costs)
+
         for entry in temp_results:
             key = (entry["shift_id"], entry["day"])
-            total_contribution = shift_day_contributions[key]
-            task_cost = (entry["contribution"] / total_contribution) * shift_day_cost[key] if total_contribution > 0 else 0
+            #total_contribution = shift_day_contributions[key]
+            #task_cost = (entry["contribution"] / total_contribution) * shift_day_cost[key] if total_contribution > 0 else 0
             
             # Format results
             task_row = tasks_df.loc[entry["task_id"]]
             shift_row = shifts_df.loc[entry["shift_id"]]
 
-            task_start_time = datetime.combine(datetime.min, task_row["StartTime"])
-            task_end_time = datetime.combine(datetime.min, task_row["EndTime"])
-            shift_start_time = datetime.combine(datetime.min, shift_row["StartTime"])
-            shift_end_time = datetime.combine(datetime.min, shift_row["EndTime"])   
-            begin_task_time = max(task_start_time, shift_start_time)
-            end_task_time = min(task_end_time, shift_end_time) 
+            # Extract task and shift timing details
+            task_start_window = int(task_row["StartTime"].hour * 60 + task_row["StartTime"].minute)
+            task_end_window = int(task_row["EndTime"].hour * 60 + task_row["EndTime"].minute)
+            task_duration = pd.to_timedelta(task_row["Duration"]).total_seconds() // 60
+            nurses_required = task_row["NursesRequired"]
 
-            duration = (end_task_time - begin_task_time).total_seconds() / 60  # Duration in minutes
+            shift_start = int(shift_row["StartTime"].hour * 60 + shift_row["StartTime"].minute)
+            shift_end = int(shift_row["EndTime"].hour * 60 + shift_row["EndTime"].minute)
 
-    # Ensure duration matches the original task's specified duration
-            if duration != pd.to_timedelta(task_row["Duration"]).total_seconds() / 60:
-                st.warning(
-                    f"Task {task_row['TaskName']} on {entry['day']} may have mismatched durations. "
-                    f"Expected {task_row['Duration']}, but calculated {duration} minutes."
-        )
+            # Restrict task window to fit within the shift's time
+            adjusted_start_window = max(task_start_window, shift_start)
+            adjusted_end_window = min(task_end_window, shift_end)
+
+            best_cost = float("inf")
+            best_start_time = None
+
+            # Test all valid start times within the adjusted task window
+            for start_time in range(adjusted_start_window, adjusted_end_window - int(task_duration) + 1):
+                end_time = start_time + int(task_duration)
+
+                # Temporarily update time slots to test the assignment
+                temp_time_slots = time_slots.copy()
+                for t in range(start_time, end_time):
+                    temp_time_slots[t] += nurses_required
+
+                # Calculate the cost for this potential assignment
+                cost = calculate_shift_cost(temp_time_slots)
+
+                # Update if this interval is better
+                if cost < best_cost:
+                    best_cost = cost
+                    best_start_time = start_time
+
+            # Assign the task to the best interval
+            if best_start_time is not None:
+                best_end_time = best_start_time + int(task_duration)
+                entry["Begin Task"] = f"{best_start_time // 60:02}:{best_start_time % 60:02}"
+                entry["End Task"] = f"{best_end_time // 60:02}:{best_end_time % 60:02}"
+                entry["Duration (minutes)"] = task_duration
+
+                # Update time slots with the assigned task
+                for t in range(best_start_time, best_end_time):
+                    time_slots[t] += nurses_required
+
 
 
             results.append({
@@ -1194,15 +1236,15 @@ def optimize_tasks_with_gurobi():
                 "Day": entry["day"],
                 "Task Start": task_row["StartTime"].strftime("%H:%M"),
                 "Task End": task_row["EndTime"].strftime("%H:%M"),
-                "Begin Task": begin_task_time.strftime("%H:%M"),
-                "End Task": end_task_time.strftime("%H:%M"),
+                "Begin Task": entry["Begin Task"],
+                "End Task": entry["End Task"],
                 "Shift ID": shift_row["id"],
                 "Shift Start": shift_row["StartTime"].strftime("%H:%M"),
                 "Shift End": shift_row["EndTime"].strftime("%H:%M"),
                 "Workers Assigned": entry["workers"],
-                "Hourly Rate ($)": entry["shift_weight"],
-                "Task Cost ($)": round(task_cost, 2),
-                "Cost %": round((task_cost / shift_day_cost[key]) * 100, 1) if shift_day_cost[key] > 0 else 0
+                # "Hourly Rate ($)": entry["shift_weight"],
+                # "Task Cost ($)": round(task_cost, 2),
+                # "Cost %": round((task_cost / shift_day_cost[key]) * 100, 1) if shift_day_cost[key] > 0 else 0
             })
 
         # --- Enhanced Display ---
