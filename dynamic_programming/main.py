@@ -995,14 +995,14 @@ def insert3():
 # ------------------------------------------------------------------
 #                     First Optimizer: Tasks-Shifts
 # ------------------------------------------------------------------
-
 def optimize_tasks_with_gurobi():
     """
     Assign tasks to (shift, day) pairs so that a single shift can have 
     different worker counts on different days.
 
     This version ensures that a Monday task won't force workers on Tuesday/Wednesday 
-    if the shift is active multiple days.
+    if the shift is active multiple days and optimizes task assignment based on 
+    dynamic intervals for minimizing costs.
     """
 
     # --- 1. Load Data ---
@@ -1015,105 +1015,118 @@ def optimize_tasks_with_gurobi():
         return
 
     # --- 2. Format Time Columns ---
-    # Adjust your time format if it's not "%H:%M:%S"
     tasks_df["StartTime"] = pd.to_datetime(tasks_df["StartTime"], format="%H:%M:%S").dt.time
-    tasks_df["EndTime"]   = pd.to_datetime(tasks_df["EndTime"],   format="%H:%M:%S").dt.time
+    tasks_df["EndTime"] = pd.to_datetime(tasks_df["EndTime"], format="%H:%M:%S").dt.time
 
     shifts_df["StartTime"] = pd.to_datetime(shifts_df["StartTime"], format="%H:%M:%S").dt.time
-    shifts_df["EndTime"]   = pd.to_datetime(shifts_df["EndTime"],   format="%H:%M:%S").dt.time
+    shifts_df["EndTime"] = pd.to_datetime(shifts_df["EndTime"], format="%H:%M:%S").dt.time
 
     # Column names in ShiftsTable6 for the days of the week
-    day_names = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
+    day_names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
     # --- 3. Create Gurobi Model ---
     model = Model("Task_Assignment")
 
-    # --- 4. Decision Variables ---
-    # 4.1. Worker variables: (shift, day) -> integer # of workers
-    shift_worker_vars = {}
-    for shift_id, shift_row in shifts_df.iterrows():
-        for day_str in day_names:
-            if shift_row[day_str] == 1:  # shift is active on this day
-                var_name = f"Workers_Shift_{shift_id}_{day_str}"
-                shift_worker_vars[(shift_id, day_str)] = model.addVar(
-                    vtype=GRB.INTEGER, lb=0, name=var_name
-                )
+    # --- 4. Helper Functions ---
+    def calculate_cost_for_shift(temp_slots, shift_start, shift_end, shift_cost):
+        """
+        Calculate the cost of a shift based on the maximum number of nurses needed in 15-minute intervals.
+        """
+        intervals = range(shift_start, shift_end, 15)
+        max_nurses = max(
+            sum(temp_slots.get(t + i, 0) for i in range(15)) for t in intervals
+        )
+        return max_nurses * shift_cost, max_nurses
 
-    # 4.2. Task assignment variables: (task, shift, day) -> binary
-    #      Only if the task's day == shift's active day AND times align
+    # --- 5. Initialize Time Slots ---
+    time_slots = {minute: 0 for minute in range(24 * 60)}  # Tracks required nurses per minute
+
+    # --- 6. Task Assignment Logic ---
     task_shift_vars = {}
+    results = []
+
     for task_id, task_row in tasks_df.iterrows():
-        t_day = task_row["Day"]   # e.g. "Monday"
-        t_s   = task_row["StartTime"]
-        t_e   = task_row["EndTime"]
+        t_day = task_row["Day"]  # e.g., "Monday"
+        duration_minutes = int(
+            (pd.Timestamp.combine(pd.Timestamp.min, task_row["EndTime"]) -
+             pd.Timestamp.combine(pd.Timestamp.min, task_row["StartTime"])).total_seconds() / 60
+        )
 
-        # Iterate over all shifts
-        for shift_id, shift_row in shifts_df.iterrows():
-            # Only consider if the shift is active on the task's day
-            if shift_row[t_day] == 1:
-                shift_s = shift_row["StartTime"]
-                shift_e = shift_row["EndTime"]
-                # Check if shift covers the task time
-                if shift_s <= t_s and shift_e >= t_e:
-                    var_name = f"Task_{task_id}_Shift_{shift_id}_{t_day}"
-                    task_shift_vars[(task_id, shift_id, t_day)] = model.addVar(
-                        vtype=GRB.BINARY, name=var_name
-                    )
+        best_cost = float("inf")
+        best_interval = None
+        best_shift_id = None
+        workers_assigned = 0
 
-    # --- 5. Objective: Minimize total cost = sum(workers * weight) across (shift, day) ---
+        # Calculate possible start times
+        task_start_minute = task_row["StartTime"].hour * 60 + task_row["StartTime"].minute
+        task_end_minute = task_row["EndTime"].hour * 60 + task_row["EndTime"].minute - duration_minutes
+
+        # Test all feasible start times
+        for start_time in range(task_start_minute, task_end_minute + 1):
+            temp_slots = time_slots.copy()
+
+            # Temporarily update time slots for this task
+            for t in range(start_time, start_time + duration_minutes):
+                temp_slots[t] += task_row["NursesRequired"]
+
+            # Calculate cost for all active shifts on this day
+            for shift_id, shift_row in shifts_df.iterrows():
+                if shift_row[t_day] == 1:  # Only consider active shifts for this day
+                    shift_start = shift_row["StartTime"].hour * 60 + shift_row["StartTime"].minute
+                    shift_end = shift_row["EndTime"].hour * 60 + shift_row["EndTime"].minute
+                    shift_cost = shift_row["Weight"]
+
+                    shift_total_cost, max_workers = calculate_cost_for_shift(temp_slots, shift_start, shift_end, shift_cost)
+
+                    # Update the best interval if this cost is lower
+                    if shift_total_cost < best_cost:
+                        best_cost = shift_total_cost
+                        best_interval = (start_time, start_time + duration_minutes)
+                        best_shift_id = shift_id
+                        workers_assigned = max_workers
+
+        # Assign task to the best interval
+        if best_interval:
+            start_time, end_time = best_interval
+
+            # Update time slots with the chosen assignment
+            for t in range(start_time, end_time):
+                time_slots[t] += task_row["NursesRequired"]
+
+            # Store assignment in results
+            task_start_hour, task_start_minute = divmod(start_time, 60)
+            task_end_hour, task_end_minute = divmod(end_time, 60)
+            results.append({
+                "Task ID": task_id,
+                "Task Name": task_row["TaskName"],
+                "Day": t_day,
+                "Task Start": f"{task_start_hour:02}:{task_start_minute:02}",
+                "Task End": f"{task_end_hour:02}:{task_end_minute:02}",
+                "Shift ID": best_shift_id,
+                "Workers Assigned": workers_assigned,
+                "Task Cost ($)": round(best_cost, 2),
+            })
+
+            # Store assignment in Gurobi variables
+            task_shift_vars[(task_id, t_day)] = model.addVar(
+                vtype=GRB.BINARY, name=f"Task_{task_id}_Day_{t_day}"
+            )
+
+    # --- 7. Objective Function: Minimize Total Cost ---
     model.setObjective(
         quicksum(
-            shift_worker_vars[(s_id, d)] * shifts_df.loc[s_id, "Weight"]
-            for (s_id, d) in shift_worker_vars
+            calculate_cost_for_shift(
+                time_slots,
+                shift_row["StartTime"].hour * 60 + shift_row["StartTime"].minute,
+                shift_row["EndTime"].hour * 60 + shift_row["EndTime"].minute,
+                shift_row["Weight"]
+            )[0]
+            for shift_id, shift_row in shifts_df.iterrows()
         ),
         GRB.MINIMIZE
     )
 
-    # --- 6. Constraints ---
-
-    # 6.1. Coverage: each task is assigned to at least one feasible (shift, day)
-    for task_id, task_row in tasks_df.iterrows():
-        # Gather all feasible assignment variables for this task
-        feasible_assignments = [
-            task_shift_vars[key]
-            for key in task_shift_vars
-            if key[0] == task_id  # same task
-        ]
-        # If there's at least one feasible shift-day, require that sum >= 1
-        if feasible_assignments:
-            model.addConstr(
-                quicksum(feasible_assignments) >= 1,
-                name=f"Task_{task_id}_Coverage"
-            )
-        else:
-            # No feasible shift-day found: either data problem or the model is infeasible
-            pass
-
-    # 6.2. Worker capacity: for each (shift, day), total nurses required
-    #     by tasks assigned cannot exceed the # of workers assigned
-    for (shift_id, day_str) in shift_worker_vars:
-        model.addConstr(
-            quicksum(
-                tasks_df.loc[t_id, "NursesRequired"] * task_shift_vars[(t_id, shift_id, day_str)]
-                for (t_id, s_id, d) in task_shift_vars
-                if s_id == shift_id and d == day_str
-            ) <= shift_worker_vars[(shift_id, day_str)],
-            name=f"Shift_{shift_id}_{day_str}_WorkerCap"
-        )
-
-    # # 6.2. Worker capacity: for each (shift, day), total nurses required
-    # #     by tasks assigned cannot exceed the # of workers assigned
-    # for (shift_id, day_str) in shift_worker_vars:
-    #     model.addConstr(
-    #         quicksum(
-    #             task_shift_vars[(t_id-1, shift_id, day_str)] + task_shift_vars[(t_id, shift_id, day_str)]
-    #             for (t_id, s_id, d) in task_shift_vars
-    #             if s_id == shift_id and d == day_str and tasks_df.loc[t_id-1, "EndTime"] <= tasks_df.loc[t_id, "StartTime"]
-    #         ) <= 1,
-    #         name=f"Shift_{shift_id}_{day_str}"
-    #     )
-   
-    # --- 7. Solve the model ---
+    # --- 8. Solve the Model ---
     with st.spinner("Optimizing tasks and shifts. Please wait..."):
         try:
             model.optimize()
@@ -1122,270 +1135,34 @@ def optimize_tasks_with_gurobi():
             return
 
     if model.status == GRB.OPTIMAL:
-        # Phase 1: Collect raw assignment data and calculate contributions
-        from collections import defaultdict
-        from datetime import datetime, date
-        temp_results = []
-        shift_day_cost = defaultdict(float)        # Total cost per (shift, day)
-        shift_day_contributions = defaultdict(float)  # Sum of contributions
-        
-        for (task_id, shift_id, d), assign_var in task_shift_vars.items():
-            if assign_var.x > 0.5:
-                # Get basic assignment info
-                workers = shift_worker_vars[(shift_id, d)].x
-                shift_weight = shifts_df.loc[shift_id, "Weight"]
-                task_row = tasks_df.loc[task_id]
-                
-                # Calculate task duration in hours
-                t_start = task_row["StartTime"]
-                t_end = task_row["EndTime"]
-                start_dt = datetime.combine(date.min, t_start)
-                end_dt = datetime.combine(date.min, t_end)
-                duration = (end_dt - start_dt).total_seconds() / 3600
-                
-                # Calculate contribution metric (nurses × hours)
-                contribution = task_row["NursesRequired"] * duration
-                
-                # Store temporary data
-                temp_results.append({
-                    "task_id": task_id,
-                    "shift_id": shift_id,
-                    "day": d,
-                    "workers": workers,
-                    "shift_weight": shift_weight,
-                    "contribution": contribution
-                })
-                
-                # Update aggregates
-                shift_day_cost[(shift_id, d)] = workers * shift_weight
-                shift_day_contributions[(shift_id, d)] += contribution
-
-        # Phase 2: Calculate proportional costs
-        def calculate_cost_for_intervals(task_row, shift_row, weight, interval_minutes=15):
-            """
-            Calculate the cost for all 15-minute intervals within the task's and shift's time overlap.
-            Returns the optimal interval and its cost.
-            """
-            # Convert times to datetime for manipulation
-            task_start = pd.to_datetime(task_row["StartTime"], format="%H:%M:%S")
-            task_end = pd.to_datetime(task_row["EndTime"], format="%H:%M:%S")
-            shift_start = pd.to_datetime(shift_row["StartTime"], format="%H:%M:%S")
-            shift_end = pd.to_datetime(shift_row["EndTime"], format="%H:%M:%S")
-
-            # Ensure Duration is numeric (convert from string if needed)
-            try:
-                duration_minutes = int(task_row["Duration"])  # Ensure it's an integer
-            except ValueError:
-                # If "Duration" is a string like "0:15:00", convert to minutes
-                duration_td = pd.to_timedelta(task_row["Duration"])
-                duration_minutes = int(duration_td.total_seconds() / 60)
-
-            # Find the overlap between task and shift times
-            start_time = max(task_start, shift_start)
-            end_time = min(task_end, shift_end)
-
-            # Generate intervals (15-minute steps)
-            intervals = pd.date_range(start=start_time, end=end_time, freq=f"{interval_minutes}min")
-
-            # Initialize variables for tracking the optimal interval
-            optimal_interval = None
-            min_cost = float("inf")
-
-            # Simulated "time slots" for the duration of the shift
-            time_slots = {minute: 0 for minute in range(int(shift_start.timestamp() // 60), int(shift_end.timestamp() // 60))}
-
-            # Helper function to calculate shift costs based on max nurses in each interval
-            def calculate_shift_cost(temp_slots, interval_start, interval_end):
-                max_nurses = 0
-                for t in range(int(interval_start.timestamp() // 60), int(interval_end.timestamp() // 60)):
-                    max_nurses = max(max_nurses, temp_slots.get(t, 0))
-                return max_nurses * weight
-
-            # Loop through intervals to find the minimum cost
-            for interval_start in intervals:
-                interval_end = interval_start + pd.Timedelta(minutes=duration_minutes)
-                if interval_end > shift_end:
-                    continue  # Skip intervals that extend beyond the shift's end
-
-                # Temporarily update time slots to test this interval
-                temp_slots = time_slots.copy()
-                for t in range(int(interval_start.timestamp() // 60), int(interval_end.timestamp() // 60)):
-                    temp_slots[t] += 1
-
-                # Calculate cost for this interval
-                cost = calculate_shift_cost(temp_slots, interval_start, interval_end)
-
-                # Update if this interval has a lower cost
-                if cost < min_cost:
-                    min_cost = cost
-                    optimal_interval = (interval_start, interval_end)
-
-            return optimal_interval, min_cost
-
-
-        results = []
-
-        for entry in temp_results:
-            task_row = tasks_df.loc[entry["task_id"]]
-            shift_row = shifts_df.loc[entry["shift_id"]]
-            weight = shift_row["Weight"]
-            key = (entry["shift_id"], entry["day"])
-
-            # Calculate optimal interval
-            optimal_interval, min_cost = calculate_cost_for_intervals(task_row, shift_row, weight)
-            begin_task, end_task = optimal_interval
-
-            results.append({
-                "Task ID": task_row["id"],
-                "Task Name": task_row["TaskName"],
-                "Day": entry["day"],
-                "Task Start": task_row["StartTime"].strftime("%H:%M"),
-                "Task End": task_row["EndTime"].strftime("%H:%M"),
-                "Begin Task": begin_task.strftime("%H:%M"),
-                "End Task": end_task.strftime("%H:%M"),
-                "Shift ID": shift_row["id"],
-                "Shift Start": shift_row["StartTime"].strftime("%H:%M"),
-                "Shift End": shift_row["EndTime"].strftime("%H:%M"),
-                "Workers Assigned": entry["workers"],
-                "Hourly Rate ($)": entry["shift_weight"],
-                "Task Cost ($)": round(min_cost, 2),
-                "Cost %": round((min_cost / shift_day_cost[key]) * 100, 1) if shift_day_cost[key] > 0 else 0
-            })
-
-        # --- Enhanced Display ---
-        results_df = pd.DataFrame(results)
-
-       
-        # 1. Cost Validation Check
-        validation = results_df.groupby(["Shift ID", "Day"]).agg(
-            Total_Cost=("Task Cost ($)", "sum"),
-            Expected_Cost=("Hourly Rate ($)", lambda x: x.iloc[0] * results_df["Workers Assigned"].iloc[0])
-        ).reset_index()
-        validation["Valid"] = validation["Total_Cost"].round(2) == validation["Expected_Cost"].round(2)
-
-        # 2. New Visualizations
-        if not results_df.empty:
-            col1, col2 = st.columns(2)
-            with col1:
-                # Ensure we have data to plot
-                if not results_df.empty:
-                    fig = px.pie(results_df, names='Day', values='Task Cost ($)', title='<b>Cost Distribution by Day</b>')
-                    fig.update_layout(showlegend=False)
-                    st.plotly_chart(fig, use_container_width=True)
-                else:
-                    st.warning("No data available for pie chart")
-
-            with col2:
-                # Ensure we have data to plot
-                if not results_df.empty:
-                    shift_cost = results_df.groupby("Shift ID")["Task Cost ($)"].sum().reset_index()
-                    fig = px.bar(shift_cost, x='Shift ID', y='Task Cost ($)', 
-                                title='<b>Total Cost by Shift</b>')
-                    fig.update_layout(showlegend=False)
-                    st.plotly_chart(fig, use_container_width=True)
-                else:
-                    st.warning("No data available for bar chart")
-        else:
-            st.warning("No results to visualize") 
-
- 
- 
-        # Calculate daily summaries
-        daily_costs = {day: 0 for day in day_names}
-        daily_workers = {day: 0 for day in day_names}
-        daily_tasks = {day: 0 for day in day_names}
-
-        for (shift_id, day_str), var in shift_worker_vars.items():
-            workers = var.x
-            daily_workers[day_str] += workers
-            daily_costs[day_str] += workers * shifts_df.loc[shift_id, "Weight"]
-
-        for (task_id, shift_id, d), var in task_shift_vars.items():
-            if var.x > 0.5:
-                daily_tasks[d] += 1
-
-        day_summary = []
-        for day in day_names:
-            day_summary.append({
-                "Day": day,
-                "Total Cost ($)": daily_costs[day],
-                "Tasks Assigned": daily_tasks[day],
-                "Workers Assigned": daily_workers[day]
-            })
-
-        results_df = pd.DataFrame(results)
-        day_summary_df = pd.DataFrame(day_summary)
-
         # --- Display Results ---
+        results_df = pd.DataFrame(results)
         st.success("✅ Task-shift optimization successful!")
-        st.balloons()
+        st.dataframe(results_df)
 
-        # Overall Metrics
-        total_cost = model.ObjVal
-        total_workers = sum(daily_workers.values())
-        total_tasks = len(results_df)
-
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Total Cost", f"${total_cost:,.2f}")
-        col2.metric("Total Workers Assigned", total_workers)
-        col3.metric("Total Tasks Assigned", total_tasks)
-
-        # Detailed Assignments
-        with st.expander("📋 View Detailed Task Assignments", expanded=True):
-            if not results_df.empty:
-                st.dataframe(
-                    results_df,
-                    column_order=("Task ID", "Task Name", "Day", "Task Start", "Task End","Begin Task","End Task",
-                                  "Shift ID", "Shift Start", "Shift End", "Workers Assigned"),
-                    hide_index=True
-                )
-                st.download_button(
-                    label="Download Assignments as CSV",
-                    data=results_df.to_csv(index=False).encode("utf-8"),
-                    file_name="task_assignments.csv",
-                    mime="text/csv"
-                )
-            else:
-                st.warning("No tasks were assigned.")
-
-        # Daily Summary
-        st.subheader("📅 Daily Summary")
-        st.dataframe(
-            day_summary_df,
-            column_order=("Day", "Total Cost ($)", "Tasks Assigned", "Workers Assigned"),
-            hide_index=True
-        )
+        # Provide download option
         st.download_button(
-            label="Download Daily Summary as CSV",
-            data=day_summary_df.to_csv(index=False).encode("utf-8"),
-            file_name="daily_summary.csv",
+            label="Download Results as CSV",
+            data=results_df.to_csv(index=False).encode("utf-8"),
+            file_name="task_assignments.csv",
             mime="text/csv"
         )
- 
 
+        # Detailed metrics
         st.subheader("📊 Model Statistics")
         stats = {
             "Solve Time": f"{model.Runtime:.2f} seconds",
             "Total Variables": model.NumVars,
             "Total Constraints": model.NumConstrs,
             "Objective Value": f"${model.ObjVal:,.2f}",
-            "MIP Gap": f"{model.MIPGap*100:.2f}%" if model.IsMIP else "N/A"
         }
-
         col1, col2, col3, col4 = st.columns(4)
         col1.metric("⏱️ Solve Time", stats["Solve Time"])
         col2.metric("🧩 Variables", stats["Total Variables"])
         col3.metric("🔗 Constraints", stats["Total Constraints"])
         col4.metric("🎯 Objective", stats["Objective Value"])
-
     else:
         st.error(f"Optimization failed with status: {model.status}")
-        # Optional: Add infeasibility diagnostics
-        model.computeIIS()
-        for constr in model.getConstrs():
-            if constr.IISConstr:
-                st.write(f"⚠️ Infeasible constraint: {constr.constrName}")
-
 
 
 # ------------------------------------------------------------------
