@@ -1733,8 +1733,7 @@ def new_optimize_tasks_with_gurobi():
         ('Task 6', 'Monday', '09:00:00', '23:00:00', 30, 2),
         ('Task 7', 'Monday', '09:00:00', '23:00:00', 30, 2)
         ''')
-    conn.commit()
-    conn.close()
+ 
 
     c.execute('''
         INSERT INTO ShiftsTable6 (
