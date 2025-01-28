@@ -2401,6 +2401,8 @@ def main():
                     original_optimize_tasks_with_gurobi()
                 if st.button("🚀 Run Task Optimization (15 min. interval)", use_container_width=True):
                     optimize_tasks_with_gurobi()
+                if st.button("🚀 Run Task Optimization (new)", use_container_width=True):
+                    new_optimize_tasks_with_gurobi()
                 
     with contact_tab:
         show_contact()
