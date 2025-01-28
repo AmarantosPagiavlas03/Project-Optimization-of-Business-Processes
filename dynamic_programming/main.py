@@ -2420,18 +2420,18 @@ def main():
                     optimize_tasks_with_gurobi()
                 if st.button("🚀 Run Task Optimization (new)", use_container_width=True):
                     tasks = [
-                        {"name": "Task 1", "start_window": 9 * 60, "end_window": 23 * 60, "duration": 30, "nurses_required": 5},
-                        {"name": "Task 2", "start_window": 9 * 60, "end_window": 23 * 60, "duration": 120, "nurses_required": 7},
-                        {"name": "Task 3", "start_window": 9 * 60, "end_window": 23 * 60, "duration": 30, "nurses_required": 1},
-                        {"name": "Task 4", "start_window": 9 * 60, "end_window": 23 * 60, "duration": 30, "nurses_required": 6},
-                        {"name": "Task 5", "start_window": 9 * 60, "end_window": 23 * 60, "duration": 30, "nurses_required": 3},
-                        {"name": "Task 6", "start_window": 9 * 60, "end_window": 23 * 60, "duration": 30, "nurses_required": 2},
-                        {"name": "Task 7", "start_window": 13 * 60, "end_window": 23 * 60, "duration": 30, "nurses_required": 2},
+                        {"name": "Task 1", "start_window": 9 * 60, "end_window": 22 * 60, "duration": 30, "nurses_required": 5},
+                        {"name": "Task 2", "start_window": 9 * 60, "end_window": 22 * 60, "duration": 120, "nurses_required": 7},
+                        {"name": "Task 3", "start_window": 9 * 60, "end_window": 22 * 60, "duration": 30, "nurses_required": 1},
+                        {"name": "Task 4", "start_window": 9 * 60, "end_window": 22 * 60, "duration": 30, "nurses_required": 6},
+                        {"name": "Task 5", "start_window": 9 * 60, "end_window": 22 * 60, "duration": 30, "nurses_required": 3},
+                        {"name": "Task 6", "start_window": 9 * 60, "end_window": 22 * 60, "duration": 30, "nurses_required": 2},
+                        {"name": "Task 7", "start_window": 9 * 60, "end_window": 22 * 60, "duration": 30, "nurses_required": 2},
                     ]
 
                     shifts = [
-                        {"start": 0 * 60, "end": 12 * 60, "cost": 10},  # Shift 1: 00:00-12:00
-                        {"start": 12 * 60, "end": 24 * 60, "cost": 20}, # Shift 2: 12:00-24:00
+                        {"start": 7 * 60, "end": 23 * 60, "cost": 10},  # Shift 1: 00:00-12:00
+                        {"start": 8 * 60, "end": 23 * 60, "cost": 20}, # Shift 2: 12:00-24:00
                     ]
 
                     new_optimize(tasks, shifts)
