@@ -1755,7 +1755,7 @@ def new_optimize_gurobi(tasks, shifts):
                 x[(task["name"], start_time)] * task["nurses_required"]
                 for task in tasks
                 for start_time in range(max(task["start_window"], t - task["duration"] + 1), min(task["end_window"], t + 1))
-                if start_time + task["duration"] > t >= start_time
+                if (task["name"], start_time) in x and start_time + task["duration"] > t >= start_time
             ),
             name=f"NursesRequired_{t}"
         )
