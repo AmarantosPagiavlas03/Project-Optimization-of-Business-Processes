@@ -428,14 +428,14 @@ def generate_and_fill_data(num_tasks=10, num_shifts=5, num_workers=5):
         start_time = datetime.now() + timedelta(hours=random.randint(0, 23), minutes=random.randint(0, 59))
         duration = timedelta(hours=random.randint(0, 2), minutes=random.randint(0, 59))
         end_time = start_time + duration
-        nurses_required = random.randint(1, 5)
+        NursesRequired = random.randint(1, 5)
         add_task_to_db(
             task_name,
             day,
             start_time.strftime("%H:%M:%S"),
             end_time.strftime("%H:%M:%S"),
             str(duration),
-            nurses_required
+            NursesRequired
         )
 
     # Random shifts
@@ -1710,7 +1710,124 @@ def optimize_tasks_with_gurobi():
             if constr.IISConstr:
                 st.write(f"⚠️ Infeasible constraint: {constr.constrName}")
 
+def new_optimize_tasks_with_gurobi():
+    # Input data
 
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute('''
+        INSERT INTO TasksTable3 (
+            TaskName,
+            Day,
+            StartTime,
+            EndTime,
+            Duration,
+            NursesRequired
+        )
+        VALUES
+        ('Task 1', 'Monday', '09:00:00', '23:00:00', 30, 5),
+        ('Task 2', 'Monday', '09:00:00', '23:00:00', 120, 7),
+        ('Task 3', 'Monday', '09:00:00', '23:00:00', 30, 1),
+        ('Task 4', 'Monday', '09:00:00', '23:00:00', 30, 6),
+        ('Task 5', 'Monday', '09:00:00', '23:00:00', 30, 3),
+        ('Task 6', 'Monday', '09:00:00', '23:00:00', 30, 2),
+        ('Task 7', 'Monday', '09:00:00', '23:00:00', 30, 2)
+        ''')
+    conn.commit()
+    conn.close()
+
+    c.execute('''
+        INSERT INTO ShiftsTable6 (
+            StartTime,
+            EndTime,
+            BreakTime,
+            BreakDuration,
+            Weight,
+            Monday,
+            Tuesday,
+            Wednesday,
+            Thursday,
+            Friday,
+            Saturday,
+            Sunday
+        )
+        VALUES
+        ('00:00:00', '12:00:00', '08:30:00', '0:30:00', 10, 0, 1, 0, 0, 1, 0, 1), 
+        ('12:00:00', '24:00:00', '08:30:00', '0:30:00', 20, 0, 1, 0, 0, 1, 0, 1)
+        ''')
+    conn.commit()
+    conn.close()
+
+    tasks = get_all("TasksTable3")
+    shifts = get_all("ShiftsTable6")
+
+    # Sort tasks by 'NursesRequired' in descending order
+    tasks = sorted(tasks, key=lambda x: x["NursesRequired"], reverse=True)
+
+
+    # Initialize schedule and cost tracker
+    schedule = []
+    time_slots = {i: 0 for i in range(24 * 60)}  # Tracks maximum nurses at each minute
+
+    # Helper function to calculate the total cost for all shifts
+    def calculate_shift_cost(temp_time_slots):
+        shift_costs = []
+        for shift in shifts:
+            max_nurses = max(temp_time_slots[t] for t in range(shift["StartTime"], shift["end"]))
+            shift_costs.append(max_nurses * shift["cost"])
+        return sum(shift_costs)
+
+    # Task assignment logic
+    for task in tasks:
+        best_cost = float("inf")
+        best_start = None
+
+        # Check all valid start times within the task's time window
+        for start_time in range(task["StartTime"], task["EndTime"] - task["Duration"] + 1):
+            end_time = start_time + task["Duration"]
+
+            # Temporarily update time_slots to test the assignment
+            temp_time_slots = time_slots.copy()
+            for t in range(start_time, end_time):
+                temp_time_slots[t] += task["NursesRequired"]
+
+            # Calculate the cost for this potential assignment
+            cost = calculate_shift_cost(temp_time_slots)
+
+            # Update if this interval is better
+            if cost < best_cost:
+                best_cost = cost
+                best_start = start_time
+
+        # Assign the task to the best interval
+        if best_start is not None:
+            end_time = best_start + task["Duration"]
+            schedule.append({
+                "task": task["TaskName"],
+                "start": best_start,
+                "end": end_time,
+                "NursesRequired": task["NursesRequired"],
+            })
+
+            # Update time slots with the assigned task
+            for t in range(best_start, end_time):
+                time_slots[t] += task["NursesRequired"]
+
+    # Calculate final shift costs
+    shift_costs = []
+    for shift in shifts:
+        max_nurses = max(time_slots[t] for t in range(shift["start"], shift["end"]))
+        shift_costs.append(max_nurses * shift["Weight"])
+
+    # Output the schedule and costs
+    for assignment in schedule:
+        start_hour, start_minute = divmod(assignment["start"], 60)
+        end_hour, end_minute = divmod(assignment["end"], 60)
+        print(f"{assignment['task']} assigned from {start_hour:02}:{start_minute:02} to {end_hour:02}:{end_minute:02}")
+
+    total_cost = sum(shift_costs)
+    print(f"Shift costs: {shift_costs}")
+    print(f"Total cost: {total_cost}")
 
 # ------------------------------------------------------------------
 #                          Visualization
