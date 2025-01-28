@@ -2370,6 +2370,50 @@ def main():
                 st.markdown("### Task-Shift Assignment Optimization")
                 st.info("Assign tasks to shifts considering time windows and nurse requirements")
                 if st.button("🚀 Run Task Optimization (Original)", use_container_width=True):
+                    conn = sqlite3.connect(DB_FILE)
+                    c = conn.cursor()
+                    c.execute('''
+                        INSERT INTO TasksTable3 (
+                            TaskName,
+                            Day,
+                            StartTime,
+                            EndTime,
+                            Duration,
+                            NursesRequired
+                        )
+                        VALUES
+                        ('Task 1', 'Monday', '09:00:00', '23:00:00', 30, 5),
+                        ('Task 2', 'Monday', '09:00:00', '23:00:00', 120, 7),
+                        ('Task 3', 'Monday', '09:00:00', '23:00:00', 30, 1),
+                        ('Task 4', 'Monday', '09:00:00', '23:00:00', 30, 6),
+                        ('Task 5', 'Monday', '09:00:00', '23:00:00', 30, 3),
+                        ('Task 6', 'Monday', '09:00:00', '23:00:00', 30, 2),
+                        ('Task 7', 'Monday', '09:00:00', '23:00:00', 30, 2)
+                        ''')
+                
+
+                    c.execute('''
+                        INSERT INTO ShiftsTable6 (
+                            StartTime,
+                            EndTime,
+                            BreakTime,
+                            BreakDuration,
+                            Weight,
+                            Monday,
+                            Tuesday,
+                            Wednesday,
+                            Thursday,
+                            Friday,
+                            Saturday,
+                            Sunday
+                        )
+                        VALUES
+                        ('00:00:00', '12:00:00', '08:30:00', '0:30:00', 10, 0, 1, 0, 0, 1, 0, 1), 
+                        ('12:00:00', '24:00:00', '08:30:00', '0:30:00', 20, 0, 1, 0, 0, 1, 0, 1)
+                        ''')
+                    conn.commit()
+                    conn.close()
+
                     original_optimize_tasks_with_gurobi()
                 if st.button("🚀 Run Task Optimization (15 min. interval)", use_container_width=True):
                     optimize_tasks_with_gurobi()
