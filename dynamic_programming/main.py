@@ -1187,7 +1187,7 @@ def original_optimize_tasks_with_gurobi():
 
         # --- Enhanced Display ---
         results_df = pd.DataFrame(results)
-        
+        st.dataframe(results_df)
         # 1. Cost Validation Check
         validation = results_df.groupby(["Shift ID", "Day"]).agg(
             Total_Cost=("Task Cost ($)", "sum"),
