@@ -1711,9 +1711,9 @@ def optimize_tasks_with_gurobi():
             if constr.IISConstr:
                 st.write(f"⚠️ Infeasible constraint: {constr.constrName}")
 
-def new_optimize_gurobi(tasks, shifts):
+def new_optimize(tasks, shifts):
     """
-    Optimize task scheduling and calculate total shift costs using Gurobi.
+    Optimize task scheduling and calculate total shift costs.
 
     Parameters:
     tasks (list): List of tasks with attributes:
@@ -1728,80 +1728,78 @@ def new_optimize_gurobi(tasks, shifts):
                    - cost: Cost per nurse per shift
 
     Returns:
-    tuple: schedule (list of task assignments), total_cost (float), shift_costs (list)
+    tuple: schedule (list of task assignments), total_cost (int), shift_costs (list)
     """
-    model = Model("TaskScheduling")
 
-    # Variables
-    x = {}  # x[task, start_time]: binary variable for assigning a task to a start time
-    time_slots = {t: model.addVar(vtype=GRB.INTEGER, name=f"time_slot_{t}") for t in range(24 * 60)}
-    
+    # Sort tasks by 'nurses_required' in descending order
+    tasks = sorted(tasks, key=lambda x: x["nurses_required"], reverse=True)
+
+    # Initialize schedule and cost tracker
+    schedule = []
+    time_slots = {i: 0 for i in range(24 * 60)}  # Tracks maximum nurses at each minute
+
+    # Helper function to calculate the total cost for all shifts
+    def calculate_shift_cost(temp_time_slots):
+        shift_costs = []
+        for shift in shifts:
+            max_nurses = max(temp_time_slots[t] for t in range(shift["start"], shift["end"]))
+            shift_costs.append(max_nurses * shift["cost"])
+        return sum(shift_costs)
+
+    # Task assignment logic
     for task in tasks:
+        best_cost = float("inf")
+        best_start = None
+
+        # Check all valid start times within the task's time window
         for start_time in range(task["start_window"], task["end_window"] - task["duration"] + 1):
-            x[(task["name"], start_time)] = model.addVar(vtype=GRB.BINARY, name=f"x_{task['name']}_{start_time}")
+            end_time = start_time + task["duration"]
 
-    # Constraints
-    # 1. Each task is assigned exactly once
-    for task in tasks:
-        model.addConstr(
-            quicksum(x[(task["name"], start_time)] for start_time in range(task["start_window"], task["end_window"] - task["duration"] + 1)) == 1,
-            name=f"TaskAssignment_{task['name']}"
-        )
-    
-    # 2. Update time slots to track nurses required at each minute
-    for t in range(24 * 60):
-        model.addConstr(
-            time_slots[t] == quicksum(
-                x[(task["name"], start_time)] * task["nurses_required"]
-                for task in tasks
-                for start_time in range(max(task["start_window"], t - task["duration"] + 1), min(task["end_window"], t + 1))
-                if (task["name"], start_time) in x and start_time + task["duration"] > t >= start_time
-            ),
-            name=f"NursesRequired_{t}"
-        )
-    
-    # 3. Limit nurses in each shift based on defined shift times
+            # Temporarily update time_slots to test the assignment
+            temp_time_slots = time_slots.copy()
+            for t in range(start_time, end_time):
+                temp_time_slots[t] += task["nurses_required"]
+
+            # Calculate the cost for this potential assignment
+            cost = calculate_shift_cost(temp_time_slots)
+
+            # Update if this interval is better
+            if cost < best_cost:
+                best_cost = cost
+                best_start = start_time
+
+        # Assign the task to the best interval
+        if best_start is not None:
+            end_time = best_start + task["duration"]
+            schedule.append({
+                "task": task["name"],
+                "start": best_start,
+                "end": end_time,
+                "nurses_required": task["nurses_required"],
+            })
+
+            # Update time slots with the assigned task
+            for t in range(best_start, end_time):
+                time_slots[t] += task["nurses_required"]
+
+    # Calculate final shift costs
     shift_costs = []
     for shift in shifts:
-        max_nurses = model.addVar(vtype=GRB.INTEGER, name=f"MaxNurses_{shift['start']}_{shift['end']}")
+        max_nurses = max(time_slots[t] for t in range(shift["start"], shift["end"]))
         shift_costs.append(max_nurses * shift["cost"])
-        model.addConstr(
-            max_nurses >= time_slots[t] for t in range(shift["start"], shift["end"])
-        )
 
-    # Objective: Minimize total shift costs
-    model.setObjective(quicksum(shift_costs), GRB.MINIMIZE)
+    # Calculate total cost
+    total_cost = sum(shift_costs)
 
-    # Solve the model
-    model.optimize()
-
-    # Retrieve the solution
-    if model.status == GRB.OPTIMAL:
-        schedule = []
-        for task in tasks:
-            for start_time in range(task["start_window"], task["end_window"] - task["duration"] + 1):
-                if x[(task["name"], start_time)].x > 0.5:
-                    schedule.append({
-                        "task": task["name"],
-                        "start": start_time,
-                        "end": start_time + task["duration"],
-                        "nurses_required": task["nurses_required"],
-                    })
-        total_cost = model.objVal
-        final_shift_costs = [var.x for var in shift_costs]
-
-        # Print assignments and costs
-        st.write("Task Assignments:")
-        for assignment in schedule:
-            start_hour, start_minute = divmod(assignment["start"], 60)
-            end_hour, end_minute = divmod(assignment["end"], 60)
-            st.write(f"{assignment['task']} assigned from {start_hour:02}:{start_minute:02} to {end_hour:02}:{end_minute:02}")
-        st.write(f"Shift costs: {final_shift_costs}")
-        st.write(f"Total cost: {total_cost}")
-
-        return schedule, total_cost, final_shift_costs
-    else:
-        st.write("No optimal solution found.")
+    # Output the schedule and costs
+    st.write("Task Assignments:")
+    for assignment in schedule:
+        start_hour, start_minute = divmod(assignment["start"], 60)
+        end_hour, end_minute = divmod(assignment["end"], 60)
+        st.write(f"{assignment['task']} assigned from {start_hour:02}:{start_minute:02} to {end_hour:02}:{end_minute:02}")
+    st.write(f"Shift costs: {shift_costs}")
+    st.write(f"Total cost: {total_cost}")
+ 
 
  
 # ------------------------------------------------------------------
@@ -2436,7 +2434,7 @@ def main():
                         {"start": 8 * 60, "end": 23 * 60, "cost": 20}, # Shift 2: 12:00-24:00
                     ]
 
-                    new_optimize_gurobi(tasks, shifts)
+                    new_optimize(tasks, shifts)
                 
     with contact_tab:
         show_contact()
