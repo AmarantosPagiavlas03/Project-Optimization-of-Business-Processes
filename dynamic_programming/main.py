@@ -1759,7 +1759,8 @@ def new_optimize_tasks_with_gurobi():
 
     tasks = get_all("TasksTable3")
     shifts = get_all("ShiftsTable6")
-
+    tasks = tasks.to_dict('records')
+    shifts = shifts.to_dict('records')
     # Sort tasks by 'NursesRequired' in descending order
     tasks = sorted(tasks, key=lambda x: x["NursesRequired"], reverse=True)
 
