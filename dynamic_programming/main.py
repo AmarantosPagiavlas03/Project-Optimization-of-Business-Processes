@@ -1008,7 +1008,8 @@ def original_optimize_tasks_with_gurobi():
     # --- 1. Load Data ---
     tasks_df = get_all("TasksTable3")
     shifts_df = get_all("ShiftsTable6")
-
+    st.dataframe(tasks_df)
+    st.dataframe(shifts_df)
     # Basic check for empty data
     if tasks_df.empty or shifts_df.empty:
         st.error("Tasks or shifts data is missing. Add data and try again.")
