@@ -1823,11 +1823,11 @@ def new_optimize_tasks_with_gurobi():
     for assignment in schedule:
         start_hour, start_minute = divmod(assignment["start"], 60)
         end_hour, end_minute = divmod(assignment["end"], 60)
-        print(f"{assignment['task']} assigned from {start_hour:02}:{start_minute:02} to {end_hour:02}:{end_minute:02}")
+        st.write(f"{assignment['task']} assigned from {start_hour:02}:{start_minute:02} to {end_hour:02}:{end_minute:02}")
 
     total_cost = sum(shift_costs)
-    print(f"Shift costs: {shift_costs}")
-    print(f"Total cost: {total_cost}")
+    st.write(f"Shift costs: {shift_costs}")
+    st.write(f"Total cost: {total_cost}")
 
 # ------------------------------------------------------------------
 #                          Visualization
