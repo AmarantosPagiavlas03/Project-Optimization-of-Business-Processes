@@ -2436,7 +2436,7 @@ def main():
                         {"start": 8 * 60, "end": 23 * 60, "cost": 20}, # Shift 2: 12:00-24:00
                     ]
 
-                    new_optimize(tasks, shifts)
+                    new_optimize_gurobi(tasks, shifts)
                 
     with contact_tab:
         show_contact()
