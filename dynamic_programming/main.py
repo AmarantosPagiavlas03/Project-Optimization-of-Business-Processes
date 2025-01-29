@@ -1669,9 +1669,12 @@ def optimize_tasks_with_gurobi():
 
         # results_df = pd.DataFrame(results)
         # day_summary_df = pd.DataFrame(day_summary)
-
+        
         # Calculate daily summaries
         if not results_df.empty:
+            # Get list of all unique days present (replace with day_names if needed)
+            all_days_list = results_df['Day'].unique().tolist()
+            
             # Group by shift and day to get each shift's total cost and weight
             shift_day_group = results_df.groupby(['Shift ID', 'Day'])
             shift_day_df = shift_day_group.agg(
@@ -1680,7 +1683,7 @@ def optimize_tasks_with_gurobi():
             ).reset_index()
             
             # Calculate max nurses per shift (total cost / weight)
-            shift_day_df['max_nurses'] = shift_day_df['total_cost'] / shift_day_df['weight']
+            shift_day_df['max_nurses'] = (shift_day_df['total_cost'] / shift_day_df['weight']).round().astype(int)
             
             # Group by day to sum total cost and max nurses
             daily_summary = shift_day_df.groupby('Day').agg(
@@ -1691,19 +1694,29 @@ def optimize_tasks_with_gurobi():
             # Count tasks assigned per day
             tasks_per_day = results_df.groupby('Day').size().reset_index(name='Tasks_Assigned')
             
-            # Merge to get the final day summary
-            day_summary_df = daily_summary.merge(tasks_per_day, on='Day', how='left')
+            # Create complete list of days
+            all_days = pd.DataFrame({'Day': day_names})  # Use your original day_names list
             
-            # Ensure all days are present (replace 'day_names' with your actual list of days)
-            all_days = pd.DataFrame({'Day': day_names})  # Replace day_names if needed
-            day_summary_df = all_days.merge(day_summary_df, on='Day', how='left').fillna(0)
+            # Merge with all days
+            day_summary_df = all_days.merge(daily_summary, on='Day', how='left')
+            day_summary_df = day_summary_df.merge(tasks_per_day, on='Day', how='left')
+            
+            # Fill NaN values with 0
+            day_summary_df.fillna({
+                'Total_Cost': 0,
+                'Total_Workers': 0,
+                'Tasks_Assigned': 0
+            }, inplace=True)
             
             # Format columns
             day_summary_df['Total_Cost'] = day_summary_df['Total_Cost'].round(2)
-            day_summary_df['Total_Workers'] = day_summary_df['Total_Workers'].astype(int)
             
         else:
-            day_summary_df = pd.DataFrame(columns=['Day', 'Total_Cost', 'Total_Workers', 'Tasks_Assigned'])
+            # Create empty summary with all days
+            day_summary_df = pd.DataFrame({'Day': day_names})
+            day_summary_df['Total_Cost'] = 0.0
+            day_summary_df['Total_Workers'] = 0
+            day_summary_df['Tasks_Assigned'] = 0
 
         # Display daily summary
         st.subheader("Daily Summary")
@@ -1711,7 +1724,7 @@ def optimize_tasks_with_gurobi():
             'Total_Cost': 'Total Cost ($)',
             'Total_Workers': 'Workers Assigned',
             'Tasks_Assigned': 'Tasks Assigned'
-        }))      
+        }))    
 
         results_df = pd.DataFrame(results)
         day_summary_df = pd.DataFrame(day_summary_df)
