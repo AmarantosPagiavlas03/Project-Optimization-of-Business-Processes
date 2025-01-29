@@ -1492,7 +1492,7 @@ def optimize_tasks_with_gurobi():
         def calculate_cost_for_intervals(task_rows, shift_row, weight, interval_minutes=15):
             """
             Calculate the cost for all 15-minute intervals within the tasks' and shift's time overlap,
-            minimizing the maximum nurses required across overlapping tasks.
+            ensuring that no tasks are assigned during shift breaks and minimizing the maximum nurses required across overlapping tasks.
             """
             shift_start = pd.to_datetime(shift_row["StartTime"], format="%H:%M:%S")
             shift_end = pd.to_datetime(shift_row["EndTime"], format="%H:%M:%S")
@@ -1536,13 +1536,15 @@ def optimize_tasks_with_gurobi():
                 for start in start_times:
                     end = start + pd.Timedelta(minutes=duration_minutes)
 
-                    # Ensure the task does not overlap with any break
-                    if any(break_start < end and start < break_end for break_start, break_end in shift_breaks):
+                    # Ensure the entire task duration does not overlap with any break
+                    if any(break_start <= start < break_end or break_start < end <= break_end or (start <= break_start and end >= break_end) for break_start, break_end in shift_breaks):
                         continue
 
                     # Temporarily update the time slots
                     temp_slots = time_slots.copy()
                     for t in range(int(start.timestamp() // 60), int(end.timestamp() // 60)):
+                        if t not in time_slots:
+                            continue  # Skip if within a break
                         temp_slots[t] += task_row["NursesRequired"]
 
                     # Calculate the maximum number of nurses required at any time
@@ -1567,6 +1569,8 @@ def optimize_tasks_with_gurobi():
                     })
 
                     for t in range(int(best_start.timestamp() // 60), int((best_start + pd.Timedelta(minutes=duration_minutes)).timestamp() // 60)):
+                        if t not in time_slots:
+                            continue  # Skip if within a break
                         time_slots[t] += task_row["NursesRequired"]
 
             # Final cost calculation based on the updated time slots
