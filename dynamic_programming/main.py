@@ -1671,12 +1671,16 @@ def optimize_tasks_with_gurobi():
         # day_summary_df = pd.DataFrame(day_summary)
 
         # Calculate daily summaries
+        # Calculate daily summaries
         daily_costs = {day: 0 for day in day_names}
         daily_workers = {day: 0 for day in day_names}
         daily_tasks = {day: 0 for day in day_names}
 
+        # Initialize day-level time slots to track overlaps across all shifts
+        day_time_slots = {day: {} for day in day_names}
+
+        # Loop through shifts and tasks
         for (shift_id, day_str), var in shift_worker_vars.items():
-            # Retrieve shift start and end times
             shift_start = pd.to_datetime(shifts_df.loc[shift_id, "StartTime"], format="%H:%M:%S")
             shift_end = pd.to_datetime(shifts_df.loc[shift_id, "EndTime"], format="%H:%M:%S")
             interval_minutes = 15
@@ -1689,7 +1693,6 @@ def optimize_tasks_with_gurobi():
                 if task_var.x > 0.5 and assigned_shift_id == shift_id and task_day == day_str:
                     daily_tasks[day_str] += 1
 
-                    # Retrieve task details from tasks_df
                     task_row = tasks_df.loc[task_id]
                     task_start = pd.to_datetime(task_row["StartTime"], format="%H:%M:%S")
                     task_end = pd.to_datetime(task_row["EndTime"], format="%H:%M:%S")
@@ -1699,17 +1702,24 @@ def optimize_tasks_with_gurobi():
                     for minute in range(int(task_start.timestamp() // 60), int(task_end.timestamp() // 60)):
                         if minute in time_slots:
                             time_slots[minute] += nurses_required
+                        # Update the day-level time slots to track overlaps
+                        if minute not in day_time_slots[day_str]:
+                            day_time_slots[day_str][minute] = 0
+                        day_time_slots[day_str][minute] += nurses_required
 
             # Calculate max nurses needed for the shift and total shift cost
             max_nurses_needed = max(time_slots.values())
             shift_cost = max_nurses_needed * shifts_df.loc[shift_id, "Weight"]
 
             # Update daily totals
-            daily_workers[day_str] = max(daily_workers[day_str], max_nurses_needed)
             daily_costs[day_str] += shift_cost
 
-        # Compile daily summaries into a list
+        # Finalize daily workers by taking the max across all day-level time slots
+        for day, slots in day_time_slots.items():
+            if slots:
+                daily_workers[day] = max(slots.values())
 
+        # Compile daily summaries into a list
         day_summary = []
         for day in day_names:
             day_summary.append({
@@ -1722,6 +1732,7 @@ def optimize_tasks_with_gurobi():
         # Convert results to DataFrame
         results_df = pd.DataFrame(results)
         day_summary_df = pd.DataFrame(day_summary)
+
 
 
         # --- Display Results ---
