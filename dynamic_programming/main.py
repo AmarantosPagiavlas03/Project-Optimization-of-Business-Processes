@@ -1520,6 +1520,9 @@ def optimize_tasks_with_gurobi():
                 start_time = max(task_start, shift_start)
                 end_time = min(task_end, shift_end)
 
+                if start_time >= end_time:
+                    continue  # Skip tasks that don't overlap with the shift
+
                 # Generate possible start times at 15-minute intervals
                 start_times = pd.date_range(start=start_time, end=end_time - pd.Timedelta(minutes=duration_minutes), freq=f"{interval_minutes}min")
 
@@ -1535,10 +1538,10 @@ def optimize_tasks_with_gurobi():
                         temp_slots[t] += task_row["NursesRequired"]
 
                     # Calculate the maximum number of nurses required at any time
-                    max_nurses = max(temp_slots.values())
-                    cost = max_nurses * weight
+                    current_max = max(temp_slots.values())
+                    cost = current_max * weight
 
-                    if cost < best_cost:
+                    if cost < best_cost  or (cost == best_cost and not best_start):
                         best_cost = cost
                         best_start = start
 
@@ -1559,30 +1562,45 @@ def optimize_tasks_with_gurobi():
                         time_slots[t] += task_row["NursesRequired"]
 
             # Final cost calculation based on the updated time slots
-            total_cost = max(time_slots.values()) * weight
+            max_nurses = max(time_slots.values(), default=0)
+            total_cost = max_nurses * weight
 
-            return assignments, total_cost
+            return assignments, total_cost, max_nurses
 
         # Compute results
         processed_shifts = set()
         results = []
+        daily_costs = {day: 0.0 for day in day_names}
+        daily_workers = {day: 0 for day in day_names}
+        daily_tasks = {day: 0 for day in day_names}
         for entry in temp_results:
             shift_id = entry["shift_id"]
-            if shift_id in processed_shifts:
-                continue  # Skip already processed shifts
+            day = entry["day"]
+            key = (shift_id, day)
+
+            # if shift_id in processed_shifts:
+            #     continue  # Skip already processed shifts
+
+            if key in processed_shifts:
+                continue
+            processed_shifts.add(key)
 
             shift_row = shifts_df.loc[shift_id]
             weight = shift_row["Weight"]
-            key = (shift_id, entry["day"])
+            #key = (shift_id, entry["day"])
 
             # Filter tasks for the current shift
             relevant_tasks = [
                 tasks_df.loc[task["task_id"]]
-                for task in temp_results if task["shift_id"] == shift_id
+                for task in temp_results
+                if task["shift_id"] == shift_id and task["day"] == day
             ]
 
             # Compute optimal intervals and costs
-            assignments, total_cost = calculate_cost_for_intervals(relevant_tasks, shift_row, weight)
+            assignments, total_cost, max_nurses  = calculate_cost_for_intervals(relevant_tasks, shift_row, weight)
+            daily_costs[day] += total_cost
+            daily_workers[day] += max_nurses
+            daily_tasks[day] += len(assignments)  # Count assigned tasks
 
             # Collect results for each task
             for assignment in assignments:
@@ -1599,11 +1617,11 @@ def optimize_tasks_with_gurobi():
                     "Shift End": shift_row["EndTime"].strftime("%H:%M"),
                     "Workers Assigned": assignment["Workers Assigned"],
                     "Hourly Rate ($)": weight,
-                    "Task Cost ($)": round(total_cost, 2),
+                    "Task Cost ($)":  round(assignment["Workers Assigned"] * weight, 2) ,
                     "Cost %": round((total_cost / shift_day_cost[key]) * 100, 1) if shift_day_cost[key] > 0 else 0
                 })
 
-            processed_shifts.add(shift_id)  # Mark this shift as processed
+            #processed_shifts.add(shift_id)  # Mark this shift as processed
 
         # Convert results to DataFrame
         results_df = pd.DataFrame(results)
@@ -1642,33 +1660,56 @@ def optimize_tasks_with_gurobi():
         else:
             st.warning("No results to visualize") 
 
- 
- 
-        # Calculate daily summaries
-        daily_costs = {day: 0 for day in day_names}
-        daily_workers = {day: 0 for day in day_names}
-        daily_tasks = {day: 0 for day in day_names}
-
-        for (shift_id, day_str), var in shift_worker_vars.items():
-            workers = var.x
-            daily_workers[day_str] += workers
-            daily_costs[day_str] += workers * shifts_df.loc[shift_id, "Weight"]
-
-        for (task_id, shift_id, d), var in task_shift_vars.items():
-            if var.x > 0.5:
-                daily_tasks[d] += 1
 
         day_summary = []
         for day in day_names:
             day_summary.append({
                 "Day": day,
-                "Total Cost ($)": daily_costs[day],
+                "Total Cost ($)": round(daily_costs[day], 2),
                 "Tasks Assigned": daily_tasks[day],
                 "Workers Assigned": daily_workers[day]
             })
 
-        results_df = pd.DataFrame(results)
         day_summary_df = pd.DataFrame(day_summary)
+
+        # Replace existing visualization and validation code with this
+        if not day_summary_df.empty:
+            st.write("### Daily Summaries")
+            st.dataframe(day_summary_df.style.format({
+                "Total Cost ($)": "{:.2f}",
+                "Tasks Assigned": "{:.0f}",
+                "Workers Assigned": "{:.0f}"
+            }))
+        else:
+            st.warning("No daily summaries available.")
+
+        
+ 
+        # # Calculate daily summaries
+        # daily_costs = {day: 0 for day in day_names}
+        # daily_workers = {day: 0 for day in day_names}
+        # daily_tasks = {day: 0 for day in day_names}
+
+        # for (shift_id, day_str), var in shift_worker_vars.items():
+        #     workers = var.x
+        #     daily_workers[day_str] += workers
+        #     daily_costs[day_str] += workers * shifts_df.loc[shift_id, "Weight"]
+
+        # for (task_id, shift_id, d), var in task_shift_vars.items():
+        #     if var.x > 0.5:
+        #         daily_tasks[d] += 1
+
+        # day_summary = []
+        # for day in day_names:
+        #     day_summary.append({
+        #         "Day": day,
+        #         "Total Cost ($)": daily_costs[day],
+        #         "Tasks Assigned": daily_tasks[day],
+        #         "Workers Assigned": daily_workers[day]
+        #     })
+
+        # results_df = pd.DataFrame(results)
+        # day_summary_df = pd.DataFrame(day_summary)
 
         # # Calculate daily summaries
         # if not results_df.empty:
