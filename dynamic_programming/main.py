@@ -1618,7 +1618,7 @@ def optimize_tasks_with_gurobi():
                     "Workers Assigned": assignment["Workers Assigned"],
                     "Hourly Rate ($)": weight,
                     "Task Cost ($)":  round(assignment["Workers Assigned"] * weight, 2) ,
-                    "Cost %": round(assignment["Workers Assigned"] * weight, 2) 
+                    #"Cost %": round((total_cost / shift_day_cost[key]) * 100, 1) if shift_day_cost[key] > 0 else 0
                 })
 
             #processed_shifts.add(shift_id)  # Mark this shift as processed
