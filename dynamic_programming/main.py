@@ -1487,11 +1487,10 @@ def optimize_tasks_with_gurobi():
 
         # Phase 2: Calculate proportional costs
 
-        # Updated function to calculate the cost using the approach from Code 2
         def calculate_cost_for_intervals(task_row, shift_row, weight, interval_minutes=15):
             """
             Calculate the cost for all 15-minute intervals within the task's and shift's time overlap,
-            using the logic of cost minimization from Code 2.
+            using the new logic for cost minimization based on shift cost summation.
             """
             # Convert times to datetime for manipulation
             task_start = pd.to_datetime(task_row["StartTime"], format="%H:%M:%S")
@@ -1518,9 +1517,15 @@ def optimize_tasks_with_gurobi():
             best_cost = float("inf")
             time_slots = {minute: 0 for minute in range(int(shift_start.timestamp() // 60), int(shift_end.timestamp() // 60))}
 
-            # Helper function to calculate the total shift cost
-            def calculate_shift_cost(temp_slots):
-                return max(temp_slots.values()) * weight
+            # Helper function to calculate total shift cost
+            def calculate_total_shift_cost(temp_slots):
+                total_cost = 0
+                for shift_start_minute in range(int(shift_start.timestamp() // 60), int(shift_end.timestamp() // 60), interval_minutes):
+                    interval_max_nurses = max(
+                        temp_slots.get(t, 0) for t in range(shift_start_minute, shift_start_minute + interval_minutes)
+                    )
+                    total_cost += interval_max_nurses * weight
+                return total_cost
 
             # Iterate over possible start times to find the optimal schedule
             for start in start_times:
@@ -1531,8 +1536,8 @@ def optimize_tasks_with_gurobi():
                 for t in range(int(start.timestamp() // 60), int(end.timestamp() // 60)):
                     temp_slots[t] += 1
 
-                # Calculate cost for this interval
-                cost = calculate_shift_cost(temp_slots)
+                # Calculate total cost for this interval
+                cost = calculate_total_shift_cost(temp_slots)
                 
                 # Update best cost and start time
                 if cost < best_cost:
