@@ -1561,8 +1561,8 @@ def optimize_tasks_with_gurobi():
 
             # Filter tasks for the current shift
             relevant_tasks = [
-                tasks_df.loc[task_id]
-                for task_id in temp_results if task_id["shift_id"] == entry["shift_id"]
+                tasks_df.loc[task["task_id"]]
+                for task in temp_results if task["shift_id"] == entry["shift_id"]
             ]
 
             # Compute optimal intervals and costs
