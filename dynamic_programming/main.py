@@ -1670,7 +1670,7 @@ def optimize_tasks_with_gurobi():
         # results_df = pd.DataFrame(results)
         # day_summary_df = pd.DataFrame(day_summary)
 
-        # Calculate daily summaries
+
         # Calculate daily summaries
 
         daily_costs = {day: 0 for day in day_names}
@@ -1737,10 +1737,9 @@ def optimize_tasks_with_gurobi():
         results_df = pd.DataFrame(results)
         day_summary_df = pd.DataFrame(day_summary)
 
-
         # --- Display Results ---
         st.success("✅ Task-shift optimization successful!")
-        st.balloons()
+        st.toast()
 
         # Overall Metrics
         total_cost = model.ObjVal
