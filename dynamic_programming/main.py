@@ -1558,16 +1558,21 @@ def optimize_tasks_with_gurobi():
             return assignments, total_cost
 
         # Compute results
+        processed_shifts = set()
         results = []
         for entry in temp_results:
-            shift_row = shifts_df.loc[entry["shift_id"]]
+            shift_id = entry["shift_id"]
+            if shift_id in processed_shifts:
+                continue  # Skip already processed shifts
+
+            shift_row = shifts_df.loc[shift_id]
             weight = shift_row["Weight"]
-            key = (entry["shift_id"], entry["day"])
+            key = (shift_id, entry["day"])
 
             # Filter tasks for the current shift
             relevant_tasks = [
                 tasks_df.loc[task["task_id"]]
-                for task in temp_results if task["shift_id"] == entry["shift_id"]
+                for task in temp_results if task["shift_id"] == shift_id
             ]
 
             # Compute optimal intervals and costs
@@ -1591,6 +1596,8 @@ def optimize_tasks_with_gurobi():
                     "Task Cost ($)": round(total_cost, 2),
                     "Cost %": round((total_cost / shift_day_cost[key]) * 100, 1) if shift_day_cost[key] > 0 else 0
                 })
+
+            processed_shifts.add(shift_id)  # Mark this shift as processed
 
         # Convert results to DataFrame
         results_df = pd.DataFrame(results)
