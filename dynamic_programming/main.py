@@ -970,7 +970,8 @@ def insert3():
             ('task 3', 'Monday', '09:00:00', '10:00:00', '0:30:00', 5),
             ('task 4', 'Monday', '09:00:00', '10:00:00', '0:30:00', 11),
             ('task 5', 'Monday', '09:00:00', '10:00:00', '0:30:00', 1),
-            ('task 6', 'Monday', '08:30:00', '10:00:00', '0:30:00', 1);
+            ('task 6', 'Monday', '08:30:00', '10:00:00', '0:30:00', 1),
+            ('task 7', 'Tuesday', '08:30:00', '10:00:00', '0:30:00', 1);
     ''')
     conn.commit()
     c.execute('''
@@ -1493,65 +1494,52 @@ def optimize_tasks_with_gurobi():
         def calculate_cost_for_intervals(task_rows, shift_row, weight, interval_minutes=15):
             """
             Calculate the cost for all 15-minute intervals within the tasks' and shift's time overlap,
-            ensuring tasks are not assigned during shift breaks and minimizing the maximum nurses required.
+            minimizing the maximum nurses required across overlapping tasks.
             """
             shift_start = pd.to_datetime(shift_row["StartTime"], format="%H:%M:%S")
             shift_end = pd.to_datetime(shift_row["EndTime"], format="%H:%M:%S")
-            shift_breaks = [
-                (pd.to_datetime(start, format="%H:%M:%S"), pd.to_datetime(start, format="%H:%M:%S") + pd.to_timedelta(duration, unit='m'))
-                for start, duration in shift_row.get("Breaks", [])
-            ]
 
-            # Generate time slots for the entire shift, excluding breaks
-            time_slots = {
-                minute: 0
-                for minute in range(int(shift_start.timestamp() // 60), int(shift_end.timestamp() // 60))
-                if all(not (start.timestamp() // 60 <= minute < (start + pd.to_timedelta(duration, unit='m')).timestamp() // 60)
-                    for start, duration in shift_row.get("Breaks", []))
-            }
-            
+            # Generate time slots for the entire shift
+            time_slots = {minute: 0 for minute in range(int(shift_start.timestamp() // 60), int(shift_end.timestamp() // 60))}
+
             assignments = []
 
-            # Assign tasks to minimize the overall cost
+            # Assign all tasks to minimize the overall cost
             for task_row in task_rows:
                 task_start = pd.to_datetime(task_row["StartTime"], format="%H:%M:%S")
                 task_end = pd.to_datetime(task_row["EndTime"], format="%H:%M:%S")
-                
+
                 try:
                     duration_minutes = int(task_row["Duration"])
                 except ValueError:
                     duration_td = pd.to_timedelta(task_row["Duration"])
                     duration_minutes = int(duration_td.total_seconds() / 60)
-                
+
                 start_time = max(task_start, shift_start)
                 end_time = min(task_end, shift_end)
-                
-                # Generate possible start times at 15-minute intervals, avoiding breaks
-                start_times = []
-                for start in pd.date_range(start=start_time, end=end_time - pd.Timedelta(minutes=duration_minutes), freq=f"{interval_minutes}min"):
-                    end = start + pd.Timedelta(minutes=duration_minutes)
-                    if all(not (break_start <= start < break_end or break_start < end <= break_end) for break_start, break_end in shift_breaks):
-                        start_times.append(start)
+
+                # Generate possible start times at 15-minute intervals
+                start_times = pd.date_range(start=start_time, end=end_time - pd.Timedelta(minutes=duration_minutes), freq=f"{interval_minutes}min")
 
                 best_start = None
                 best_cost = float("inf")
-                
+
                 for start in start_times:
                     end = start + pd.Timedelta(minutes=duration_minutes)
-                    
+
                     # Temporarily update the time slots
                     temp_slots = time_slots.copy()
                     for t in range(int(start.timestamp() // 60), int(end.timestamp() // 60)):
                         temp_slots[t] += task_row["NursesRequired"]
-                    
+
                     # Calculate the maximum number of nurses required at any time
                     max_nurses = max(temp_slots.values())
                     cost = max_nurses * weight
-                    
+
                     if cost < best_cost:
                         best_cost = cost
                         best_start = start
-                
+
                 # Assign the task to the best interval
                 if best_start:
                     assignments.append({
@@ -1564,14 +1552,15 @@ def optimize_tasks_with_gurobi():
                         "End Task": best_start + pd.Timedelta(minutes=duration_minutes),
                         "Workers Assigned": task_row["NursesRequired"]
                     })
-                    
+
                     for t in range(int(best_start.timestamp() // 60), int((best_start + pd.Timedelta(minutes=duration_minutes)).timestamp() // 60)):
                         time_slots[t] += task_row["NursesRequired"]
 
             # Final cost calculation based on the updated time slots
-            total_cost = max(time_slots.values()) * weight if time_slots else 0
+            total_cost = max(time_slots.values()) * weight
 
             return assignments, total_cost
+
         # Compute results
         processed_shifts = set()
         results = []
