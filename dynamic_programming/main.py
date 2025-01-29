@@ -1739,7 +1739,7 @@ def optimize_tasks_with_gurobi():
 
         # --- Display Results ---
         st.success("✅ Task-shift optimization successful!")
-        st.toast()
+        st.balloons()
 
         # Overall Metrics
         total_cost = model.ObjVal
