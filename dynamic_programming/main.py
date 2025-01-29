@@ -1670,6 +1670,7 @@ def optimize_tasks_with_gurobi():
         # results_df = pd.DataFrame(results)
         # day_summary_df = pd.DataFrame(day_summary)
 
+        # Calculate daily summaries
         daily_costs = {day: 0 for day in day_names}
         daily_workers = {day: 0 for day in day_names}
         daily_tasks = {day: 0 for day in day_names}
@@ -1688,10 +1689,11 @@ def optimize_tasks_with_gurobi():
                 if task_var.x > 0.5 and assigned_shift_id == shift_id and task_day == day_str:
                     daily_tasks[day_str] += 1
 
-                    # Retrieve task start, end, and required nurses
-                    task_start = pd.to_datetime(task_shift_vars[(task_id, shift_id, task_day)]["TaskStart"], format="%H:%M:%S")
-                    task_end = pd.to_datetime(task_shift_vars[(task_id, shift_id, task_day)]["TaskEnd"], format="%H:%M:%S")
-                    nurses_required = task_shift_vars[(task_id, shift_id, task_day)]["NursesRequired"]
+                    # Retrieve task details from tasks_df
+                    task_row = tasks_df.loc[task_id]
+                    task_start = pd.to_datetime(task_row["StartTime"], format="%H:%M:%S")
+                    task_end = pd.to_datetime(task_row["EndTime"], format="%H:%M:%S")
+                    nurses_required = task_row["NursesRequired"]
 
                     # Update time slots for this task
                     for minute in range(int(task_start.timestamp() // 60), int(task_end.timestamp() // 60)):
@@ -1720,6 +1722,7 @@ def optimize_tasks_with_gurobi():
         # Convert results to DataFrame
         results_df = pd.DataFrame(results)
         day_summary_df = pd.DataFrame(day_summary)
+
 
         # --- Display Results ---
         st.success("✅ Task-shift optimization successful!")
