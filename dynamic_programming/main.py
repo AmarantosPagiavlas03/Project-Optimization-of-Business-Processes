@@ -1498,6 +1498,8 @@ def optimize_tasks_with_gurobi():
             # Generate time slots for the entire shift
             time_slots = {minute: 0 for minute in range(int(shift_start.timestamp() // 60), int(shift_end.timestamp() // 60))}
 
+            assignments = []
+
             # Assign all tasks to minimize the overall cost
             for task_row in task_rows:
                 task_start = pd.to_datetime(task_row["StartTime"], format="%H:%M:%S")
@@ -1536,13 +1538,24 @@ def optimize_tasks_with_gurobi():
 
                 # Assign the task to the best interval
                 if best_start:
+                    assignments.append({
+                        "Task ID": task_row["id"],
+                        "Task Name": task_row["TaskName"],
+                        "Day": task_row["Day"],
+                        "Task Start": task_row["StartTime"],
+                        "Task End": task_row["EndTime"],
+                        "Begin Task": best_start,
+                        "End Task": best_start + pd.Timedelta(minutes=duration_minutes),
+                        "Workers Assigned": task_row["NursesRequired"]
+                    })
+
                     for t in range(int(best_start.timestamp() // 60), int((best_start + pd.Timedelta(minutes=duration_minutes)).timestamp() // 60)):
                         time_slots[t] += task_row["NursesRequired"]
 
             # Final cost calculation based on the updated time slots
             total_cost = max(time_slots.values()) * weight
 
-            return time_slots, total_cost
+            return assignments, total_cost
 
         # Compute results
         results = []
@@ -1558,22 +1571,22 @@ def optimize_tasks_with_gurobi():
             ]
 
             # Compute optimal intervals and costs
-            time_slots, total_cost = calculate_cost_for_intervals(relevant_tasks, shift_row, weight)
+            assignments, total_cost = calculate_cost_for_intervals(relevant_tasks, shift_row, weight)
 
             # Collect results for each task
-            for task_row in relevant_tasks:
+            for assignment in assignments:
                 results.append({
-                    "Task ID": task_row["id"],
-                    "Task Name": task_row["TaskName"],
-                    "Day": entry["day"],
-                    "Task Start": task_row["StartTime"].strftime("%H:%M"),
-                    "Task End": task_row["EndTime"].strftime("%H:%M"),
-                    "Begin Task": "Optimized",
-                    "End Task": "Optimized",
+                    "Task ID": assignment["Task ID"],
+                    "Task Name": assignment["Task Name"],
+                    "Day": assignment["Day"],
+                    "Task Start": assignment["Task Start"].strftime("%H:%M"),
+                    "Task End": assignment["Task End"].strftime("%H:%M"),
+                    "Begin Task": assignment["Begin Task"].strftime("%H:%M"),
+                    "End Task": assignment["End Task"].strftime("%H:%M"),
                     "Shift ID": shift_row["id"],
                     "Shift Start": shift_row["StartTime"].strftime("%H:%M"),
                     "Shift End": shift_row["EndTime"].strftime("%H:%M"),
-                    "Workers Assigned": max(time_slots.values()),
+                    "Workers Assigned": assignment["Workers Assigned"],
                     "Hourly Rate ($)": weight,
                     "Task Cost ($)": round(total_cost, 2),
                     "Cost %": round((total_cost / shift_day_cost[key]) * 100, 1) if shift_day_cost[key] > 0 else 0
@@ -1581,6 +1594,7 @@ def optimize_tasks_with_gurobi():
 
         # Convert results to DataFrame
         results_df = pd.DataFrame(results)
+
 
        
         # 1. Cost Validation Check
