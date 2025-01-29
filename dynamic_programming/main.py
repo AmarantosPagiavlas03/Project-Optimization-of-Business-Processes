@@ -1670,66 +1670,52 @@ def optimize_tasks_with_gurobi():
         # results_df = pd.DataFrame(results)
         # day_summary_df = pd.DataFrame(day_summary)
 
-
-
-
         # Calculate daily summaries
-        daily_costs = {day: 0 for day in day_names}
-        daily_workers = {day: 0 for day in day_names}
-        daily_tasks = {day: 0 for day in day_names}
+        if not results_df.empty:
+            # Group by shift and day to get each shift's total cost and weight
+            shift_day_group = results_df.groupby(['Shift ID', 'Day'])
+            shift_day_df = shift_day_group.agg(
+                total_cost=('Task Cost ($)', 'first'),
+                weight=('Hourly Rate ($)', 'first')
+            ).reset_index()
+            
+            # Calculate max nurses per shift (total cost / weight)
+            shift_day_df['max_nurses'] = shift_day_df['total_cost'] / shift_day_df['weight']
+            
+            # Group by day to sum total cost and max nurses
+            daily_summary = shift_day_df.groupby('Day').agg(
+                Total_Cost=('total_cost', 'sum'),
+                Total_Workers=('max_nurses', 'sum')
+            ).reset_index()
+            
+            # Count tasks assigned per day
+            tasks_per_day = results_df.groupby('Day').size().reset_index(name='Tasks_Assigned')
+            
+            # Merge to get the final day summary
+            day_summary_df = daily_summary.merge(tasks_per_day, on='Day', how='left')
+            
+            # Ensure all days are present (replace 'day_names' with your actual list of days)
+            all_days = pd.DataFrame({'Day': day_names})  # Replace day_names if needed
+            day_summary_df = all_days.merge(day_summary_df, on='Day', how='left').fillna(0)
+            
+            # Format columns
+            day_summary_df['Total_Cost'] = day_summary_df['Total_Cost'].round(2)
+            day_summary_df['Total_Workers'] = day_summary_df['Total_Workers'].astype(int)
+            
+        else:
+            day_summary_df = pd.DataFrame(columns=['Day', 'Total_Cost', 'Total_Workers', 'Tasks_Assigned'])
 
-        # Loop through each shift
-        for shift_id in shifts_df["id"]:
-            shift_row = shifts_df.loc[shift_id]
-            shift_start = pd.to_datetime(shift_row["StartTime"], format="%H:%M:%S")
-            shift_end = pd.to_datetime(shift_row["EndTime"], format="%H:%M:%S")
-            shift_weight = shift_row["Weight"]
+        # Display daily summary
+        st.subheader("Daily Summary")
+        st.dataframe(day_summary_df.rename(columns={
+            'Total_Cost': 'Total Cost ($)',
+            'Total_Workers': 'Workers Assigned',
+            'Tasks_Assigned': 'Tasks Assigned'
+        }))      
 
-            # Initialize 15-minute intervals for this shift
-            shift_time_slots = {minute: 0 for minute in range(int(shift_start.timestamp() // 60), int(shift_end.timestamp() // 60), 15)}
-
-            # Filter tasks assigned to this shift
-            shift_tasks = results_df[results_df["Shift ID"] == shift_id]
-
-            # Populate time slots with nurses required
-            for _, task in shift_tasks.iterrows():
-                task_start = pd.to_datetime(task["Begin Task"], format="%H:%M")
-                task_end = pd.to_datetime(task["End Task"], format="%H:%M")
-                nurses_required = task["Workers Assigned"]
-                day = task["Day"]
-
-                # Update time slots for the task
-                for minute in range(int(task_start.timestamp() // 60), int(task_end.timestamp() // 60), 15):
-                    if minute in shift_time_slots:
-                        shift_time_slots[minute] += nurses_required
-
-                # Update daily task count
-                daily_tasks[day] += 1
-
-            # Calculate the maximum nurses needed for this shift
-            max_nurses_needed_shift = max(shift_time_slots.values())
-
-            # Calculate the total cost for this shift
-            shift_cost = max_nurses_needed_shift * shift_weight
-
-            # Update daily totals
-            if max_nurses_needed_shift > daily_workers[day]:
-                daily_workers[day] = max_nurses_needed_shift
-            daily_costs[day] += shift_cost
-
-        # Compile daily summaries into a list
-        day_summary = []
-        for day in day_names:
-            day_summary.append({
-                "Day": day,
-                "Total Cost ($)": daily_costs[day],
-                "Tasks Assigned": daily_tasks[day],
-                "Workers Assigned": daily_workers[day]
-            })
-
-        # Convert results to DataFrame
         results_df = pd.DataFrame(results)
-        day_summary_df = pd.DataFrame(day_summary)
+        day_summary_df = pd.DataFrame(day_summary_df)
+
 
 
         # --- Display Results ---
