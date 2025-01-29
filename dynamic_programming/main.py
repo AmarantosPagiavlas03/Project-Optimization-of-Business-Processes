@@ -1683,94 +1683,6 @@ def optimize_tasks_with_gurobi():
         else:
             st.warning("No daily summaries available.")
 
-        
- 
-        # # Calculate daily summaries
-        # daily_costs = {day: 0 for day in day_names}
-        # daily_workers = {day: 0 for day in day_names}
-        # daily_tasks = {day: 0 for day in day_names}
-
-        # for (shift_id, day_str), var in shift_worker_vars.items():
-        #     workers = var.x
-        #     daily_workers[day_str] += workers
-        #     daily_costs[day_str] += workers * shifts_df.loc[shift_id, "Weight"]
-
-        # for (task_id, shift_id, d), var in task_shift_vars.items():
-        #     if var.x > 0.5:
-        #         daily_tasks[d] += 1
-
-        # day_summary = []
-        # for day in day_names:
-        #     day_summary.append({
-        #         "Day": day,
-        #         "Total Cost ($)": daily_costs[day],
-        #         "Tasks Assigned": daily_tasks[day],
-        #         "Workers Assigned": daily_workers[day]
-        #     })
-
-        # results_df = pd.DataFrame(results)
-        # day_summary_df = pd.DataFrame(day_summary)
-
-        # # Calculate daily summaries
-        # if not results_df.empty:
-        #     # Get list of all unique days present (replace with day_names if needed)
-        #     all_days_list = results_df['Day'].unique().tolist()
-            
-        #     # Group by shift and day to get each shift's total cost and weight
-        #     shift_day_group = results_df.groupby(['Shift ID', 'Day'])
-        #     shift_day_df = shift_day_group.agg(
-        #         total_cost=('Task Cost ($)', 'first'),
-        #         weight=('Hourly Rate ($)', 'first')
-        #     ).reset_index()
-            
-        #     # Calculate max nurses per shift (total cost / weight)
-        #     shift_day_df['max_nurses'] = (shift_day_df['total_cost'] / shift_day_df['weight']).round().astype(int)
-            
-        #     # Group by day to sum total cost and max nurses
-        #     daily_summary = shift_day_df.groupby('Day').agg(
-        #         Total_Cost=('total_cost', 'sum'),
-        #         Total_Workers=('max_nurses', 'sum')
-        #     ).reset_index()
-            
-        #     # Count tasks assigned per day
-        #     tasks_per_day = results_df.groupby('Day').size().reset_index(name='Tasks_Assigned')
-            
-        #     # Create complete list of days
-        #     all_days = pd.DataFrame({'Day': day_names})  # Use your original day_names list
-            
-        #     # Merge with all days
-        #     day_summary_df = all_days.merge(daily_summary, on='Day', how='left')
-        #     day_summary_df = day_summary_df.merge(tasks_per_day, on='Day', how='left')
-            
-        #     # Fill NaN values with 0
-        #     day_summary_df.fillna({
-        #         'Total_Cost': 0,
-        #         'Total_Workers': 0,
-        #         'Tasks_Assigned': 0
-        #     }, inplace=True)
-            
-        #     # Format columns
-        #     day_summary_df['Total_Cost'] = day_summary_df['Total_Cost'].round(2)
-            
-        # else:
-        #     # Create empty summary with all days
-        #     day_summary_df = pd.DataFrame({'Day': day_names})
-        #     day_summary_df['Total_Cost'] = 0.0
-        #     day_summary_df['Total_Workers'] = 0
-        #     day_summary_df['Tasks_Assigned'] = 0
-
-        # # Display daily summary
-        # st.subheader("Daily Summary")
-        # st.dataframe(day_summary_df.rename(columns={
-        #     'Total_Cost': 'Total Cost ($)',
-        #     'Total_Workers': 'Workers Assigned',
-        #     'Tasks_Assigned': 'Tasks Assigned'
-        # }))    
-
-        # results_df = pd.DataFrame(results)
-        # day_summary_df = pd.DataFrame(day_summary_df)
-
-
 
         # --- Display Results ---
         st.success("✅ Task-shift optimization successful!")
@@ -1782,7 +1694,7 @@ def optimize_tasks_with_gurobi():
         total_tasks = len(results_df)
 
         col1, col2, col3 = st.columns(3)
-        col1.metric("Total Cost", f"${total_cost:,.2f}")
+        col1.metric("Total Cost", f"${3:,.2f}")
         col2.metric("Total Workers Assigned", total_workers)
         col3.metric("Total Tasks Assigned", total_tasks)
 
