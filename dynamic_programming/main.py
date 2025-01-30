@@ -2068,7 +2068,7 @@ def display_tasks_and_shifts():
                 st.dataframe(
                     tasks_df.iloc[:, 1:6].style.format("{:.2f}") 
                     .background_gradient(subset=["NursesRequired"], cmap="Blues")
-                    #.format({"Duration": lambda x: str(pd.Timedelta(x)).split()[-1]}),
+                    .format({"Duration": lambda x: str(pd.Timedelta(x)).split()[-1]}),
                     use_container_width=True,
                     height=300
                 )
