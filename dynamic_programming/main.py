@@ -1501,7 +1501,6 @@ def optimize_tasks_with_gurobi():
             shift_start = pd.to_datetime(shift_row["StartTime"], format="%H:%M:%S")
             shift_end = pd.to_datetime(shift_row["EndTime"], format="%H:%M:%S")
             
-            # Parse break information
             break_start = pd.to_datetime(shift_row["BreakTime"], format="%H:%M:%S")
             break_duration = pd.Timedelta(minutes=int(pd.to_datetime(shift_row["BreakDuration"], format="%H:%M:%S").minute))
             break_end = break_start + break_duration
