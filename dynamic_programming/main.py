@@ -1956,7 +1956,6 @@ def display_tasks_and_shifts():
                         "Friday", "Saturday", "Sunday"]
             time_range = ["2023-01-01 00:00:00", "2023-01-01 23:59:59"]
 
-            # Modern task timeline
             if not tasks_df.empty:
                 st.subheader("🔧 Task Schedule", divider="blue")
                 tasks_df = tasks_df.assign(
