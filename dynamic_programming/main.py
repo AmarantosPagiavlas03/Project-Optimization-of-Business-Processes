@@ -1758,46 +1758,47 @@ def optimize_tasks_with_gurobi():
                 height=600 + 150*len(day_names)
             )
 
-            # Format axes and layout
-            fig.update_xaxes(
-                tickformat="%H:%M\n%a",
-                rangeslider_visible=True,
-                title_text="Time"
-            )
-            
-            fig.update_yaxes(visible=False, title_text="")
-            
-            # Improve legend and layout
-            fig.update_layout(
-                margin=dict(l=100, r=50, b=80, t=100),
-                legend_title_text="Shift ID",
-                legend=dict(
-                    orientation="h",
-                    yanchor="bottom",
-                    y=-0.3,
-                    xanchor="right",
-                    x=1
-                ),
-                plot_bgcolor='rgba(240,240,240,0.8)',
-                xaxis=dict(showgrid=True, gridcolor='white'),
-                hoverlabel=dict(
-                    bgcolor="white",
-                    font_size=12,
-                    font_family="Arial"
-                )
-            )
+        # Format axes and layout
+        fig.update_xaxes(
+            tickformat="%H:%M\n%a",
+            rangeslider_visible=False,  # Disable range slider
+            title_text="Time"
+        )
 
-            # Add day labels to left side
-            for annotation in fig.layout.annotations:
-                if annotation.text in day_names:
-                    annotation.x = -0.07
-                    annotation.xanchor = 'right'
-                    annotation.font = dict(size=14, color='black')
-                    annotation.bgcolor = 'rgba(255,255,255,0.8)'
+        fig.update_yaxes(visible=False, title_text="")
 
-            st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.warning("No tasks available for Gantt chart visualization")
+        # Improve legend and layout
+        fig.update_layout(
+            margin=dict(l=100, r=50, b=80, t=100),
+            legend_title_text="Shift ID",
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=-0.3,
+                xanchor="right",
+                x=1
+            ),
+            plot_bgcolor='rgba(240,240,240,0.8)',
+            xaxis=dict(showgrid=True, gridcolor='white'),
+            hoverlabel=dict(
+                bgcolor="white",
+                font_size=12,
+                font_family="Arial"
+            ),
+            dragmode=False  # Disable zoom/select interaction
+        )
+
+        # Add day labels to left side
+        for annotation in fig.layout.annotations:
+            if annotation.text in day_names:
+                annotation.x = -0.07
+                annotation.xanchor = 'right'
+                annotation.font = dict(size=14, color='black')
+                annotation.bgcolor = 'rgba(255,255,255,0.8)'
+
+        st.plotly_chart(fig, use_container_width=True)
+
+####################################################################
  
         day_summary = []
         for day in day_names:
