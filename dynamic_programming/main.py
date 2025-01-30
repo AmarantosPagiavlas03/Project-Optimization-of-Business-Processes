@@ -2066,8 +2066,8 @@ def display_tasks_and_shifts():
         if not tasks_df.empty:
             with st.expander("📋 Task Details", expanded=True):
                 st.dataframe(
-                    tasks_df.iloc[:, 1:7].style,
-                    #.background_gradient(subset=["NursesRequired"], cmap="Blues")
+                    tasks_df.iloc[:, 1:7].style
+                    .background_gradient(subset=["NursesRequired"], cmap="Blues"),
                     use_container_width=True,
                     height=300
                 )
