@@ -1213,8 +1213,8 @@ def original_optimize_tasks_with_gurobi():
                 "Shift Start": shift_row["StartTime"].strftime("%H:%M"),
                 "Shift End": shift_row["EndTime"].strftime("%H:%M"),
                 "Workers Assigned": entry["workers"],
-                "Hourly Rate ($)": entry["shift_weight"],
-                "Task Cost ($)": round(task_cost, 2),
+                "Hourly Rate (€)": entry["shift_weight"],
+                "Task Cost (€)": round(task_cost, 2),
                 "Cost %": round((task_cost / shift_day_cost[key]) * 100, 1) if shift_day_cost[key] > 0 else 0
             })
 
@@ -1223,8 +1223,8 @@ def original_optimize_tasks_with_gurobi():
         st.dataframe(results_df)
         # 1. Cost Validation Check
         validation = results_df.groupby(["Shift ID", "Day"]).agg(
-            Total_Cost=("Task Cost ($)", "sum"),
-            Expected_Cost=("Hourly Rate ($)", lambda x: x.iloc[0] * results_df["Workers Assigned"].iloc[0])
+            Total_Cost=("Task Cost (€)", "sum"),
+            Expected_Cost=("Hourly Rate (€)", lambda x: x.iloc[0] * results_df["Workers Assigned"].iloc[0])
         ).reset_index()
         validation["Valid"] = validation["Total_Cost"].round(2) == validation["Expected_Cost"].round(2)
 
@@ -1234,7 +1234,7 @@ def original_optimize_tasks_with_gurobi():
             with col1:
                 # Ensure we have data to plot
                 if not results_df.empty:
-                    fig = px.pie(results_df, names='Day', values='Task Cost ($)', title='<b>Cost Distribution by Day</b>')
+                    fig = px.pie(results_df, names='Day', values='Task Cost (€)', title='<b>Cost Distribution by Day</b>')
                     fig.update_layout(showlegend=False)
                     st.plotly_chart(fig, use_container_width=True)
                 else:
@@ -1243,8 +1243,8 @@ def original_optimize_tasks_with_gurobi():
             with col2:
                 # Ensure we have data to plot
                 if not results_df.empty:
-                    shift_cost = results_df.groupby("Shift ID")["Task Cost ($)"].sum().reset_index()
-                    fig = px.bar(shift_cost, x='Shift ID', y='Task Cost ($)', 
+                    shift_cost = results_df.groupby("Shift ID")["Task Cost (€)"].sum().reset_index()
+                    fig = px.bar(shift_cost, x='Shift ID', y='Task Cost (€)', 
                                 title='<b>Total Cost by Shift</b>')
                     fig.update_layout(showlegend=False)
                     st.plotly_chart(fig, use_container_width=True)
@@ -1273,7 +1273,7 @@ def original_optimize_tasks_with_gurobi():
         for day in day_names:
             day_summary.append({
                 "Day": day,
-                "Total Cost ($)": daily_costs[day],
+                "Total Cost (€)": daily_costs[day],
                 "Tasks Assigned": daily_tasks[day],
                 "Workers Assigned": daily_workers[day]
             })
@@ -1857,7 +1857,7 @@ def optimize_tasks_with_gurobi():
         total_tasks = len(results_df)
 
         col1, col2, col3 = st.columns(3)
-        col1.metric("Total Cost", f"${total_cost:,.2f}")
+        col1.metric("Total Cost", f"€{total_cost:,.2f}")
         col2.metric("Total Workers Assigned", total_workers)
         col3.metric("Total Tasks Assigned", total_tasks)
 
@@ -1883,7 +1883,7 @@ def optimize_tasks_with_gurobi():
         st.subheader("📅 Daily Summary")
         st.dataframe(
             day_summary_df,
-            column_order=("Day", "Total Cost ($)", "Tasks Assigned", "Workers Assigned"),
+            column_order=("Day", "Total Cost (€)", "Tasks Assigned", "Workers Assigned"),
             hide_index=True
         )
         st.download_button(
