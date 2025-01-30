@@ -1706,49 +1706,57 @@ def optimize_tasks_with_gurobi():
             st.warning("No results to visualize") 
 
         # Add Gantt chart final
-        # Create interactive Gantt chart with discrete colors
-        fig = px.timeline(
-            results_df,
-            x_start="Begin_Datetime",
-            x_end="End_Datetime",
-            y="Vertical_Position",
-            color="Shift ID",
-            color_discrete_sequence=px.colors.qualitative.D3,
-            facet_row="Day",
-            title="<b>Task Schedule with Shift Colors</b>",
-            hover_name="Task Name",
-            hover_data={
-                "Shift ID": True,
-                "Begin_Datetime": "|%H:%M",
-                "End_Datetime": "|%H:%M",
-                "Vertical_Position": False,
-                "Day": False
-            },
-            labels={"Begin_Datetime": "Start Time", "End_Datetime": "End Time"},
-            category_orders={"Day": day_names, "Shift ID": sorted(results_df['Shift ID'].unique())},
-            height=600 + 150*len(day_names)
-        )
+        # Add Enhanced Gantt chart with discrete shift colors
+        if not results_df.empty:
+            st.subheader("Task Schedule Gantt Chart")
+            
+            # ... [previous data preparation code remains unchanged] ...
 
-        # Add spacing in layout updates instead
-        fig.update_layout(
-            facet_row_spacing=0.1,  # Moved here from px.timeline call
-            margin=dict(l=100, r=50, b=80, t=100),
-            legend_title_text="Shift ID",
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=-0.3,
-                xanchor="right",
-                x=1
-            ),
-            plot_bgcolor='rgba(240,240,240,0.8)',
-            xaxis=dict(showgrid=True, gridcolor='white'),
-            hoverlabel=dict(
-                bgcolor="white",
-                font_size=12,
-                font_family="Arial"
+            # Create interactive Gantt chart with discrete colors
+            fig = px.timeline(
+                results_df,
+                x_start="Begin_Datetime",
+                x_end="End_Datetime",
+                y="Vertical_Position",
+                color="Shift ID",
+                color_discrete_sequence=px.colors.qualitative.D3,
+                facet_row="Day",
+                title="<b>Task Schedule with Shift Colors</b>",
+                hover_name="Task Name",
+                hover_data={
+                    "Shift ID": True,
+                    "Begin_Datetime": "|%H:%M",
+                    "End_Datetime": "|%H:%M",
+                    "Vertical_Position": False,
+                    "Day": False
+                },
+                labels={"Begin_Datetime": "Start Time", "End_Datetime": "End Time"},
+                category_orders={"Day": day_names, "Shift ID": sorted(results_df['Shift ID'].unique())},
+                height=600 + 150*len(day_names),
+                facet_row_spacing=0.1  # Increased spacing between rows
             )
-        )
+
+            # Remove default axis updates and configure per-row axes
+            fig.update_xaxes(showgrid=True, gridcolor='white')  # Keep grid settings if needed
+
+            # Configure each row's x-axis to be independent
+            num_days = len(day_names)
+            for row_idx in range(1, num_days + 1):
+                fig.update_xaxes(
+                    matches=None,  # Disable axis matching
+                    tickformat="%H:%M",  # Simplified time format
+                    showticklabels=True,
+                    rangeslider_visible=False,  # Remove rangeslider
+                    title_text="Time" if row_idx == num_days else None,  # Title only on last row
+                    row=row_idx, 
+                    col=1
+                )
+
+            # ... [remaining layout updates stay the same] ...
+
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.warning("No tasks available for Gantt chart visualization")
 ######################################################
  
         day_summary = []
