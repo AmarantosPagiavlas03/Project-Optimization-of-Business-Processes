@@ -2083,7 +2083,7 @@ def display_tasks_and_shifts():
         if not shifts_df.empty:
             with st.expander("👥 Shift Details", expanded=True):
                 st.dataframe(
-                    shifts_df.iloc[:, 1:11].style
+                    shifts_df.iloc[:, 1:13].style
                     .highlight_max(subset=["Weight"], color="#fffd75")
                     .highlight_min(subset=["Weight"], color="#90EE90"),
                     use_container_width=True,
@@ -2091,7 +2091,7 @@ def display_tasks_and_shifts():
                 )
                 st.download_button(
                     label="📥 Download Shifts CSV",
-                    data=shifts_df.iloc[:, 1:11].to_csv(index=False).encode("utf-8"),
+                    data=shifts_df.iloc[:, 1:13].to_csv(index=False).encode("utf-8"),
                     file_name="hospital_shifts.csv",
                     mime="text/csv",
                     type="primary"
