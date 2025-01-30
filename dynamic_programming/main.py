@@ -1706,120 +1706,120 @@ def optimize_tasks_with_gurobi():
             st.warning("No results to visualize") 
 
         # Add Gantt chart final
-        # Add Enhanced Gantt chart with detailed time axis
-        if not results_df.empty:
-            st.subheader("Task Schedule Gantt Chart")
-            
-            # Convert Shift ID to categorical type
-            results_df['Shift ID'] = results_df['Shift ID'].astype(str)
-            
-            # Create date mapping with proper midnight handling
-            base_date = pd.to_datetime("2023-10-02")
-            date_mapping = {day: base_date + pd.DateOffset(days=i) for i, day in enumerate(day_names)}
-            
-            # Convert times and handle midnight crossings
-            results_df['Begin_Datetime'] = results_df.apply(
-                lambda row: pd.Timestamp.combine(date_mapping[row['Day']], 
-                                                pd.to_datetime(row['Begin Task'], format="%H:%M").time()),
-                axis=1
-            )
-            results_df['End_Datetime'] = results_df.apply(
-                lambda row: pd.Timestamp.combine(date_mapping[row['Day']], 
-                                                pd.to_datetime(row['End Task'], format="%H:%M").time()),
-                axis=1
-            )
-            mask = results_df['End_Datetime'] < results_df['Begin_Datetime']
-            results_df.loc[mask, 'End_Datetime'] += pd.Timedelta(days=1)
+    # Add Enhanced Gantt chart with detailed time axis
+    if not results_df.empty:
+        st.subheader("Task Schedule Gantt Chart")
+        
+        # Convert Shift ID to categorical type
+        results_df['Shift ID'] = results_df['Shift ID'].astype(str)
+        
+        # Create date mapping with proper midnight handling
+        base_date = pd.to_datetime("2023-10-02")
+        date_mapping = {day: base_date + pd.DateOffset(days=i) for i, day in enumerate(day_names)}
+        
+        # Convert times and handle midnight crossings
+        results_df['Begin_Datetime'] = results_df.apply(
+            lambda row: pd.Timestamp.combine(date_mapping[row['Day']], 
+                                            pd.to_datetime(row['Begin Task'], format="%H:%M").time()),
+            axis=1
+        )
+        results_df['End_Datetime'] = results_df.apply(
+            lambda row: pd.Timestamp.combine(date_mapping[row['Day']], 
+                                            pd.to_datetime(row['End Task'], format="%H:%M").time()),
+            axis=1
+        )
+        mask = results_df['End_Datetime'] < results_df['Begin_Datetime']
+        results_df.loc[mask, 'End_Datetime'] += pd.Timedelta(days=1)
 
-            # Create vertical positions for parallel tasks
-            results_df = results_df.sort_values(['Day', 'Begin_Datetime'])
-            results_df['Vertical_Position'] = results_df.groupby(['Day', pd.Grouper(key='Begin_Datetime', freq='15T')]).cumcount()
-            
-            # Generate time axis ticks and labels
-            start_time = results_df['Begin_Datetime'].min()
-            end_time = results_df['End_Datetime'].max()
-            all_ticks = pd.date_range(start=start_time.floor('3H'), 
-                                    end=end_time.ceil('3H'), 
-                                    freq='3H')
-            
-            ticktext = []
-            for tick in all_ticks:
-                if tick.time() == pd.Timestamp('00:00').time():
-                    ticktext.append(tick.strftime("%a\n%H:%M"))
-                else:
-                    ticktext.append(tick.strftime("%H:%M"))
+        # Create vertical positions for parallel tasks
+        results_df = results_df.sort_values(['Day', 'Begin_Datetime'])
+        results_df['Vertical_Position'] = results_df.groupby(['Day', pd.Grouper(key='Begin_Datetime', freq='15T')]).cumcount()
+        
+        # Generate time axis ticks and labels
+        start_time = results_df['Begin_Datetime'].min()
+        end_time = results_df['End_Datetime'].max()
+        all_ticks = pd.date_range(start=start_time.floor('3H'), 
+                                end=end_time.ceil('3H'), 
+                                freq='3H')
+        
+        ticktext = []
+        for tick in all_ticks:
+            if tick.time() == pd.Timestamp('00:00').time():
+                ticktext.append(tick.strftime("%a\n%H:%M"))
+            else:
+                ticktext.append(tick.strftime("%H:%M"))
 
-            # Create interactive Gantt chart
-            fig = px.timeline(
-                results_df,
-                x_start="Begin_Datetime",
-                x_end="End_Datetime",
-                y="Vertical_Position",
-                color="Shift ID",
-                color_discrete_sequence=px.colors.qualitative.D3,
-                facet_row="Day",
-                title="<b>Task Schedule with Detailed Time Axis</b>",
-                hover_name="Task Name",
-                hover_data={
-                    "Shift ID": True,
-                    "Begin_Datetime": "|%H:%M",
-                    "End_Datetime": "|%H:%M",
-                    "Vertical_Position": False,
-                    "Day": False
-                },
-                labels={"Begin_Datetime": "Start Time", "End_Datetime": "End Time"},
-                category_orders={"Day": day_names, "Shift ID": sorted(results_df['Shift ID'].unique())},
-                height=600 + 150*len(day_names)
+        # Create interactive Gantt chart
+        fig = px.timeline(
+            results_df,
+            x_start="Begin_Datetime",
+            x_end="End_Datetime",
+            y="Vertical_Position",
+            color="Shift ID",
+            color_discrete_sequence=px.colors.qualitative.D3,
+            facet_row="Day",
+            title="<b>Task Schedule with Detailed Time Axis</b>",
+            hover_name="Task Name",
+            hover_data={
+                "Shift ID": True,
+                "Begin_Datetime": "|%H:%M",
+                "End_Datetime": "|%H:%M",
+                "Vertical_Position": False,
+                "Day": False
+            },
+            labels={"Begin_Datetime": "Start Time", "End_Datetime": "End Time"},
+            category_orders={"Day": day_names, "Shift ID": sorted(results_df['Shift ID'].unique())},
+            height=600 + 150*len(day_names)
+        )
+
+        # Format axes and layout
+        fig.update_xaxes(
+            tickvals=all_ticks,
+            ticktext=ticktext,
+            rangeslider_visible=True,
+            title_text="Time (3-hour increments)",
+            tickangle=45,
+            showgrid=True,
+            gridcolor='lightgrey',
+            minor=dict(
+                ticklen=6,
+                gridcolor='rgba(200,200,200,0.2)'
             )
-
-            # Format axes and layout
-            fig.update_xaxes(
-                tickvals=all_ticks,
-                ticktext=ticktext,
-                rangeslider_visible=True,
-                title_text="Time (3-hour increments)",
-                tickangle=45,
-                showgrid=True,
-                gridcolor='lightgrey',
-                minor=dict(
-                    ticklen=6,
-                    gridcolor='rgba(200,200,200,0.2)'
-                )
+        )
+        
+        fig.update_yaxes(visible=False, title_text="")
+        
+        # Improve legend and layout
+        fig.update_layout(
+            margin=dict(l=100, r=50, b=150, t=100),
+            legend_title_text="Shift ID",
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=-0.4,
+                xanchor="right",
+                x=1
+            ),
+            plot_bgcolor='rgba(240,240,240,0.8)',
+            xaxis=dict(showgrid=True, gridcolor='white'),
+            hoverlabel=dict(
+                bgcolor="white",
+                font_size=12,
+                font_family="Arial"
             )
-            
-            fig.update_yaxes(visible=False, title_text="")
-            
-            # Improve legend and layout
-            fig.update_layout(
-                margin=dict(l=100, r=50, b=150, t=100),
-                legend_title_text="Shift ID",
-                legend=dict(
-                    orientation="h",
-                    yanchor="bottom",
-                    y=-0.4,
-                    xanchor="right",
-                    x=1
-                ),
-                plot_bgcolor='rgba(240,240,240,0.8)',
-                xaxis=dict(showgrid=True, gridcolor='white'),
-                hoverlabel=dict(
-                    bgcolor="white",
-                    font_size=12,
-                    font_family="Arial"
-                )
-            )
+        )
 
-            # Add day labels to left side with background
-            for annotation in fig.layout.annotations:
-                if annotation.text in day_names:
-                    annotation.x = -0.07
-                    annotation.xanchor = 'right'
-                    annotation.font = dict(size=14, color='black')
-                    annotation.bgcolor = 'rgba(255,255,255,0.8)'
+        # Add day labels to left side with background
+        for annotation in fig.layout.annotations:
+            if annotation.text in day_names:
+                annotation.x = -0.07
+                annotation.xanchor = 'right'
+                annotation.font = dict(size=14, color='black')
+                annotation.bgcolor = 'rgba(255,255,255,0.8)'
 
-            st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.warning("No tasks available for Gantt chart visualization")
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.warning("No tasks available for Gantt chart visualization")
  
         day_summary = []
         for day in day_names:
