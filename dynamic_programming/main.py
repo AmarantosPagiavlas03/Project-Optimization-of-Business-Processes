@@ -1622,6 +1622,7 @@ def optimize_tasks_with_gurobi():
                 })
 
             #processed_shifts.add(shift_id)  # Mark this shift as processed
+            #yey
 
         # Convert results to DataFrame
         results_df = pd.DataFrame(results)
