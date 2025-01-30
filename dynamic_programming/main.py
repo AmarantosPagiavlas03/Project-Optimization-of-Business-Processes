@@ -289,12 +289,15 @@ def shift_input_form():
         
         # Create columns for time inputs
         time_col1, time_col2 = st.columns(2)
+        # Get index of 09:00 and 17:00 within intervals
+        start_index = intervals.index(time(9, 0))
+        end_index   = intervals.index(time(17, 0))
         with time_col1:
-            Shift_StartTime = st.selectbox("Shift Start*", intervals, 
+            Shift_StartTime = st.selectbox("Shift Start*", intervals, index=start_index,
                                          format_func=lambda t: t.strftime("%H:%M"),
                                          help="Select shift start time")
         with time_col2:
-            Shift_EndTime = st.selectbox("Shift End*", intervals,
+            Shift_EndTime = st.selectbox("Shift End*", intervals, index=end_index,
                                        index=min(len(intervals)-1, intervals.index(Shift_StartTime) + 32),
                                        format_func=lambda t: t.strftime("%H:%M"),
                                        help="Select shift end time")
