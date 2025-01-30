@@ -232,9 +232,6 @@ def get_default_indices_for_intervals(intervals):
 
     return default_idx_1h, default_idx_2h
 
-import streamlit as st
-from datetime import datetime, timedelta
-
 def task_input_form():
     """Sidebar form to add a new task."""
     with st.form("task_form", clear_on_submit=True):
