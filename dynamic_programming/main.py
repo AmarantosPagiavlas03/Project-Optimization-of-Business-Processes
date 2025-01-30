@@ -308,7 +308,7 @@ def shift_input_form():
                                    help="Select break start time")
         with break_col2:
             break_durations = [15, 30, 45, 60, 75, 90, 105, 120]
-            BreakDuration = st.selectbox("Break Duration (minutes)*",
+            BreakDuration = st.selectbox("Break Duration*",
                                        options=break_durations,
                                        index=1,
                                        format_func=lambda x: f"{x} minutes")
