@@ -2062,7 +2062,7 @@ def display_tasks_and_shifts():
             st.info("Please ensure Plotly is installed: `pip install plotly`")
 
     with tab2:
-        
+
         if not tasks_df.empty:
             with st.expander("📋 Task Details", expanded=True):
                 st.dataframe(
@@ -2413,7 +2413,7 @@ def main():
     """, unsafe_allow_html=True)
 
     init_db()
-    home_tab, contact_tab = st.tabs(["🏠 Home", "📞 Contact"])
+    home_tab, manual_tab, contact_tab = st.tabs(["🏠 Home", "📖 Manual","📞 Contact"])
     
     with home_tab:
         header()
@@ -2481,9 +2481,35 @@ def main():
                 if st.button("🚀 Run Task Optimization (15 min. interval)", use_container_width=True):
                     optimize_tasks_with_gurobi()
  
-                
+               
     with contact_tab:
         show_contact()
+
+    with manual_tab:
+        st.header("User Manual")
+        
+        st.subheader("Overview")
+        st.write("This application helps users with [describe the purpose of the app]. Follow the steps below to get started.")
+
+        st.subheader("How to Use This App")
+        st.write("""
+        1. **Navigate through the tabs** – Each tab provides a different functionality.
+        2. **Input your data** – Provide the necessary input fields with valid values.
+        3. **Process the data** – Click on the appropriate buttons to perform actions.
+        4. **View the results** – The output will be displayed dynamically.
+        5. **Export if needed** – You can download your results for future use.
+        """)
+
+        st.subheader("Troubleshooting")
+        st.write("""
+        - If the app is not responding, try refreshing the page.
+        - Ensure that you have provided all the required inputs.
+        - Check for any error messages displayed in the app.
+        """)
+
+        st.info("For more detailed information, refer to the official documentation or contact support.")
+
+
 
 if __name__ == "__main__":
     main()
