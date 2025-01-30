@@ -2062,7 +2062,7 @@ def display_tasks_and_shifts():
             st.info("Please ensure Plotly is installed: `pip install plotly`")
 
     with tab2:
-        # Enhanced data tables with search
+        
         if not tasks_df.empty:
             with st.expander("📋 Task Details", expanded=True):
                 st.dataframe(
