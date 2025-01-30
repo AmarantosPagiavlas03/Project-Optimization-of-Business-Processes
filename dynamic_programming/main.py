@@ -253,9 +253,9 @@ def task_input_form():
         # Time inputs in their own columns
         time_col1, time_col2, time_col3 = st.columns(3)
         with time_col1:
-            StartTime = st.time_input("Start Time*", datetime.now().time())
+            StartTime = st.time_input("Start Time*",index= datetime.now().time())
         with time_col2:
-            EndTime = st.time_input("End Time*", 
+            EndTime = st.time_input("End Time*",index= 
                                   (datetime.now() + timedelta(hours=1)).time())
         with time_col3:
             duration = st.number_input("Duration*", 
