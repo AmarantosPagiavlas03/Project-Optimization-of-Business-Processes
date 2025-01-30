@@ -258,9 +258,9 @@ def task_input_form():
             EndTime = st.time_input("End Time*", 
                                   (datetime.now() + timedelta(hours=1)).time())
         with time_col3:
-            duration = st.number_input("Duration (minutes)*", 
+            duration = st.number_input("Duration*", 
                                      min_value=15, max_value=480, 
-                                     value=60, step=15)
+                                     value=60, step=15,help="Duration in minutes.")
 
         # Full-width submit button
         submitted = st.form_submit_button("➕ Add Task", use_container_width=True,type="primary")
@@ -315,7 +315,7 @@ def shift_input_form():
 
         # --- Shift Weight with Synced Display ---
         st.markdown("### Shift Preferences")
-        Weight = st.slider("Shift Weight ", 0.1, 10.0, 1.0, 0.1,
+        Weight = st.slider("Shift Weight ", 0.1, 1000.0, 1.0, 0.1,
                          help="Higher weight means more expensive to schedule")
         
         # --- Days of Week Selection ---
