@@ -2083,7 +2083,7 @@ def display_tasks_and_shifts():
         if not shifts_df.empty:
             with st.expander("👥 Shift Details", expanded=True):
                 st.dataframe(
-                    shifts_df.style
+                    shifts_df.iloc[:, 1:7].style
                     .highlight_max(subset=["Weight"], color="#fffd75")
                     .highlight_min(subset=["Weight"], color="#90EE90"),
                     use_container_width=True,
