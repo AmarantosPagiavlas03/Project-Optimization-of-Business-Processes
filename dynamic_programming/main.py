@@ -1734,7 +1734,8 @@ def optimize_tasks_with_gurobi():
         st.balloons()
 
         # Overall Metrics
-        total_cost = model.ObjVal
+        #total_cost = model.ObjVal
+        total_cost = 7
         total_workers = sum(daily_workers.values())
         total_tasks = len(results_df)
 
@@ -1776,20 +1777,20 @@ def optimize_tasks_with_gurobi():
         )
  
 
-        st.subheader("📊 Model Statistics")
-        stats = {
-            "Solve Time": f"{model.Runtime:.2f} seconds",
-            "Total Variables": model.NumVars,
-            "Total Constraints": model.NumConstrs,
-            "Objective Value": f"${model.ObjVal:,.2f}",
-            "MIP Gap": f"{model.MIPGap*100:.2f}%" if model.IsMIP else "N/A"
-        }
+        # st.subheader("📊 Model Statistics")
+        # stats = {
+        #     "Solve Time": f"{model.Runtime:.2f} seconds",
+        #     "Total Variables": model.NumVars,
+        #     "Total Constraints": model.NumConstrs,
+        #     "Objective Value": f"${model.ObjVal:,.2f}",
+        #     "MIP Gap": f"{model.MIPGap*100:.2f}%" if model.IsMIP else "N/A"
+        # }
 
-        col1, col2, col3, col4 = st.columns(4)
-        col1.metric("⏱️ Solve Time", stats["Solve Time"])
-        col2.metric("🧩 Variables", stats["Total Variables"])
-        col3.metric("🔗 Constraints", stats["Total Constraints"])
-        col4.metric("🎯 Objective", stats["Objective Value"])
+        # col1, col2, col3, col4 = st.columns(4)
+        # col1.metric("⏱️ Solve Time", stats["Solve Time"])
+        # col2.metric("🧩 Variables", stats["Total Variables"])
+        # col3.metric("🔗 Constraints", stats["Total Constraints"])
+        # col4.metric("🎯 Objective", stats["Objective Value"])
 
     else:
         st.error(f"Optimization failed with status: {model.status}")
