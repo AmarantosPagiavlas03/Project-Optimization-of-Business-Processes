@@ -1734,10 +1734,12 @@ def optimize_tasks_with_gurobi():
             # Create vertical positions for parallel tasks
             results_df = results_df.sort_values(['Day', 'Begin_Datetime'])
             results_df['Vertical_Position'] = results_df.groupby(['Day', pd.Grouper(key='Begin_Datetime', freq='15T')]).cumcount()
+
+            filtered_df = results_df[results_df["Day"].isin(results_df["Day"].value_counts().index)]
+            filtered_day_names = sorted(filtered_df['Day'].unique())
             
-            # Create interactive Gantt chart with discrete colors
             fig = px.timeline(
-                results_df,
+                filtered_df,
                 x_start="Begin_Datetime",
                 x_end="End_Datetime",
                 y="Vertical_Position",
@@ -1754,50 +1756,53 @@ def optimize_tasks_with_gurobi():
                     "Day": False
                 },
                 labels={"Begin_Datetime": "Start Time", "End_Datetime": "End Time"},
-                category_orders={"Day": day_names, "Shift ID": sorted(results_df['Shift ID'].unique())},
-                height=600 + 150*len(day_names)
+                category_orders={"Day": filtered_day_names, "Shift ID": sorted(filtered_df['Shift ID'].unique())},
+                height=600 + 150*len(filtered_day_names)  # Adjust height dynamically
             )
 
-        # Format axes and layout
-        fig.update_xaxes(
-            tickformat="%H:%M\n%a",
-            rangeslider_visible=False,  # Disable range slider
-            title_text="Time"
-        )
+            # Format axes and layout
+            fig.update_xaxes(
+                tickformat="%H:%M\n%a",
+                rangeslider_visible=False,  # Disable range slider
+                title_text="Time"
+            )
 
-        fig.update_yaxes(visible=False, title_text="")
+            fig.update_yaxes(visible=False, title_text="")
 
-        # Improve legend and layout
-        fig.update_layout(
-            margin=dict(l=100, r=50, b=80, t=100),
-            legend_title_text="Shift ID",
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=-0.3,
-                xanchor="right",
-                x=1
-            ),
-            plot_bgcolor='rgba(240,240,240,0.8)',
-            xaxis=dict(showgrid=True, gridcolor='white'),
-            hoverlabel=dict(
-                bgcolor="white",
-                font_size=12,
-                font_family="Arial"
-            ),
-            dragmode=False  # Disable zoom/select interaction
-        )
+            # Improve legend and layout
+            fig.update_layout(
+                margin=dict(l=100, r=50, b=80, t=100),
+                legend_title_text="Shift ID",
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom",
+                    y=-0.3,
+                    xanchor="right",
+                    x=1
+                ),
+                plot_bgcolor='rgba(240,240,240,0.8)',
+                xaxis=dict(showgrid=True, gridcolor='white'),
+                hoverlabel=dict(
+                    bgcolor="white",
+                    font_size=12,
+                    font_family="Arial"
+                ),
+                dragmode=False  # Disable zoom/select interaction
+            )
 
-        # Add day labels to left side
-        for annotation in fig.layout.annotations:
-            if annotation.text in day_names:
-                annotation.x = -0.07
-                annotation.xanchor = 'right'
-                annotation.font = dict(size=14, color='black')
-                annotation.bgcolor = 'rgba(255,255,255,0.8)'
+            # Add day labels to left side (only for days that exist)
+            for annotation in fig.layout.annotations:
+                if annotation.text in filtered_day_names:
+                    annotation.x = -0.07
+                    annotation.xanchor = 'right'
+                    annotation.font = dict(size=14, color='black')
+                    annotation.bgcolor = 'rgba(255,255,255,0.8)'
 
-        st.plotly_chart(fig, use_container_width=True)
-
+            # Display chart only if there are tasks
+            if not filtered_df.empty:
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.warning("No tasks available for Gantt chart visualization")
 ####################################################################
  
         day_summary = []
