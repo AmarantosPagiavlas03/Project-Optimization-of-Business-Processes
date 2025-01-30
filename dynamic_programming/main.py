@@ -1705,32 +1705,63 @@ def optimize_tasks_with_gurobi():
         else:
             st.warning("No results to visualize") 
 
-        # 3. Gantt Chart Visualization
+        # Add Gantt chart visualization
         if not results_df.empty:
-            gantt_df = results_df.copy()
-            gantt_df['Begin Task'] = pd.to_datetime(gantt_df['Begin Task'], format='%H:%M')
-            gantt_df['End Task'] = pd.to_datetime(gantt_df['End Task'], format='%H:%M')
-            gantt_df['Day'] = pd.Categorical(gantt_df['Day'], categories=day_names, ordered=True)
+            st.subheader("Task Schedule Gantt Chart")
             
-            fig = px.timeline(
-                gantt_df, 
-                x_start="Begin Task", 
-                x_end="End Task", 
-                y="Day", 
-                color="Shift ID", 
-                title="<b>Task Schedule Gantt Chart</b>",
-                hover_data={"Task Name": True, "Shift ID": True}
+            # Create date mapping for each day
+            base_date = pd.to_datetime("2023-10-02")  # Base date (Monday)
+            date_mapping = {day: base_date + pd.DateOffset(days=i) for i, day in enumerate(day_names)}
+            
+            # Convert time strings to datetime objects with correct dates
+            results_df['Begin_Datetime'] = results_df.apply(
+                lambda row: pd.Timestamp.combine(date_mapping[row['Day']], 
+                                                pd.to_datetime(row['Begin Task'], format="%H:%M").time()),
+                axis=1
             )
+            results_df['End_Datetime'] = results_df.apply(
+                lambda row: pd.Timestamp.combine(date_mapping[row['Day']], 
+                                                pd.to_datetime(row['End Task'], format="%H:%M").time()),
+                axis=1
+            )
+            
+            # Create interactive Gantt chart
+            fig = px.timeline(
+                results_df,
+                x_start="Begin_Datetime",
+                x_end="End_Datetime",
+                y="Day",
+                color="Shift ID",
+                title="<b>Task Schedule by Day</b>",
+                hover_name="Task Name",
+                hover_data={
+                    "Shift ID": True,
+                    "Begin_Datetime": "|%H:%M",
+                    "End_Datetime": "|%H:%M",
+                    "Day": False
+                },
+                labels={"Begin_Datetime": "Start Time", "End_Datetime": "End Time"},
+                category_orders={"Day": day_names}
+            )
+            
+            # Format x-axis to show time and day
+            fig.update_xaxes(
+                tickformat="%H:%M\n%A",
+                rangeslider_visible=True,
+                title_text="Time"
+            )
+            
+            # Adjust layout
             fig.update_layout(
-                xaxis_title="Time", 
-                yaxis_title="Day",
-                showlegend=True,
                 height=600,
-                margin=dict(l=20, r=20, t=50, b=20)
+                yaxis_title="Day",
+                legend_title="Shift ID",
+                hovermode="closest"
             )
             
             st.plotly_chart(fig, use_container_width=True)
-
+        else:
+            st.warning("No tasks available for Gantt chart visualization")
 
 
         day_summary = []
