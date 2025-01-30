@@ -1960,8 +1960,8 @@ def display_tasks_and_shifts():
             if not tasks_df.empty:
                 st.subheader("🔧 Task Schedule", divider="blue")
                 tasks_df = tasks_df.assign(
-                    Start=lambda df: pd.to_datetime("2023-01-01 " + df['StartTime']),
-                    End=lambda df: pd.to_datetime("2023-01-01 " + df['EndTime']),
+                    # Start=lambda df: pd.to_datetime("2023-01-01 " + df['StartTime']),
+                    # End=lambda df: pd.to_datetime("2023-01-01 " + df['EndTime']),
                     Day=lambda df: pd.Categorical(df['Day'], categories=day_order, ordered=True),
                     #DurationHours=lambda df: (df['End'] - df['Start']).dt.total_seconds()/3600
                 ).sort_values(by=['Day', 'Start'])
