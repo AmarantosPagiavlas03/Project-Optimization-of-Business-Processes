@@ -1710,7 +1710,7 @@ def optimize_tasks_with_gurobi():
             st.warning("No results to visualize") 
 
         # Add Gantt chart final
-        # Add Enhanced Gantt chart with discrete shift colors
+################################################################################
         if not results_df.empty:
             st.subheader("Task Schedule Gantt Chart")
             
