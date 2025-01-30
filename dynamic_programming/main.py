@@ -1963,7 +1963,7 @@ def display_tasks_and_shifts():
                     Start=lambda df: pd.to_datetime("2023-01-01 " + df['StartTime']),
                     End=lambda df: pd.to_datetime("2023-01-01 " + df['EndTime']),
                     Day=lambda df: pd.Categorical(df['Day'], categories=day_order, ordered=True),
-                    #DurationHours=lambda df: (df['End'] - df['Start']).dt.total_seconds()/3600
+                    DurationHours=lambda df: (df['End'] - df['Start']).dt.total_seconds()/3600
                 ).sort_values(by=['Day', 'Start'])
 
                 fig_tasks = px.timeline(
@@ -1976,7 +1976,7 @@ def display_tasks_and_shifts():
                     hover_data={
                         "TaskName": True,
                         "NursesRequired": True,
-                        # "DurationHours": ":.1f hours",
+                        "DurationHours": ":.1f hours",
                         "Start": "|%H:%M",
                         "End": "|%H:%M"
                     },
