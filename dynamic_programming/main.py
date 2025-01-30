@@ -1710,8 +1710,31 @@ def optimize_tasks_with_gurobi():
         if not results_df.empty:
             st.subheader("Task Schedule Gantt Chart")
             
-            # ... [previous data preparation code remains unchanged] ...
+            # Convert Shift ID to categorical type
+            results_df['Shift ID'] = results_df['Shift ID'].astype(str)
+            
+            # Create date mapping with proper midnight handling
+            base_date = pd.to_datetime("2023-10-02")
+            date_mapping = {day: base_date + pd.DateOffset(days=i) for i, day in enumerate(day_names)}
+            
+            # Convert times and handle midnight crossings
+            results_df['Begin_Datetime'] = results_df.apply(
+                lambda row: pd.Timestamp.combine(date_mapping[row['Day']], 
+                                                pd.to_datetime(row['Begin Task'], format="%H:%M").time()),
+                axis=1
+            )
+            results_df['End_Datetime'] = results_df.apply(
+                lambda row: pd.Timestamp.combine(date_mapping[row['Day']], 
+                                                pd.to_datetime(row['End Task'], format="%H:%M").time()),
+                axis=1
+            )
+            mask = results_df['End_Datetime'] < results_df['Begin_Datetime']
+            results_df.loc[mask, 'End_Datetime'] += pd.Timedelta(days=1)
 
+            # Create vertical positions for parallel tasks
+            results_df = results_df.sort_values(['Day', 'Begin_Datetime'])
+            results_df['Vertical_Position'] = results_df.groupby(['Day', pd.Grouper(key='Begin_Datetime', freq='15T')]).cumcount()
+            
             # Create interactive Gantt chart with discrete colors
             fig = px.timeline(
                 results_df,
@@ -1719,7 +1742,7 @@ def optimize_tasks_with_gurobi():
                 x_end="End_Datetime",
                 y="Vertical_Position",
                 color="Shift ID",
-                color_discrete_sequence=px.colors.qualitative.D3,
+                color_discrete_sequence=px.colors.qualitative.D3,  # Discrete color palette
                 facet_row="Day",
                 title="<b>Task Schedule with Shift Colors</b>",
                 hover_name="Task Name",
@@ -1732,32 +1755,49 @@ def optimize_tasks_with_gurobi():
                 },
                 labels={"Begin_Datetime": "Start Time", "End_Datetime": "End Time"},
                 category_orders={"Day": day_names, "Shift ID": sorted(results_df['Shift ID'].unique())},
-                height=600 + 150*len(day_names),
-                facet_row_spacing=0.1  # Increased spacing between rows
+                height=600 + 150*len(day_names)
             )
 
-            # Remove default axis updates and configure per-row axes
-            fig.update_xaxes(showgrid=True, gridcolor='white')  # Keep grid settings if needed
-
-            # Configure each row's x-axis to be independent
-            num_days = len(day_names)
-            for row_idx in range(1, num_days + 1):
-                fig.update_xaxes(
-                    matches=None,  # Disable axis matching
-                    tickformat="%H:%M",  # Simplified time format
-                    showticklabels=True,
-                    rangeslider_visible=False,  # Remove rangeslider
-                    title_text="Time" if row_idx == num_days else None,  # Title only on last row
-                    row=row_idx, 
-                    col=1
+            # Format axes and layout
+            fig.update_xaxes(
+                tickformat="%H:%M\n%a",
+                rangeslider_visible=True,
+                title_text="Time"
+            )
+            
+            fig.update_yaxes(visible=False, title_text="")
+            
+            # Improve legend and layout
+            fig.update_layout(
+                margin=dict(l=100, r=50, b=80, t=100),
+                legend_title_text="Shift ID",
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom",
+                    y=-0.3,
+                    xanchor="right",
+                    x=1
+                ),
+                plot_bgcolor='rgba(240,240,240,0.8)',
+                xaxis=dict(showgrid=True, gridcolor='white'),
+                hoverlabel=dict(
+                    bgcolor="white",
+                    font_size=12,
+                    font_family="Arial"
                 )
+            )
 
-            # ... [remaining layout updates stay the same] ...
+            # Add day labels to left side
+            for annotation in fig.layout.annotations:
+                if annotation.text in day_names:
+                    annotation.x = -0.07
+                    annotation.xanchor = 'right'
+                    annotation.font = dict(size=14, color='black')
+                    annotation.bgcolor = 'rgba(255,255,255,0.8)'
 
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning("No tasks available for Gantt chart visualization")
-######################################################
  
         day_summary = []
         for day in day_names:
