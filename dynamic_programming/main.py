@@ -312,10 +312,17 @@ def shift_input_form():
         # --- Break Configuration ---
         st.markdown("### Break Configuration")
         break_col1, break_col2 = st.columns(2)
+        # Get index of 12:00 within intervals
+        noon_index = intervals.index(time(12, 0))
+        
         with break_col1:
-            BreakTime = st.selectbox("Break Start*", intervals,
-                                   format_func=lambda t: t.strftime("%H:%M"),
-                                   help="Select break start time")
+            BreakTime = st.selectbox(
+                "Break Start*",
+                intervals,
+                index=noon_index,  # <-- Default BreakTime at 12:00
+                format_func=lambda t: t.strftime("%H:%M"),
+                help="Select break start time"
+            )
         with break_col2:
             break_durations = [15, 30, 45, 60, 75, 90, 105, 120]
             BreakDuration = st.selectbox("Break Duration*",
