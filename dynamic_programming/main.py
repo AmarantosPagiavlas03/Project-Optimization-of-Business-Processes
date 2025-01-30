@@ -1976,7 +1976,7 @@ def display_tasks_and_shifts():
                     hover_data={
                         "TaskName": True,
                         "NursesRequired": True,
-                        "DurationHours": ":.1f hours",
+                        # "DurationHours": ":.1f hours",
                         "Start": "|%H:%M",
                         "End": "|%H:%M"
                     },
