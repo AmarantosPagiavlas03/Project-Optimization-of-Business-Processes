@@ -1705,6 +1705,33 @@ def optimize_tasks_with_gurobi():
         else:
             st.warning("No results to visualize") 
 
+        # 3. Gantt Chart Visualization
+        if not results_df.empty:
+            gantt_df = results_df.copy()
+            gantt_df['Begin Task'] = pd.to_datetime(gantt_df['Begin Task'], format='%H:%M')
+            gantt_df['End Task'] = pd.to_datetime(gantt_df['End Task'], format='%H:%M')
+            gantt_df['Day'] = pd.Categorical(gantt_df['Day'], categories=day_names, ordered=True)
+            
+            fig = px.timeline(
+                gantt_df, 
+                x_start="Begin Task", 
+                x_end="End Task", 
+                y="Day", 
+                color="Shift ID", 
+                title="<b>Task Schedule Gantt Chart</b>",
+                hover_data={"Task Name": True, "Shift ID": True}
+            )
+            fig.update_layout(
+                xaxis_title="Time", 
+                yaxis_title="Day",
+                showlegend=True,
+                height=600,
+                margin=dict(l=20, r=20, t=50, b=20)
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+
+
 
         day_summary = []
         for day in day_names:
