@@ -1695,8 +1695,93 @@ def optimize_tasks_with_gurobi():
             Expected_Cost=("Hourly Rate (€)", lambda x: x.iloc[0] * results_df["Workers Assigned"].iloc[0])
         ).reset_index()
         validation["Valid"] = validation["Total_Cost"].round(2) == validation["Expected_Cost"].round(2)
+ 
+        day_summary = []
+        for day in day_names:
+            day_summary.append({
+                "Day": day,
+                "Total Cost (€)": round(daily_costs[day], 2),
+                "Tasks Assigned": daily_tasks[day],
+                "Workers Assigned": daily_workers[day]
+            })
 
-        # 2. New Visualizations
+
+        day_summary_df = pd.DataFrame(day_summary)
+
+        # Replace existing visualization and validation code with this
+        if not day_summary_df.empty:
+            st.write("### Daily Summaries")
+            st.dataframe(day_summary_df.style.format({
+                "Total Cost (€)": "{:.2f}",
+                "Tasks Assigned": "{:.0f}",
+                "Workers Assigned": "{:.0f}"
+            }))
+        else:
+            st.warning("No daily summaries available.")
+
+        total_cost = 0
+        for day in day_names:
+            total_cost += round(daily_costs[day], 2)
+
+
+        # --- Display Results ---
+        st.success("✅ Task-shift optimization successful!")
+        st.balloons()
+
+        # Overall Metrics
+        #total_cost = model.ObjVal
+        # total_cost = 7
+        total_workers = sum(daily_workers.values())
+        total_tasks = len(results_df)
+
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Total Cost", f"€{total_cost:,.2f}")
+        col2.metric("Total Workers Assigned", total_workers)
+        col3.metric("Total Tasks Assigned", total_tasks)
+
+        # Detailed Assignments
+        with st.expander("📋 View Detailed Task Assignments", expanded=True):
+            if not results_df.empty:
+                st.dataframe(
+                    results_df,
+                    column_order=("Task ID", "Task Name", "Day", "Task Start", "Task End","Begin Task","End Task",
+                                  "Shift ID", "Shift Start", "Shift End", "Workers Assigned"),
+                    hide_index=True
+                )
+                st.download_button(
+                    label="Download Assignments as CSV",
+                    data=results_df.to_csv(index=False).encode("utf-8"),
+                    file_name="task_assignments.csv",
+                    mime="text/csv"
+                )
+            else:
+                st.warning("No tasks were assigned.")
+
+        # Daily Summary
+        st.subheader("📅 Daily Summary")
+        st.dataframe(
+            day_summary_df,
+            column_order=("Day", "Total Cost (€)", "Tasks Assigned", "Workers Assigned"),
+            hide_index=True
+        )
+        st.download_button(
+            label="Download Daily Summary as CSV",
+            data=day_summary_df.to_csv(index=False).encode("utf-8"),
+            file_name="daily_summary.csv",
+            mime="text/csv"
+        )
+ 
+
+ 
+    else:
+        st.error(f"Optimization failed with status: {model.status}")
+        # Optional: Add infeasibility diagnostics
+        model.computeIIS()
+        for constr in model.getConstrs():
+            if constr.IISConstr:
+                st.write(f"⚠️ Infeasible constraint: {constr.constrName}")
+
+       # 2. New Visualizations
         if not results_df.empty:
             col1, col2 = st.columns(2)
             with col1:
@@ -1820,91 +1905,6 @@ def optimize_tasks_with_gurobi():
             else:
                 st.warning("No tasks available for Gantt chart visualization")
 ####################################################################
- 
-        day_summary = []
-        for day in day_names:
-            day_summary.append({
-                "Day": day,
-                "Total Cost (€)": round(daily_costs[day], 2),
-                "Tasks Assigned": daily_tasks[day],
-                "Workers Assigned": daily_workers[day]
-            })
-
-
-        day_summary_df = pd.DataFrame(day_summary)
-
-        # Replace existing visualization and validation code with this
-        if not day_summary_df.empty:
-            st.write("### Daily Summaries")
-            st.dataframe(day_summary_df.style.format({
-                "Total Cost (€)": "{:.2f}",
-                "Tasks Assigned": "{:.0f}",
-                "Workers Assigned": "{:.0f}"
-            }))
-        else:
-            st.warning("No daily summaries available.")
-
-        total_cost = 0
-        for day in day_names:
-            total_cost += round(daily_costs[day], 2)
-
-
-        # --- Display Results ---
-        st.success("✅ Task-shift optimization successful!")
-        st.balloons()
-
-        # Overall Metrics
-        #total_cost = model.ObjVal
-        # total_cost = 7
-        total_workers = sum(daily_workers.values())
-        total_tasks = len(results_df)
-
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Total Cost", f"€{total_cost:,.2f}")
-        col2.metric("Total Workers Assigned", total_workers)
-        col3.metric("Total Tasks Assigned", total_tasks)
-
-        # Detailed Assignments
-        with st.expander("📋 View Detailed Task Assignments", expanded=True):
-            if not results_df.empty:
-                st.dataframe(
-                    results_df,
-                    column_order=("Task ID", "Task Name", "Day", "Task Start", "Task End","Begin Task","End Task",
-                                  "Shift ID", "Shift Start", "Shift End", "Workers Assigned"),
-                    hide_index=True
-                )
-                st.download_button(
-                    label="Download Assignments as CSV",
-                    data=results_df.to_csv(index=False).encode("utf-8"),
-                    file_name="task_assignments.csv",
-                    mime="text/csv"
-                )
-            else:
-                st.warning("No tasks were assigned.")
-
-        # Daily Summary
-        st.subheader("📅 Daily Summary")
-        st.dataframe(
-            day_summary_df,
-            column_order=("Day", "Total Cost (€)", "Tasks Assigned", "Workers Assigned"),
-            hide_index=True
-        )
-        st.download_button(
-            label="Download Daily Summary as CSV",
-            data=day_summary_df.to_csv(index=False).encode("utf-8"),
-            file_name="daily_summary.csv",
-            mime="text/csv"
-        )
- 
-
- 
-    else:
-        st.error(f"Optimization failed with status: {model.status}")
-        # Optional: Add infeasibility diagnostics
-        model.computeIIS()
-        for constr in model.getConstrs():
-            if constr.IISConstr:
-                st.write(f"⚠️ Infeasible constraint: {constr.constrName}")
 
  
  
