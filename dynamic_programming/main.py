@@ -1262,13 +1262,12 @@ def original_optimize_tasks_with_gurobi():
         st.balloons()
 
         # Overall Metrics
-        # total_cost = model.ObjVal
-        total_cost = 7
+        total_cost = model.ObjVal
         total_workers = sum(daily_workers.values())
         total_tasks = len(results_df)
 
         col1, col2, col3 = st.columns(3)
-        col1.metric("Total Cost", f"${total_cost:,.2f}")
+        col1.metric("Total Cost", f"${7:,.2f}")
         col2.metric("Total Workers Assigned", total_workers)
         col3.metric("Total Tasks Assigned", total_tasks)
 
