@@ -250,60 +250,6 @@ def task_input_form():
         Day = st.selectbox("Day of the Week*", 
                             ["Monday", "Tuesday", "Wednesday", "Thursday",
                             "Friday", "Saturday", "Sunday"])
-
-        # Time inputs in their own columns
-        time_col1, time_col2 = st.columns(2)
-        
-        with time_col1:
-            StartTime = st.time_input("Start Time*", value=datetime.now().time())
-
-        with time_col2:
-            duration = st.number_input("Duration (minutes)*", 
-                                       min_value=15, max_value=480, 
-                                       value=60, step=15, help="Duration in minutes.")
-        
-        # Compute End Time dynamically based on StartTime + Duration
-        start_datetime = datetime.combine(datetime.today(), StartTime)
-        end_datetime = start_datetime + timedelta(minutes=duration)
-        EndTime = end_datetime.time()
-
-        st.write(f"**Calculated End Time:** {EndTime.strftime('%H:%M:%S')}")
-
-        # Submit button
-        submitted = st.form_submit_button("➕ Add Task", use_container_width=True, type="primary")
-            
-        if submitted:
-            if not TaskName:
-                st.error("Task Name is required!")
-            else:
-                add_task_to_db(
-                    TaskName,
-                    Day,
-                    StartTime.strftime("%H:%M:%S"),
-                    EndTime.strftime("%H:%M:%S"),
-                    str(timedelta(minutes=duration)),
-                    NursesRequired
-                )
-                st.success("Task added successfully!")
-
-
-    """Sidebar form to add a new task."""
-    with st.form("task_form", clear_on_submit=True):
-        st.subheader("Add New Task")
-        
-        # Create two main columns for task details
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            TaskName = st.text_input("Task Name*", key="task_name")
-            
-        with col2:
-            NursesRequired = st.number_input("Nurses Required*", 
-                                           min_value=1, value=1, step=1)
-            
-        Day = st.selectbox("Day of the Week*", 
-                            ["Monday", "Tuesday", "Wednesday", "Thursday",
-                            "Friday", "Saturday", "Sunday"])
         # Time inputs in their own columns
         time_col1, time_col2, time_col3 = st.columns(3)
         with time_col1:
@@ -2116,7 +2062,7 @@ def display_tasks_and_shifts():
             st.info("Please ensure Plotly is installed: `pip install plotly`")
 
     with tab2:
-
+        
         if not tasks_df.empty:
             with st.expander("📋 Task Details", expanded=True):
                 st.dataframe(
