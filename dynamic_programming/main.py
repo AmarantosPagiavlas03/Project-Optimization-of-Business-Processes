@@ -2067,7 +2067,7 @@ def display_tasks_and_shifts():
         if not tasks_df.empty:
             with st.expander("📋 Task Details", expanded=True):
                 st.dataframe(
-                    tasks_df.columns.style
+                    tasks_df.style
                     .background_gradient(subset=["NursesRequired"], cmap="Blues")
                     .format({"Duration": lambda x: str(pd.Timedelta(x)).split()[-1]}),
                     use_container_width=True,
@@ -2075,7 +2075,7 @@ def display_tasks_and_shifts():
                 )
                 st.download_button(
                     label="📥 Download Tasks CSV",
-                    data=tasks_df.columns.to_csv(index=False).encode("utf-8"),
+                    data=tasks_df.to_csv(index=False).encode("utf-8"),
                     file_name="hospital_tasks.csv",
                     mime="text/csv",
                     type="primary"
