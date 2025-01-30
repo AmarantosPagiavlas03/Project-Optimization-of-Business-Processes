@@ -1705,9 +1705,13 @@ def optimize_tasks_with_gurobi():
         else:
             st.warning("No results to visualize") 
 
-        # Add Enhanced Gantt chart visualization
+        # Add Gantt chart final
+        # Add Enhanced Gantt chart with discrete shift colors
         if not results_df.empty:
             st.subheader("Task Schedule Gantt Chart")
+            
+            # Convert Shift ID to categorical type
+            results_df['Shift ID'] = results_df['Shift ID'].astype(str)
             
             # Create date mapping with proper midnight handling
             base_date = pd.to_datetime("2023-10-02")
@@ -1731,15 +1735,16 @@ def optimize_tasks_with_gurobi():
             results_df = results_df.sort_values(['Day', 'Begin_Datetime'])
             results_df['Vertical_Position'] = results_df.groupby(['Day', pd.Grouper(key='Begin_Datetime', freq='15T')]).cumcount()
             
-            # Create interactive Gantt chart
+            # Create interactive Gantt chart with discrete colors
             fig = px.timeline(
                 results_df,
                 x_start="Begin_Datetime",
                 x_end="End_Datetime",
                 y="Vertical_Position",
                 color="Shift ID",
+                color_discrete_sequence=px.colors.qualitative.D3,  # Discrete color palette
                 facet_row="Day",
-                title="<b>Enhanced Task Schedule Visualization</b>",
+                title="<b>Task Schedule with Shift Colors</b>",
                 hover_name="Task Name",
                 hover_data={
                     "Shift ID": True,
@@ -1749,7 +1754,7 @@ def optimize_tasks_with_gurobi():
                     "Day": False
                 },
                 labels={"Begin_Datetime": "Start Time", "End_Datetime": "End Time"},
-                category_orders={"Day": day_names},
+                category_orders={"Day": day_names, "Shift ID": sorted(results_df['Shift ID'].unique())},
                 height=600 + 150*len(day_names)
             )
 
@@ -1760,32 +1765,40 @@ def optimize_tasks_with_gurobi():
                 title_text="Time"
             )
             
-            fig.update_yaxes(
-                visible=False,  # Hide numeric y-axis
-                title_text=""
-            )
+            fig.update_yaxes(visible=False, title_text="")
             
-            # Add custom annotations for day labels
-            for annotation in fig.layout.annotations:
-                if annotation.text in day_names:
-                    annotation.x = -0.05
-                    annotation.xanchor = 'right'
-                    annotation.font.size = 14
-
+            # Improve legend and layout
             fig.update_layout(
                 margin=dict(l=100, r=50, b=80, t=100),
-                showlegend=True,
                 legend_title_text="Shift ID",
-                hoverlabel=dict(bgcolor="white", font_size=12),
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom",
+                    y=-0.3,
+                    xanchor="right",
+                    x=1
+                ),
                 plot_bgcolor='rgba(240,240,240,0.8)',
                 xaxis=dict(showgrid=True, gridcolor='white'),
-                yaxis=dict(showgrid=False)
+                hoverlabel=dict(
+                    bgcolor="white",
+                    font_size=12,
+                    font_family="Arial"
+                )
             )
+
+            # Add day labels to left side
+            for annotation in fig.layout.annotations:
+                if annotation.text in day_names:
+                    annotation.x = -0.07
+                    annotation.xanchor = 'right'
+                    annotation.font = dict(size=14, color='black')
+                    annotation.bgcolor = 'rgba(255,255,255,0.8)'
 
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning("No tasks available for Gantt chart visualization")
-
+ 
         day_summary = []
         for day in day_names:
             day_summary.append({
