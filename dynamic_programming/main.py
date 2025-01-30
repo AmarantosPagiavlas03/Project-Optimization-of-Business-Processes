@@ -1709,15 +1709,15 @@ def optimize_tasks_with_gurobi():
         day_summary_df = pd.DataFrame(day_summary)
 
         # Replace existing visualization and validation code with this
-        # if not day_summary_df.empty:
-        #     st.write("### Daily Summaries")
-        #     st.dataframe(day_summary_df.style.format({
-        #         "Total Cost (€)": "{:.2f}",
-        #         "Tasks Assigned": "{:.0f}",
-        #         "Workers Assigned": "{:.0f}"
-        #     }))
-        # else:
-        #     st.warning("No daily summaries available.")
+        if not day_summary_df.empty:
+            st.write("### Daily Summaries")
+            st.dataframe(day_summary_df.style.format({
+                "Total Cost (€)": "{:.2f}",
+                "Tasks Assigned": "{:.0f}",
+                "Workers Assigned": "{:.0f}"
+            }))
+        else:
+            st.warning("No daily summaries available.")
 
         total_cost = 0
         for day in day_names:
