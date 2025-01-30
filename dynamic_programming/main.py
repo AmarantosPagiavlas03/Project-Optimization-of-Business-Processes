@@ -1827,6 +1827,7 @@ def optimize_tasks_with_gurobi():
                 "Workers Assigned": daily_workers[day]
             })
 
+
         day_summary_df = pd.DataFrame(day_summary)
 
         # Replace existing visualization and validation code with this
@@ -1840,6 +1841,10 @@ def optimize_tasks_with_gurobi():
         else:
             st.warning("No daily summaries available.")
 
+        total_cost = 0
+        for day in day_names:
+            total_cost += round(daily_costs[day], 2)
+
 
         # --- Display Results ---
         st.success("✅ Task-shift optimization successful!")
@@ -1847,7 +1852,7 @@ def optimize_tasks_with_gurobi():
 
         # Overall Metrics
         #total_cost = model.ObjVal
-        total_cost = 7
+        # total_cost = 7
         total_workers = sum(daily_workers.values())
         total_tasks = len(results_df)
 
