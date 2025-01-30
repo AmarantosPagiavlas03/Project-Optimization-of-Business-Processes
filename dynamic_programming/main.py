@@ -1228,31 +1228,6 @@ def original_optimize_tasks_with_gurobi():
         ).reset_index()
         validation["Valid"] = validation["Total_Cost"].round(2) == validation["Expected_Cost"].round(2)
 
-        # 2. New Visualizations
-        if not results_df.empty:
-            col1, col2 = st.columns(2)
-            with col1:
-                # Ensure we have data to plot
-                if not results_df.empty:
-                    fig = px.pie(results_df, names='Day', values='Task Cost (€)', title='<b>Cost Distribution by Day</b>')
-                    fig.update_layout(showlegend=False)
-                    st.plotly_chart(fig, use_container_width=True)
-                else:
-                    st.warning("No data available for pie chart")
-
-            with col2:
-                # Ensure we have data to plot
-                if not results_df.empty:
-                    shift_cost = results_df.groupby("Shift ID")["Task Cost (€)"].sum().reset_index()
-                    fig = px.bar(shift_cost, x='Shift ID', y='Task Cost (€)', 
-                                title='<b>Total Cost by Shift</b>')
-                    fig.update_layout(showlegend=False)
-                    st.plotly_chart(fig, use_container_width=True)
-                else:
-                    st.warning("No data available for bar chart")
-        else:
-            st.warning("No results to visualize") 
-
  
  
         # Calculate daily summaries
@@ -1295,6 +1270,7 @@ def original_optimize_tasks_with_gurobi():
         col2.metric("Total Workers Assigned", total_workers)
         col3.metric("Total Tasks Assigned", total_tasks)
 
+
         # Detailed Assignments
         with st.expander("📋 View Detailed Task Assignments", expanded=True):
             if not results_df.empty:
@@ -1326,6 +1302,33 @@ def original_optimize_tasks_with_gurobi():
             file_name="daily_summary.csv",
             mime="text/csv"
         )
+
+       # 2. New Visualizations
+        if not results_df.empty:
+            col1, col2 = st.columns(2)
+            with col1:
+                # Ensure we have data to plot
+                if not results_df.empty:
+                    fig = px.pie(results_df, names='Day', values='Task Cost (€)', title='<b>Cost Distribution by Day</b>')
+                    fig.update_layout(showlegend=False)
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.warning("No data available for pie chart")
+
+            with col2:
+                # Ensure we have data to plot
+                if not results_df.empty:
+                    shift_cost = results_df.groupby("Shift ID")["Task Cost (€)"].sum().reset_index()
+                    fig = px.bar(shift_cost, x='Shift ID', y='Task Cost (€)', 
+                                title='<b>Total Cost by Shift</b>')
+                    fig.update_layout(showlegend=False)
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.warning("No data available for bar chart")
+        else:
+            st.warning("No results to visualize") 
+
+ 
  
 
         # st.subheader("📊 Model Statistics")
