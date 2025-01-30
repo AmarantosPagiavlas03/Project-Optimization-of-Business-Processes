@@ -2468,15 +2468,15 @@ def main():
             with st.expander("🔍 Load Example Data"):
                 ex_col1, ex_col2, ex_col3 = st.columns(3)
                 with ex_col1:
-                    if st.button("🌱 Really Small Dataset", use_container_width=True):
+                    if st.button("🌱 Really Small Data", use_container_width=True):
                         insert3()
                         st.success("Really small example data loaded!")
                 with ex_col2:
-                    if st.button("🌲 Small Dataset", use_container_width=True):
+                    if st.button("🌲 Small Data", use_container_width=True):
                         insert()
                         st.success("Small example data loaded!")
                 with ex_col3:
-                    if st.button("🌳 Large Dataset", use_container_width=True):
+                    if st.button("🌳 Large Data", use_container_width=True):
                         insert2()
                         st.success("Large example data loaded!")
 
