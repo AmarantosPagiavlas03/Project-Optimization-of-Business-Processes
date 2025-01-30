@@ -1771,17 +1771,7 @@ def optimize_tasks_with_gurobi():
             mime="text/csv"
         )
  
-
- 
-    else:
-        st.error(f"Optimization failed with status: {model.status}")
-        # Optional: Add infeasibility diagnostics
-        model.computeIIS()
-        for constr in model.getConstrs():
-            if constr.IISConstr:
-                st.write(f"⚠️ Infeasible constraint: {constr.constrName}")
-
-       # 2. New Visualizations
+        # 2. New Visualizations
         if not results_df.empty:
             col1, col2 = st.columns(2)
             with col1:
@@ -1905,6 +1895,17 @@ def optimize_tasks_with_gurobi():
             else:
                 st.warning("No tasks available for Gantt chart visualization")
 ####################################################################
+
+ 
+    else:
+        st.error(f"Optimization failed with status: {model.status}")
+        # Optional: Add infeasibility diagnostics
+        model.computeIIS()
+        for constr in model.getConstrs():
+            if constr.IISConstr:
+                st.write(f"⚠️ Infeasible constraint: {constr.constrName}")
+
+
 
  
  
