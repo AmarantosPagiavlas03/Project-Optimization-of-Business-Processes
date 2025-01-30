@@ -2434,7 +2434,7 @@ def main():
         header()
         
         # Create two main columns
-        left_col, right_col = st.columns([1.15, 2.85])
+        left_col, right_col = st.columns([1.10, 2.90])
         
         with left_col:
             # Manual Input Section
