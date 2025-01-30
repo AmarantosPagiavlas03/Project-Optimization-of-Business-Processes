@@ -2067,14 +2067,14 @@ def display_tasks_and_shifts():
             with st.expander("📋 Task Details", expanded=True):
                 st.dataframe(
                     tasks_df.iloc[:, 1:6].style
-                    # .background_gradient(subset=["NursesRequired"], cmap="Blues")
+                    .background_gradient(subset=["NursesRequired"], cmap="Blues")
                     .format({"Duration": lambda x: str(pd.Timedelta(x)).split()[-1]}),
                     use_container_width=True,
                     height=300
                 )
                 st.download_button(
                     label="📥 Download Tasks CSV",
-                    data=tasks_df.to_csv(index=False).encode("utf-8"),
+                    data=tasks_df.iloc[:, 1:6].to_csv(index=False).encode("utf-8"),
                     file_name="hospital_tasks.csv",
                     mime="text/csv",
                     type="primary"
