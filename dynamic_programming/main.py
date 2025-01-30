@@ -1710,103 +1710,84 @@ def optimize_tasks_with_gurobi():
             st.warning("No results to visualize") 
 
         # Add Gantt chart final
-        # Add Enhanced Gantt chart with discrete shift colors
-        if not results_df.empty:
-            st.subheader("Task Schedule Gantt Chart")
-            
-            # Convert Shift ID to categorical type
-            results_df['Shift ID'] = results_df['Shift ID'].astype(str)
-            
-            # Create date mapping with proper midnight handling
-            base_date = pd.to_datetime("2023-10-02")
-            date_mapping = {day: base_date + pd.DateOffset(days=i) for i, day in enumerate(day_names)}
-            
-            # Convert times and handle midnight crossings
-            results_df['Begin_Datetime'] = results_df.apply(
-                lambda row: pd.Timestamp.combine(date_mapping[row['Day']], 
-                                                pd.to_datetime(row['Begin Task'], format="%H:%M").time()),
-                axis=1
-            )
-            results_df['End_Datetime'] = results_df.apply(
-                lambda row: pd.Timestamp.combine(date_mapping[row['Day']], 
-                                                pd.to_datetime(row['End Task'], format="%H:%M").time()),
-                axis=1
-            )
-            mask = results_df['End_Datetime'] < results_df['Begin_Datetime']
-            results_df.loc[mask, 'End_Datetime'] += pd.Timedelta(days=1)
+        # Filter out days with no tasks
+        filtered_df = results_df[results_df["Day"].isin(results_df["Day"].value_counts().index)]
 
-            # Create vertical positions for parallel tasks
-            results_df = results_df.sort_values(['Day', 'Begin_Datetime'])
-            results_df['Vertical_Position'] = results_df.groupby(['Day', pd.Grouper(key='Begin_Datetime', freq='15T')]).cumcount()
+        # Get unique day names after filtering
+        filtered_day_names = sorted(filtered_df['Day'].unique())
 
-            filtered_df = results_df[results_df["Day"].isin(results_df["Day"].value_counts().index)]
-            filtered_day_names = sorted(filtered_df['Day'].unique())
-            
-            fig = px.timeline(
-                filtered_df,
-                x_start="Begin_Datetime",
-                x_end="End_Datetime",
-                y="Vertical_Position",
-                color="Shift ID",
-                color_discrete_sequence=px.colors.qualitative.D3,  # Discrete color palette
-                facet_row="Day",
-                title="<b>Task Schedule with Shift Colors</b>",
-                hover_name="Task Name",
-                hover_data={
-                    "Shift ID": True,
-                    "Begin_Datetime": "|%H:%M",
-                    "End_Datetime": "|%H:%M",
-                    "Vertical_Position": False,
-                    "Day": False
-                },
-                labels={"Begin_Datetime": "Start Time", "End_Datetime": "End Time"},
-                category_orders={"Day": filtered_day_names, "Shift ID": sorted(filtered_df['Shift ID'].unique())},
-                height=600 + 150*len(filtered_day_names)  # Adjust height dynamically
-            )
+        # Get min and max datetime values for the x-axis range
+        min_time = filtered_df["Begin_Datetime"].min().replace(hour=0, minute=0, second=0)
+        max_time = filtered_df["End_Datetime"].max()
 
-            # Format axes and layout
-            fig.update_xaxes(
-                tickformat="%H:%M\n%a",
-                rangeslider_visible=False,  # Disable range slider
-                title_text="Time"
-            )
+        # Create interactive Gantt chart with discrete colors
+        fig = px.timeline(
+            filtered_df,
+            x_start="Begin_Datetime",
+            x_end="End_Datetime",
+            y="Vertical_Position",
+            color="Shift ID",
+            color_discrete_sequence=px.colors.qualitative.D3,  # Discrete color palette
+            facet_row="Day",
+            title="<b>Task Schedule with Shift Colors</b>",
+            hover_name="Task Name",
+            hover_data={
+                "Shift ID": True,
+                "Begin_Datetime": "|%H:%M",
+                "End_Datetime": "|%H:%M",
+                "Vertical_Position": False,
+                "Day": False
+            },
+            labels={"Begin_Datetime": "Start Time", "End_Datetime": "End Time"},
+            category_orders={"Day": filtered_day_names, "Shift ID": sorted(filtered_df['Shift ID'].unique())},
+            height=600 + 150*len(filtered_day_names)  # Adjust height dynamically
+        )
 
-            fig.update_yaxes(visible=False, title_text="")
+        # Format axes and layout
+        fig.update_xaxes(
+            tickformat="%H:%M\n%a",
+            rangeslider_visible=False,  # Disable range slider
+            title_text="Time",
+            range=[min_time, max_time]  # Force x-axis to start at 00:00
+        )
 
-            # Improve legend and layout
-            fig.update_layout(
-                margin=dict(l=100, r=50, b=80, t=100),
-                legend_title_text="Shift ID",
-                legend=dict(
-                    orientation="h",
-                    yanchor="bottom",
-                    y=-0.3,
-                    xanchor="right",
-                    x=1
-                ),
-                plot_bgcolor='rgba(240,240,240,0.8)',
-                xaxis=dict(showgrid=True, gridcolor='white'),
-                hoverlabel=dict(
-                    bgcolor="white",
-                    font_size=12,
-                    font_family="Arial"
-                ),
-                dragmode=False  # Disable zoom/select interaction
-            )
+        fig.update_yaxes(visible=False, title_text="")
 
-            # Add day labels to left side (only for days that exist)
-            for annotation in fig.layout.annotations:
-                if annotation.text in filtered_day_names:
-                    annotation.x = -0.07
-                    annotation.xanchor = 'right'
-                    annotation.font = dict(size=14, color='black')
-                    annotation.bgcolor = 'rgba(255,255,255,0.8)'
+        # Improve legend and layout
+        fig.update_layout(
+            margin=dict(l=100, r=50, b=80, t=100),
+            legend_title_text="Shift ID",
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=-0.3,
+                xanchor="right",
+                x=1
+            ),
+            plot_bgcolor='rgba(240,240,240,0.8)',
+            xaxis=dict(showgrid=True, gridcolor='white'),
+            hoverlabel=dict(
+                bgcolor="white",
+                font_size=12,
+                font_family="Arial"
+            ),
+            dragmode=False  # Disable zoom/select interaction
+        )
 
-            # Display chart only if there are tasks
-            if not filtered_df.empty:
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.warning("No tasks available for Gantt chart visualization")
+        # Add day labels to left side (only for days that exist)
+        for annotation in fig.layout.annotations:
+            if annotation.text in filtered_day_names:
+                annotation.x = -0.07
+                annotation.xanchor = 'right'
+                annotation.font = dict(size=14, color='black')
+                annotation.bgcolor = 'rgba(255,255,255,0.8)'
+
+        # Display chart only if there are tasks
+        if not filtered_df.empty:
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.warning("No tasks available for Gantt chart visualization")
+
 ####################################################################
  
         day_summary = []
