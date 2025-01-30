@@ -2065,8 +2065,9 @@ def display_tasks_and_shifts():
         # Enhanced data tables with search
         if not tasks_df.empty:
             with st.expander("📋 Task Details", expanded=True):
+                tasksFiltered_df = tasks_df.iloc[:, 1:6].copy()
                 st.dataframe(
-                    tasks_df.style
+                    tasksFiltered_df.style
                     .background_gradient(subset=["NursesRequired"], cmap="Blues")
                     .format({"Duration": lambda x: str(pd.Timedelta(x)).split()[-1]}),
                     use_container_width=True,
@@ -2074,7 +2075,7 @@ def display_tasks_and_shifts():
                 )
                 st.download_button(
                     label="📥 Download Tasks CSV",
-                    data=tasks_df.to_csv(index=False).encode("utf-8"),
+                    data=tasksFiltered_df.to_csv(index=False).encode("utf-8"),
                     file_name="hospital_tasks.csv",
                     mime="text/csv",
                     type="primary"
