@@ -1775,31 +1775,28 @@ def optimize_tasks_with_gurobi():
 
         nurse_requirements_df = (
             results_df
-            .groupby(["Day", "Shift ID"], as_index=False)
+            .groupby(["Day", "Shift ID", "Shift Start", "Shift End"], as_index=False)
             .agg({
-                "Workers Assigned": "sum",        # total number of nurses per shift
-                "Task Cost (€)": "sum"           # total cost per shift
+                "Workers Assigned": "sum",    # total nurses assigned in this shift
+                "Task Cost (€)": "sum"        # total cost for this shift
             })
-            # 3. Rename for clarity.
             .rename(columns={
                 "Workers Assigned": "Number of Nurses",
                 "Task Cost (€)": "Shift Cost (€)"
             })
         )
-        
-        with st.expander("👩‍⚕️ View Nurse Requirements per Shift (15-min overlap)", expanded=True):
+
+        # 2) Display in Streamlit
+        with st.expander("👩‍⚕️ View Nurse Requirements per Shift", expanded=True):
             if not nurse_requirements_df.empty:
-                # Create a user-friendly "Shift" column for quick reference
+                # Create a user-friendly Shift label
                 nurse_requirements_df["Shift"] = (
                     nurse_requirements_df["Shift Start"] + " - " + nurse_requirements_df["Shift End"]
                 )
                 
-                # Rearrange columns as you wish
+                # Decide which columns to show and in what order
                 display_df = nurse_requirements_df[[
-                    "Day", 
-                    "Shift", 
-                    "Number of Nurses", 
-                    "Shift Cost (€)"
+                    "Day", "Shift", "Number of Nurses", "Shift Cost (€)"
                 ]]
                 
                 st.dataframe(
@@ -1807,6 +1804,8 @@ def optimize_tasks_with_gurobi():
                     column_order=("Day", "Shift", "Number of Nurses", "Shift Cost (€)"),
                     hide_index=True
                 )
+
+                # Download button
                 st.download_button(
                     label="Download Nurse Requirements as CSV",
                     data=display_df.to_csv(index=False).encode("utf-8"),
