@@ -1275,9 +1275,10 @@ def original_optimize_tasks_with_gurobi():
         with st.expander("📋 View Detailed Task Assignments", expanded=True):
             if not results_df.empty:
                 st.dataframe(
-                    results_df,
-                    column_order=("Task ID", "Task Name", "Day", "Task Start", "Task End",
-                                  "Shift ID", "Shift Start", "Shift End", "Workers Assigned"),
+                    results_df[:,1,4],
+                    column_order=("Task ID","Task Name"), 
+                                #   "Task Name", "Day", "Task Start", "Task End",
+                                #   "Shift ID", "Shift Start", "Shift End", "Workers Assigned"),
                     hide_index=True
                 )
                 st.download_button(
