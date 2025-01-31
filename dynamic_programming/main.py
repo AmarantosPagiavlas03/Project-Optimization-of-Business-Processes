@@ -929,19 +929,12 @@ def optimize_tasks_with_gurobi():
                     task_shift_vars[(task_id, shift_id, t_day)] = model.addVar(
                         vtype=GRB.BINARY, name=var_name
                     )
-    # 4.3. Auxiliary variables: (shift, day) -> maximum nurses required at any time slot
-    max_nurses_vars = {}
-    for (shift_id, day_str) in shift_worker_vars:
-        var_name = f"MaxNurses_Shift_{shift_id}_{day_str}"
-        max_nurses_vars[(shift_id, day_str)] = model.addVar(
-            vtype=GRB.INTEGER, lb=0, name=var_name
-        )
 
-    # --- 5. Objective: Minimize total cost = sum(max_nurses * weight) across (shift, day) ---
+    # --- 5. Objective: Minimize total cost = sum(workers * weight) across (shift, day) ---
     model.setObjective(
         quicksum(
-            max_nurses_vars[(s_id, d)] * shifts_df.loc[s_id, "Weight"]
-            for (s_id, d) in max_nurses_vars
+            shift_worker_vars[(s_id, d)] * shifts_df.loc[s_id, "Weight"]
+            for (s_id, d) in shift_worker_vars
         ),
         GRB.MINIMIZE
     )
@@ -966,65 +959,20 @@ def optimize_tasks_with_gurobi():
             # No feasible shift-day found: either data problem or the model is infeasible
             pass
 
-    # 6.2. Worker capacity: ensure workers cover the maximum nurses required in any time slot
-    # Define time slots (e.g., every 15 minutes)
-    time_interval = 15  # minutes
-
+    # 6.2. Worker capacity: for each (shift, day), total nurses required
+    #     by tasks assigned cannot exceed the # of workers assigned
     for (shift_id, day_str) in shift_worker_vars:
-        shift_row = shifts_df.loc[shift_id]
-        shift_start = pd.to_datetime(shift_row["StartTime"].strftime("%H:%M:%S"), format="%H:%M:%S")
-        shift_end   = pd.to_datetime(shift_row["EndTime"].strftime("%H:%M:%S"), format="%H:%M:%S")
-        
-        # Handle Break Times
-        break_start = pd.to_datetime(shift_row["BreakTime"].strftime("%H:%M:%S"), format="%H:%M:%S")
-        break_duration = pd.to_timedelta(shift_row["BreakDuration"])
-        break_end = break_start + break_duration
-        
-        # Generate time slots excluding break period
-        slots = []
-        current_slot_start = shift_start
-        while current_slot_start < shift_end:
-            current_slot_end = current_slot_start + pd.Timedelta(minutes=time_interval)
-            # Exclude slots that overlap with break
-            if not (current_slot_start < break_end and current_slot_end > break_start):
-                slots.append((current_slot_start, current_slot_end))
-            current_slot_start = current_slot_end
-        
-        for slot_start, slot_end in slots:
-            # Find all tasks that overlap with this slot
-            overlapping_tasks = []
-            for task_id, task_row in tasks_df.iterrows():
-                if task_row["Day"] != day_str:
-                    continue
-                task_start = pd.to_datetime(task_row["StartTime"].strftime("%H:%M:%S"), format="%H:%M:%S")
-                task_end   = pd.to_datetime(task_row["EndTime"].strftime("%H:%M:%S"), format="%H:%M:%S")
-                
-                # Check if task overlaps with the slot
-                if not (task_end <= slot_start or task_start >= slot_end):
-                    # Task overlaps with the slot
-                    # Only consider if the task is assigned to this shift and day
-                    if (task_id, shift_id, day_str) in task_shift_vars:
-                        overlapping_tasks.append(
-                            (task_shift_vars[(task_id, shift_id, day_str)], task_row["NursesRequired"])
-                        )
-            
-            if overlapping_tasks:
-                # Calculate total nurses required in this slot
-                total_nurses_expr = quicksum(var * nurses for (var, nurses) in overlapping_tasks)
-                # Link the total nurses in this slot to the max_nurses_var
-                model.addConstr(
-                    total_nurses_expr <= max_nurses_vars[(shift_id, day_str)],
-                    name=f"Shift_{shift_id}_{day_str}_Slot_{slot_start.time()}_MaxNurses"
-                )
-        
-        # Ensure that the number of workers assigned is at least the maximum nurses required
         model.addConstr(
-            shift_worker_vars[(shift_id, day_str)] >= max_nurses_vars[(shift_id, day_str)],
-            name=f"Shift_{shift_id}_{day_str}_Workers_Cover_MaxNurses"
+            quicksum(
+                tasks_df.loc[t_id, "NursesRequired"] * task_shift_vars[(t_id, shift_id, day_str)]
+                for (t_id, s_id, d) in task_shift_vars
+                if s_id == shift_id and d == day_str
+            ) <= shift_worker_vars[(shift_id, day_str)],
+            name=f"Shift_{shift_id}_{day_str}_WorkerCap"
         )
  
    
-   # --- 7. Solve the model ---
+    # --- 7. Solve the model ---
     with st.spinner("Optimizing tasks and shifts. Please wait..."):
         try:
             model.optimize()
@@ -1043,7 +991,7 @@ def optimize_tasks_with_gurobi():
         for (task_id, shift_id, d), assign_var in task_shift_vars.items():
             if assign_var.x > 0.5:
                 # Get basic assignment info
-                workers = max_nurses_vars[(shift_id, d)].x
+                workers = shift_worker_vars[(shift_id, d)].x
                 shift_weight = shifts_df.loc[shift_id, "Weight"]
                 task_row = tasks_df.loc[task_id]
                 
