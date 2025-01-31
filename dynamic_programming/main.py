@@ -1679,6 +1679,7 @@ def optimize_tasks_with_gurobi():
                     "Workers Assigned": assignment["Workers Assigned"],
                     "Hourly Rate (€)": weight,
                     "Task Cost (€)":  round(assignment["Workers Assigned"] * weight, 2) ,
+                    "Number of Nurses": max_nurses,
                     #"Cost %": round((total_cost / shift_day_cost[key]) * 100, 1) if shift_day_cost[key] > 0 else 0
                 })
 
@@ -1687,6 +1688,11 @@ def optimize_tasks_with_gurobi():
         # Convert results to DataFrame
         results_df = pd.DataFrame(results)
 
+        results_df["Shift"] = (
+            results_df["Shift Start"] 
+            + " - " 
+            + results_df["Shift End"]
+        )
 
        
         # 1. Cost Validation Check
@@ -1710,20 +1716,6 @@ def optimize_tasks_with_gurobi():
 
         results_df["Shift"] = results_df["Shift Start"] + " - " + results_df["Shift End"]
 
-        # 2. Group by "Day" and "Shift", summing both nurses and cost.
-        nurse_requirements_df = (
-            results_df
-            .groupby(["Day", "Shift"], as_index=False)
-            .agg({
-                "Workers Assigned": "sum",        # total number of nurses per shift
-                "Task Cost (€)": "sum"           # total cost per shift
-            })
-            # 3. Rename for clarity.
-            .rename(columns={
-                "Workers Assigned": "Number of Nurses",
-                "Task Cost (€)": "Shift Cost (€)"
-            })
-        )
 
         # Replace existing visualization and validation code with this
         # if not day_summary_df.empty:
@@ -1782,21 +1774,27 @@ def optimize_tasks_with_gurobi():
                 st.warning("No tasks were assigned.")
 
 
-        with st.expander("👩‍⚕️ View Nurse Requirements per Shift", expanded=True):
-            if not nurse_requirements_df.empty:
+        with st.expander("👩‍⚕️ Nurse Requirements per Shift (Concurrency)", expanded=True):
+            if not results_df.empty:
                 st.dataframe(
-                    nurse_requirements_df[["Day", "Shift", "Number of Nurses", "Shift Cost (€)"]],
-                    column_order=("Day", "Shift", "Number of Nurses", "Shift Cost (€)"),
+                    results_df[[
+                        "Day", 
+                        "Shift", 
+                        "Number of Nurses", 
+                        "Shift Cost (€)"
+                    ]],
                     hide_index=True
                 )
                 st.download_button(
                     label="Download Nurse Requirements as CSV",
-                    data=nurse_requirements_df.to_csv(index=False).encode("utf-8"),
+                    data=results_df.to_csv(index=False).encode("utf-8"),
                     file_name="nurse_requirements.csv",
                     mime="text/csv"
                 )
             else:
                 st.warning("No nurse requirements found.")
+
+
 
         # Daily Summary
         st.subheader("📅 Daily Summary")
