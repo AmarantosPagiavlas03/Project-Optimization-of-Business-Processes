@@ -1809,7 +1809,7 @@ def optimize_tasks_with_gurobi():
         if not results_df.empty:
             st.subheader("Task Schedule Gantt Chart")
 
-            results_df = results_df.assign(
+            results_df1 = results_df.assign(
                 Start=lambda df: pd.to_datetime("2023-01-01 " + df['Begin Task']),
                 End=lambda df: pd.to_datetime("2023-01-01 " + df['End Task']),
                 Day=lambda df: pd.Categorical(df['Day'], categories=day_order, ordered=True),
@@ -1817,7 +1817,7 @@ def optimize_tasks_with_gurobi():
             ).sort_values(by=['Day', 'Begin Task'])
 
             fig_tasks = px.timeline(
-                results_df,
+                results_df1,
                 x_start="Begin Task",
                 x_end="End Task",
                 y="Day",
