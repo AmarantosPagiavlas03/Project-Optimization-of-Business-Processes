@@ -1511,54 +1511,56 @@ def optimize_tasks_with_gurobi():
                 st.warning("No results to visualize") 
 
         # Add Gantt chart final
+####################################################################################
+        import plotly.express as px
+
+        # --- Create Gantt Charts by Day with Discrete Colors ---
         st.subheader("Gantt Charts by Day")
 
-        # Ensure the columns we need actually exist
-        if not {"Day", "Task Name", "Shift ID", "Begin Task", "End Task"}.issubset(results_df.columns):
-            st.warning("Required columns for Gantt chart not found in results_df.")
+        required_cols = {"Day", "Task Name", "Shift ID", "Begin Task", "End Task"}
+        if not required_cols.issubset(results_df.columns):
+            st.warning(f"Required columns {required_cols} for Gantt chart not found in results_df.")
         else:
-            # Convert the "Begin Task" and "End Task" columns from HH:MM strings 
-            # into datetimes on an arbitrary date (e.g., 2000-01-01) so Plotly can interpret them properly.
-            # We’ll do this inside the loop for each day’s subset.
-            
+            # Convert SHIFT ID to string to ensure discrete color mapping
+            results_df["Shift ID"] = results_df["Shift ID"].astype(str)
+
             unique_days = results_df["Day"].unique()
+
             for day in unique_days:
                 day_data = results_df[results_df["Day"] == day].copy()
-                
                 if day_data.empty:
-                    continue  # Skip if no tasks on that day
+                    continue  # No tasks for this day
                 
-                # Parse the time columns into actual datetimes (on a "dummy" date).
-                # e.g. 2000-01-01 HH:MM
+                # Convert Begin Task / End Task from HH:MM to a full datetime
                 day_data["Begin_DT"] = pd.to_datetime(day_data["Begin Task"], format="%H:%M").apply(
                     lambda t: t.replace(year=2000, month=1, day=1)
                 )
                 day_data["End_DT"] = pd.to_datetime(day_data["End Task"], format="%H:%M").apply(
                     lambda t: t.replace(year=2000, month=1, day=1)
                 )
-                
-                # Plotly Express timeline
+
                 fig = px.timeline(
                     day_data,
                     x_start="Begin_DT",
                     x_end="End_DT",
                     y="Task Name",
-                    color="Shift ID",  # Same color for the same shift
-                    hover_data=["Task Name", "Begin Task", "End Task", "Shift ID"]
+                    color="Shift ID",  # Use Shift ID for color
+                    hover_data=["Task Name", "Begin Task", "End Task", "Shift ID"],
+                    # Specify a discrete color sequence (pick any from px.colors.qualitative)
+                    color_discrete_sequence=px.colors.qualitative.Set3
                 )
-                
-                # Reverse the Y-axis so tasks list top-to-bottom
+
+                # Reverse Y-axis so tasks list top to bottom
                 fig.update_yaxes(autorange="reversed")
-                
-                # Format the X-axis ticks to show just HH:MM
+
+                # Format X-axis ticks to show just HH:MM
                 fig.update_layout(
                     title=f"Gantt Chart for {day}",
                     xaxis=dict(tickformat='%H:%M'),
-                    height=600  # You can adjust this as you like
+                    height=600
                 )
 
                 st.plotly_chart(fig, use_container_width=True)
-
 
 ####bzz###############################################
 
