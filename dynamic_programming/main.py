@@ -1781,7 +1781,7 @@ def optimize_tasks_with_gurobi():
                 "Task Cost (€)": "sum"      # Total shift cost
             })
         )
-        # 2) Display in Streamlit
+
         with st.expander("👩‍⚕️ View Nurse Requirements per Shift", expanded=True):
             if not nurse_requirements_df.empty:
                 # Create a user-friendly Shift label
