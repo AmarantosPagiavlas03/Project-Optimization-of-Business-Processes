@@ -139,7 +139,7 @@ def update_needed_workers_for_each_day(results_df):
         .max()  # or .sum()
         .reset_index()
     )
-    # 2. Build a dictionary: shift_day_dict[shift_id][day] = needed count
+
     day_list = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     shift_day_dict = {}
 
