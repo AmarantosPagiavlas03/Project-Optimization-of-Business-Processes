@@ -1799,63 +1799,65 @@ def optimize_tasks_with_gurobi():
         # Add Gantt chart final
 ################################################################################
 ###bz###
-        import plotly.express as px
+        if results_df is None or results_df.empty:
+            st.warning("No results available to display a Gantt chart.")
+            return
 
         # Define the order of days for proper display
-        day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", 
+        day_order = ["Monday", "Tuesday", "Wednesday", "Thursday",
                     "Friday", "Saturday", "Sunday"]
 
         # Define the time range for the chart
         time_range = ["2023-01-01 00:00:00", "2023-01-01 23:59:59"]
 
         # Prepare the data for plotting
-        if not results_df.empty:
-            results_df = results_df.assign(
-                Start=lambda df: pd.to_datetime("2023-01-01 " + df['Begin Task']),
-                End=lambda df: pd.to_datetime("2023-01-01 " + df['End Task']),
-                Day=lambda df: pd.Categorical(df['Day'], categories=day_order, ordered=True)
-            ).sort_values(by=['Day', 'Start'])
+        # Make sure 'Begin Task' and 'End Task' columns exist and are in HH:MM format
+        # Here we assume a dummy date of 2023-01-01 for all tasks.
+        results_df = results_df.assign(
+            Start=lambda df: pd.to_datetime("2023-01-01 " + df["Begin Task"]),
+            End=lambda df: pd.to_datetime("2023-01-01 " + df["End Task"]),
+            Day=lambda df: pd.Categorical(df["Day"], categories=day_order, ordered=True)
+        ).sort_values(by=["Day", "Start"])
 
-            # Create a Gantt chart using Plotly Express
-            fig_results = px.timeline(
-                results_df,
-                x_start="Start",
-                x_end="End",
-                y="Day",
-                color="Task Name",
-                hover_data={
-                    "Task Name": True,
-                    "Shift ID": True,
-                    "Start": "|%H:%M",
-                    "End": "|%H:%M"
-                },
-                title="<b>Task Distribution by Day</b>",
-                template="plotly_white"
-            )
+        st.subheader("Gantt Chart", divider="blue")
 
-            # Adjust the layout and formatting
-            fig_results.update_layout(
-                height=600,
-                hovermode="y unified",
-                xaxis_title="Time of Day",
-                yaxis_title="",
-                legend_title="Tasks",
-                font=dict(family="Arial", size=12),
-                margin=dict(l=100, r=20, t=60, b=20)
-            )
+        fig_results = px.timeline(
+            results_df,
+            x_start="Start",
+            x_end="End",
+            y="Day",
+            color="Task Name",
+            hover_data={
+                "Task Name": True,
+                "Shift ID": True,
+                "Start": "|%H:%M",
+                "End": "|%H:%M"
+            },
+            title="<b>Task Distribution by Day</b>",
+            template="plotly_white"
+        )
 
-            # Set the time axis format and range
-            fig_results.update_xaxes(
-                tickformat="%H:%M",
-                dtick=3600000,  # 1 hour in milliseconds
-                range=time_range,
-                showgrid=True
-            )
+        # Adjust layout and formatting
+        fig_results.update_layout(
+            height=600,
+            hovermode="y unified",
+            xaxis_title="Time of Day",
+            yaxis_title="",
+            legend_title="Tasks",
+            font=dict(family="Arial", size=12),
+            margin=dict(l=100, r=20, t=60, b=20)
+        )
 
-            # Display the chart
-            st.plotly_chart(fig_results, use_container_width=True)
-        else:
-            st.warning("No results available to display a Gantt chart.")
+        # Set the time axis format and range
+        fig_results.update_xaxes(
+            tickformat="%H:%M",
+            dtick=3600000,  # 1 hour in milliseconds
+            range=time_range,
+            showgrid=True
+        )
+
+        # Display the chart in Streamlit
+        st.plotly_chart(fig_results, use_container_width=True)
 ####bzz###############################################
 #         if not results_df.empty:
 #             st.subheader("Task Schedule Gantt Chart")
