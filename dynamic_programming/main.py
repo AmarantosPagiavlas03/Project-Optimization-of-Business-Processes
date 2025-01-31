@@ -2039,8 +2039,18 @@ def main():
         - This removes all existing records, allowing you to upload or enter new data from scratch.
         """)
 
-        # --- Section 3: Running the Optimization ---
-        st.subheader("3. Running the Optimization")
+        # --- Section 3: Visualization ---
+        st.subheader("3. Viewing Schedules & Data")
+        st.write("""
+        In the **Visualization** panel (still under **Home**): you can visualize the  data you imported
+        - See a **Gantt-style** timeline for tasks and shifts.
+        - Hover over any bar to reveal more details (start/end times, day of the week, etc.).
+        - Switch to the **Raw Data** tab to directly browse tables for tasks and shifts, 
+        and download them as needed. 
+        """)
+
+
+        st.subheader("4. Running the Optimization")
         st.write("""
         After you have your tasks and shifts set up, you can let the app do the heavy lifting:
         - In the **Home** tab, find the **“Optimization”** section on the right.
@@ -2053,16 +2063,6 @@ def main():
         3. **Daily Summary** – Total cost per day, the number of tasks covered, and how many 
             nurses in total are allocated.
         4. **Visual Charts** – A pie chart for cost by day and a bar chart for cost by shift.
-        """)
-
-        # --- Section 4: Visualization ---
-        st.subheader("4. Viewing Schedules & Data")
-        st.write("""
-        In the **Visualization** panel (still under **Home**):
-        - See a **Gantt-style** timeline for tasks and shifts.
-        - Hover over any bar to reveal more details (start/end times, day of the week, etc.).
-        - Switch to the **Raw Data** tab to directly browse tables for tasks and shifts, 
-        and download them as needed.
         """)
 
         # --- Section 5: Tips & Troubleshooting ---
