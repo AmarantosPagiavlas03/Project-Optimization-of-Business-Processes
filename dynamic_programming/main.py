@@ -1134,17 +1134,6 @@ def original_optimize_tasks_with_gurobi():
             name=f"Shift_{shift_id}_{day_str}_WorkerCap"
         )
 
-    # # 6.2. Worker capacity: for each (shift, day), total nurses required
-    # #     by tasks assigned cannot exceed the # of workers assigned
-    # for (shift_id, day_str) in shift_worker_vars:
-    #     model.addConstr(
-    #         quicksum(
-    #             task_shift_vars[(t_id-1, shift_id, day_str)] + task_shift_vars[(t_id, shift_id, day_str)]
-    #             for (t_id, s_id, d) in task_shift_vars
-    #             if s_id == shift_id and d == day_str and tasks_df.loc[t_id-1, "EndTime"] <= tasks_df.loc[t_id, "StartTime"]
-    #         ) <= 1,
-    #         name=f"Shift_{shift_id}_{day_str}"
-    #     )
    
     # --- 7. Solve the model ---
     with st.spinner("Optimizing tasks and shifts. Please wait..."):
@@ -1329,23 +1318,6 @@ def original_optimize_tasks_with_gurobi():
             st.warning("No results to visualize") 
 
  
- 
-
-        # st.subheader("📊 Model Statistics")
-        # stats = {
-        #     "Solve Time": f"{model.Runtime:.2f} seconds",
-        #     "Total Variables": model.NumVars,
-        #     "Total Constraints": model.NumConstrs,
-        #     "Objective Value": f"€{model.ObjVal:,.2f}",
-        #     "MIP Gap": f"{model.MIPGap*100:.2f}%" if model.IsMIP else "N/A"
-        # }
-
-        # col1, col2, col3, col4 = st.columns(4)
-        # col1.metric("⏱️ Solve Time", stats["Solve Time"])
-        # col2.metric("🧩 Variables", stats["Total Variables"])
-        # col3.metric("🔗 Constraints", stats["Total Constraints"])
-        # col4.metric("🎯 Objective", stats["Objective Value"])
-
     else:
         st.error(f"Optimization failed with status: {model.status}")
         # Optional: Add infeasibility diagnostics
@@ -1717,17 +1689,6 @@ def optimize_tasks_with_gurobi():
         results_df["Shift"] = results_df["Shift Start"] + " - " + results_df["Shift End"]
 
 
-        # Replace existing visualization and validation code with this
-        # if not day_summary_df.empty:
-        #     st.write("### Daily Summaries")
-        #     st.dataframe(day_summary_df.style.format({
-        #         "Total Cost (€)": "{:.2f}",
-        #         "Tasks Assigned": "{:.0f}",
-        #         "Workers Assigned": "{:.0f}"
-        #     }))
-        # else:
-        #     st.warning("No daily summaries available.")
-
         total_cost = 0
         for day in day_names:
             total_cost += round(daily_costs[day], 2)
@@ -1783,7 +1744,7 @@ def optimize_tasks_with_gurobi():
         )
 
 
-        with st.expander("👩‍⚕️ View Nurse Requirements per Shift", expanded=True):
+        with st.expander("👩‍⚕️ View Nurse Requirements per Shift per Day", expanded=True):
             if not nurse_requirements_df.empty:
                 nurse_requirements_df["Shift"] = (
                     nurse_requirements_df["Shift Start"] + " - " + nurse_requirements_df["Shift End"]
