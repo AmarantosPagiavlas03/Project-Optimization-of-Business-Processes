@@ -1510,7 +1510,7 @@ def optimize_tasks_with_gurobi():
             else:
                 st.warning("No results to visualize") 
 
-        # Add Gantt chart 
+        # Gantt chart  
         st.subheader("Gantt Charts by Day")
 
         # Ensure the columns we need actually exist
