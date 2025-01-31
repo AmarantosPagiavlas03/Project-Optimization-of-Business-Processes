@@ -1792,12 +1792,12 @@ def optimize_tasks_with_gurobi():
                 
                 # Decide which columns to show and in what order
                 display_df = nurse_requirements_df[[
-                    "Day", "Shift", "Number of Nurses"
+                    "Day", "Shift", "Shift ID", "Number of Nurses"
                 ]]
                 
                 st.dataframe(
                     display_df,
-                    column_order=("Day", "Shift", "Number of Nurses", "Shift Cost (€)"),
+                    column_order=("Day", "Shift", "Shift ID", "Number of Nurses"),
                     hide_index=True
                 )
 
