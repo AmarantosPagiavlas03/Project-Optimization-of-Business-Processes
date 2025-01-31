@@ -1801,12 +1801,9 @@ def optimize_tasks_with_gurobi():
 ###bz###
         if not results_df.empty:
             st.subheader("Task Schedule Gantt Chart")
-            
-            # Define correct chronological day order
+
+            # Define correct day order
             day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-            
-            # Convert Shift ID to categorical type
-            results_df['Shift ID'] = results_df['Shift ID'].astype(str)
             
             # Create date mapping with proper midnight handling
             base_date = pd.to_datetime("2023-10-02")  # Monday
@@ -1826,18 +1823,45 @@ def optimize_tasks_with_gurobi():
             mask = results_df['End_Datetime'] < results_df['Begin_Datetime']
             results_df.loc[mask, 'End_Datetime'] += pd.Timedelta(days=1)
 
-            # Sort by day order and start time
-            results_df['Day'] = pd.Categorical(results_df['Day'], categories=day_order, ordered=True)
-            results_df = results_df.sort_values(['Day', 'Begin_Datetime'])
+            # Create complete 15-minute grid for each day
+            all_slots = []
+            for day in results_df['Day'].unique():
+                day_date = date_mapping[day]
+                start_time = day_date.replace(hour=0, minute=0)
+                end_time = day_date.replace(hour=23, minute=59)
+                
+                # Create 15-minute intervals
+                current_time = start_time
+                while current_time <= end_time:
+                    all_slots.append({
+                        'Day': day,
+                        'Begin_Datetime': current_time,
+                        'End_Datetime': current_time + pd.Timedelta(minutes=15),
+                        'Empty': True
+                    })
+                    current_time += pd.Timedelta(minutes=15)
 
-            # Create vertical positions for parallel tasks within each time slot
-            results_df['Vertical_Position'] = results_df.groupby(
+            # Create grid dataframe
+            grid_df = pd.DataFrame(all_slots)
+            
+            # Merge with original data
+            results_df['Empty'] = False
+            combined_df = pd.concat([results_df, grid_df], ignore_index=True)
+            
+            # Sort and create vertical positions
+            combined_df['Day'] = pd.Categorical(combined_df['Day'], categories=day_order, ordered=True)
+            combined_df = combined_df.sort_values(['Day', 'Begin_Datetime'])
+            
+            # Create vertical positions for both real and empty tasks
+            combined_df['Vertical_Position'] = combined_df.groupby(
                 ['Day', pd.Grouper(key='Begin_Datetime', freq='15T')]
             ).cumcount()
 
-            filtered_df = results_df[results_df["Day"].isin(day_order)]
+            # Filter to maintain original days
+            filtered_df = combined_df[combined_df["Day"].isin(day_order)]
             filtered_day_names = [day for day in day_order if day in filtered_df['Day'].unique()]
             
+            # Create the plot
             fig = px.timeline(
                 filtered_df,
                 x_start="Begin_Datetime",
@@ -1846,31 +1870,44 @@ def optimize_tasks_with_gurobi():
                 color="Shift ID",
                 color_discrete_sequence=px.colors.qualitative.D3,
                 facet_row="Day",
-                title="<b>Task Schedule with Shift Colors</b>",
+                title="<b>Complete Task Schedule</b>",
                 hover_name="Task Name",
                 hover_data={
                     "Shift ID": True,
                     "Begin_Datetime": "|%H:%M",
                     "End_Datetime": "|%H:%M",
                     "Vertical_Position": False,
-                    "Day": False
+                    "Day": False,
+                    "Empty": False
                 },
                 labels={"Begin_Datetime": "Start Time", "End_Datetime": "End Time"},
                 category_orders={"Day": filtered_day_names},
                 height=600 + 150*len(filtered_day_names)
             )
 
+            # Format empty boxes
+            fig.update_traces(
+                marker=dict(line=dict(width=0)),
+                selector=({'name': 'Shift ID'})  # Hide empty boxes
+            )
+            
+            # Force x-axis range to full day
+            min_time = pd.Timestamp("2023-10-02 00:00:00")
+            max_time = pd.Timestamp("2023-10-02 23:59:59")
+            
             # Format axes and layout
             fig.update_xaxes(
                 tickformat="%H:%M",
                 rangeslider_visible=False,
                 title_text="Time",
-                tickmode='linear',
-                dtick=3600000*4  # Show ticks every 4 hours
+                tickmode='array',
+                tickvals=pd.date_range(start=min_time, end=max_time, freq='4H'),
+                range=[min_time, max_time]
             )
 
             fig.update_yaxes(visible=False, title_text="")
 
+            # Maintain original layout
             fig.update_layout(
                 margin=dict(l=100, r=50, b=80, t=100),
                 legend_title_text="Shift ID",
@@ -1888,7 +1925,8 @@ def optimize_tasks_with_gurobi():
                     font_size=12,
                     font_family="Arial"
                 ),
-                dragmode=False
+                dragmode=False,
+                showlegend=True
             )
 
             # Adjust day labels
