@@ -1802,14 +1802,14 @@ def optimize_tasks_with_gurobi():
         if not results_df.empty:
             st.subheader("Task Schedule Gantt Chart")
             
-            # Define correct day order
+            # Define correct chronological day order
             day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
             
             # Convert Shift ID to categorical type
             results_df['Shift ID'] = results_df['Shift ID'].astype(str)
             
             # Create date mapping with proper midnight handling
-            base_date = pd.to_datetime("2023-10-02")
+            base_date = pd.to_datetime("2023-10-02")  # Monday
             date_mapping = {day: base_date + pd.DateOffset(days=i) for i, day in enumerate(day_order)}
             
             # Convert times and handle midnight crossings
@@ -1826,11 +1826,15 @@ def optimize_tasks_with_gurobi():
             mask = results_df['End_Datetime'] < results_df['Begin_Datetime']
             results_df.loc[mask, 'End_Datetime'] += pd.Timedelta(days=1)
 
-            # Create vertical positions for parallel tasks
+            # Sort by day order and start time
+            results_df['Day'] = pd.Categorical(results_df['Day'], categories=day_order, ordered=True)
             results_df = results_df.sort_values(['Day', 'Begin_Datetime'])
-            results_df['Vertical_Position'] = results_df.groupby(['Day', pd.Grouper(key='Begin_Datetime', freq='15T')]).cumcount()
 
-            # Maintain original day order filtering
+            # Create vertical positions for parallel tasks within each time slot
+            results_df['Vertical_Position'] = results_df.groupby(
+                ['Day', pd.Grouper(key='Begin_Datetime', freq='15T')]
+            ).cumcount()
+
             filtered_df = results_df[results_df["Day"].isin(day_order)]
             filtered_day_names = [day for day in day_order if day in filtered_df['Day'].unique()]
             
@@ -1860,12 +1864,13 @@ def optimize_tasks_with_gurobi():
             fig.update_xaxes(
                 tickformat="%H:%M",
                 rangeslider_visible=False,
-                title_text="Time"
+                title_text="Time",
+                tickmode='linear',
+                dtick=3600000*4  # Show ticks every 4 hours
             )
 
             fig.update_yaxes(visible=False, title_text="")
 
-            # Maintain original layout
             fig.update_layout(
                 margin=dict(l=100, r=50, b=80, t=100),
                 legend_title_text="Shift ID",
@@ -1886,7 +1891,7 @@ def optimize_tasks_with_gurobi():
                 dragmode=False
             )
 
-            # Adjust day labels to match original positioning
+            # Adjust day labels
             for annotation in fig.layout.annotations:
                 if annotation.text in filtered_day_names:
                     annotation.x = -0.07
