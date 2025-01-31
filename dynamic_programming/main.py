@@ -868,13 +868,8 @@ def insert3():
 
 def optimize_tasks_with_gurobi():
     """
-    Assign tasks to (shift, day) pairs so that a single shift can have 
-    different worker counts on different days.
-
-    This version ensures that a Monday task won't force workers on Tuesday/Wednesday 
-    if the shift is active multiple days.
+    Assign tasks to (shift, day) pairs considering overlapping tasks to minimize total cost.
     """
-
     # --- 1. Load Data ---
     tasks_df = get_all("TasksTable3")
     shifts_df = get_all("ShiftsTable6")
@@ -883,41 +878,8 @@ def optimize_tasks_with_gurobi():
     if tasks_df.empty or shifts_df.empty:
         st.error("Tasks or shifts data is missing. Add data and try again.")
         return
-    
 
     # --- 2. Format Time Columns ---
-    # Adjust your time format if it's not "%H:%M:%S"
-    try:
-        # For Tasks
-        tasks_df["StartTime"] = pd.to_datetime(tasks_df["StartTime"], format="%H:%M:%S", errors='coerce').dt.time
-        tasks_df["EndTime"]   = pd.to_datetime(tasks_df["EndTime"],   format="%H:%M:%S", errors='coerce').dt.time
-
-        # For Shifts
-        shifts_df["StartTime"] = pd.to_datetime(shifts_df["StartTime"], format="%H:%M:%S", errors='coerce').dt.time
-        shifts_df["EndTime"]   = pd.to_datetime(shifts_df["EndTime"],   format="%H:%M:%S", errors='coerce').dt.time
-
-        # Parse BreakTime
-        shifts_df["BreakTime"] = pd.to_datetime(shifts_df["BreakTime"], format="%H:%M:%S", errors='coerce').dt.time
-
-        # Parse BreakDuration
-        # Assuming BreakDuration is in "HH:MM:SS" format
-        shifts_df["BreakDuration"] = pd.to_timedelta(shifts_df["BreakDuration"], errors='coerce')
-    except Exception as e:
-        st.error(f"Error parsing time columns: {e}")
-        return
-
-    # Check for missing BreakTime or BreakDuration
-    missing_break_time = shifts_df["BreakTime"].isnull().sum()
-    missing_break_duration = shifts_df["BreakDuration"].isnull().sum()
-
-    if missing_break_time > 0:
-        st.warning(f"There are {missing_break_time} shifts with missing BreakTime. Please update the data.")
-
-    if missing_break_duration > 0:
-        st.warning(f"There are {missing_break_duration} shifts with missing BreakDuration. Please update the data.")
-
-    # --- 2. Format Time Columns ---
-    # Adjust your time format if it's not "%H:%M:%S"
     tasks_df["StartTime"] = pd.to_datetime(tasks_df["StartTime"], format="%H:%M:%S").dt.time
     tasks_df["EndTime"]   = pd.to_datetime(tasks_df["EndTime"],   format="%H:%M:%S").dt.time
 
@@ -938,7 +900,7 @@ def optimize_tasks_with_gurobi():
             if shift_row[day_str] == 1:  # shift is active on this day
                 var_name = f"Workers_Shift_{shift_id}_{day_str}"
                 shift_worker_vars[(shift_id, day_str)] = model.addVar(
-                    vtype=GRB.CONTINUOUS, lb=0, name=var_name
+                    vtype=GRB.INTEGER, lb=0, name=var_name
                 )
 
     # 4.2. Task assignment variables: (task, shift, day) -> binary
@@ -961,26 +923,19 @@ def optimize_tasks_with_gurobi():
                     task_shift_vars[(task_id, shift_id, t_day)] = model.addVar(
                         vtype=GRB.BINARY, name=var_name
                     )
-    # 4.3. Auxiliary variables: (shift, day) -> maximum nurses required at any time slot
-    max_nurses_vars = {}
-    for (shift_id, day_str) in shift_worker_vars:
-        var_name = f"MaxNurses_Shift_{shift_id}_{day_str}"
-        max_nurses_vars[(shift_id, day_str)] = model.addVar(
-            vtype=GRB.INTEGER, lb=0, name=var_name
-        )
 
-    # --- 5. Objective: Minimize total cost = sum(max_nurses * weight) across (shift, day) ---
+    # --- 5. Objective: Minimize total cost = sum(workers * weight) across (shift, day) ---
     model.setObjective(
         quicksum(
-            max_nurses_vars[(s_id, d)] * shifts_df.loc[s_id, "Weight"]
-            for (s_id, d) in max_nurses_vars
+            shift_worker_vars[(s_id, d)] * shifts_df.loc[s_id, "Weight"]
+            for (s_id, d) in shift_worker_vars
         ),
         GRB.MINIMIZE
     )
 
     # --- 6. Constraints ---
 
-    # 6.1. Coverage: each task is assigned to at least one feasible (shift, day)
+    # 6.1. Coverage: each task is assigned to exactly one feasible (shift, day)
     for task_id, task_row in tasks_df.iterrows():
         # Gather all feasible assignment variables for this task
         feasible_assignments = [
@@ -988,75 +943,80 @@ def optimize_tasks_with_gurobi():
             for key in task_shift_vars
             if key[0] == task_id  # same task
         ]
-        # If there's at least one feasible shift-day, require that sum >= 1
+        # Require that exactly one assignment is made
         if feasible_assignments:
             model.addConstr(
-                quicksum(feasible_assignments) >= 1,
+                quicksum(feasible_assignments) == 1,
                 name=f"Task_{task_id}_Coverage"
             )
         else:
-            # No feasible shift-day found: either data problem or the model is infeasible
-            pass
+            # No feasible shift-day found: data problem or the model is infeasible
+            st.error(f"No feasible shift found for Task ID {task_id}")
+            return
 
-    # 6.2. Worker capacity: ensure workers cover the maximum nurses required in any time slot
-    # Define time slots (e.g., every 15 minutes)
-    time_interval = 15  # minutes
-
-    for (shift_id, day_str) in shift_worker_vars:
+    # 6.2. Worker capacity: for each (shift, day), the number of nurses required at any time slot <= workers assigned
+    # Define time slots (15-minute intervals)
+    interval = 15  # minutes
+    for (shift_id, day_str), worker_var in shift_worker_vars.items():
         shift_row = shifts_df.loc[shift_id]
-        shift_start = pd.to_datetime(shift_row["StartTime"].strftime("%H:%M:%S"), format="%H:%M:%S")
-        shift_end   = pd.to_datetime(shift_row["EndTime"].strftime("%H:%M:%S"), format="%H:%M:%S")
-        
-        # Handle Break Times
-        break_start = pd.to_datetime(shift_row["BreakTime"].strftime("%H:%M:%S"), format="%H:%M:%S")
-        break_duration = pd.to_timedelta(shift_row["BreakDuration"])
-        break_end = break_start + break_duration
-        
-        # Generate time slots excluding break period
-        slots = []
-        current_slot_start = shift_start
-        while current_slot_start < shift_end:
-            current_slot_end = current_slot_start + pd.Timedelta(minutes=time_interval)
-            # Exclude slots that overlap with break
-            if not (current_slot_start < break_end and current_slot_end > break_start):
-                slots.append((current_slot_start, current_slot_end))
-            current_slot_start = current_slot_end
-        
-        for slot_start, slot_end in slots:
-            # Find all tasks that overlap with this slot
-            overlapping_tasks = []
-            for task_id, task_row in tasks_df.iterrows():
-                if task_row["Day"] != day_str:
-                    continue
-                task_start = pd.to_datetime(task_row["StartTime"].strftime("%H:%M:%S"), format="%H:%M:%S")
-                task_end   = pd.to_datetime(task_row["EndTime"].strftime("%H:%M:%S"), format="%H:%M:%S")
-                
-                # Check if task overlaps with the slot
-                if not (task_end <= slot_start or task_start >= slot_end):
-                    # Task overlaps with the slot
-                    # Only consider if the task is assigned to this shift and day
-                    if (task_id, shift_id, day_str) in task_shift_vars:
-                        overlapping_tasks.append(
-                            (task_shift_vars[(task_id, shift_id, day_str)], task_row["NursesRequired"])
-                        )
-            
-            if overlapping_tasks:
-                # Calculate total nurses required in this slot
-                total_nurses_expr = quicksum(var * nurses for (var, nurses) in overlapping_tasks)
-                # Link the total nurses in this slot to the max_nurses_var
+        shift_start = shift_row["StartTime"]
+        shift_end = shift_row["EndTime"]
+        break_start = shift_row["BreakTime"]
+        break_duration_td = pd.to_timedelta(shift_row["BreakDuration"])
+        break_end_dt = (datetime.combine(datetime.today(), break_start) + break_duration_td).time()
+
+        # Generate all 15-minute time slots within the shift, excluding break
+        pre_break_slots = generate_time_slots(shift_start, break_start, interval)
+        post_break_slots = generate_time_slots(break_end_dt, shift_end, interval)
+        all_slots = pre_break_slots + post_break_slots
+
+        for slot_start in all_slots:
+            # Calculate slot end
+            slot_end_dt = (datetime.combine(datetime.today(), slot_start) + timedelta(minutes=interval)).time()
+
+            # Find tasks that overlap with this slot
+            overlapping_tasks = tasks_df[
+                (tasks_df["Day"] == day_str) &
+                (tasks_df["StartTime"] < slot_end_dt) &
+                (tasks_df["EndTime"] > slot_start)
+            ]
+
+            # Sum of nurses required by overlapping tasks assigned to this shift-day and active during this slot
+            overlapping_task_vars = [
+                task_shift_vars[(t_id, shift_id, day_str)]
+                for t_id in overlapping_tasks.index
+            ]
+
+            # Constraint: sum of nurses required by overlapping tasks <= workers assigned
+            if overlapping_task_vars:
                 model.addConstr(
-                    total_nurses_expr <= max_nurses_vars[(shift_id, day_str)],
-                    name=f"Shift_{shift_id}_{day_str}_Slot_{slot_start.time()}_MaxNurses"
+                    quicksum(
+                        tasks_df.loc[t_id, "NursesRequired"] * task_shift_vars[(t_id, shift_id, day_str)]
+                        for t_id in overlapping_tasks.index
+                    ) <= worker_var,
+                    name=f"Shift_{shift_id}_{day_str}_Slot_{slot_start}_Capacity"
                 )
-        
-        # Ensure that the number of workers assigned is at least the maximum nurses required
-        model.addConstr(
-            shift_worker_vars[(shift_id, day_str)] >= max_nurses_vars[(shift_id, day_str)],
-            name=f"Shift_{shift_id}_{day_str}_Workers_Cover_MaxNurses"
-        )
- 
-   
-   # --- 7. Solve the model ---
+            else:
+                # No tasks overlap with this slot, no constraint needed
+                pass
+
+    # 6.3. Logical Linking (Optional): If any task is assigned to a shift-day, at least one worker must be assigned
+    for (shift_id, day_str), worker_var in shift_worker_vars.items():
+        assigned_tasks = [
+            task_shift_vars[(t_id, shift_id, day_str)]
+            for t_id in tasks_df[
+                (tasks_df["Day"] == day_str) &
+                (tasks_df["StartTime"] >= shifts_df.loc[shift_id, "StartTime"]) &
+                (tasks_df["EndTime"] <= shifts_df.loc[shift_id, "EndTime"])
+            ].index
+        ]
+        if assigned_tasks:
+            model.addConstr(
+                quicksum(assigned_tasks) <= worker_var * len(assigned_tasks),
+                name=f"Shift_{shift_id}_{day_str}_LogicalLink"
+            )
+
+    # --- 7. Solve the model ---
     with st.spinner("Optimizing tasks and shifts. Please wait..."):
         try:
             model.optimize()
@@ -1066,218 +1026,36 @@ def optimize_tasks_with_gurobi():
 
     if model.status == GRB.OPTIMAL:
         # Phase 1: Collect raw assignment data and calculate contributions
-        from collections import defaultdict
-        from datetime import datetime, date
-        temp_results = []
-        shift_day_cost = defaultdict(float)        # Total cost per (shift, day)
-        shift_day_contributions = defaultdict(float)  # Sum of contributions
-        
-        for (task_id, shift_id, d), assign_var in task_shift_vars.items():
+        results = []
+        for (task_id, shift_id, day_str), assign_var in task_shift_vars.items():
             if assign_var.x > 0.5:
-                # Get basic assignment info
-                workers = max_nurses_vars[(shift_id, d)].x
+                worker_var = shift_worker_vars[(shift_id, day_str)]
                 shift_weight = shifts_df.loc[shift_id, "Weight"]
                 task_row = tasks_df.loc[task_id]
-                
+
                 # Calculate task duration in hours
                 t_start = task_row["StartTime"]
                 t_end = task_row["EndTime"]
                 start_dt = datetime.combine(date.min, t_start)
                 end_dt = datetime.combine(date.min, t_end)
                 duration = (end_dt - start_dt).total_seconds() / 3600
-                
-                # Calculate contribution metric (nurses × hours)
-                contribution = task_row["NursesRequired"] * duration
-                
-                # Store temporary data
-                temp_results.append({
-                    "task_id": task_id,
-                    "shift_id": shift_id,
-                    "day": d,
-                    "workers": workers,
-                    "shift_weight": shift_weight,
-                    "contribution": contribution
-                })
-                
-                # Update aggregates
-                shift_day_cost[(shift_id, d)] = workers * shift_weight
-                shift_day_contributions[(shift_id, d)] += contribution
 
-        # Phase 2: Calculate proportional costs
+                # Calculate task cost
+                task_cost = task_row["NursesRequired"] * shift_weight
 
-        def calculate_cost_for_intervals(task_rows, shift_row, weight, interval_minutes=15):
-            """
-            Calculate the cost considering shift breaks, preventing task assignments during break times.
-            Returns assignments, total cost, and max nurses required.
-            """
-            shift_start = pd.to_datetime(shift_row["StartTime"], format="%H:%M:%S")
-            shift_end = pd.to_datetime(shift_row["EndTime"], format="%H:%M:%S")
-            
-            break_start = pd.to_datetime(shift_row["BreakTime"], format="%H:%M:%S")
-            break_duration = pd.Timedelta(minutes=int(pd.to_datetime(shift_row["BreakDuration"], format="%H:%M:%S").minute))
-            break_end = break_start + break_duration
-
-            # Create time slots excluding break period
-            time_slots = {}
-            periods = []
-            
-            # Add pre-break period if valid
-            if shift_start < break_start:
-                periods.append((shift_start, break_start))
-            
-            # Add post-break period if valid
-            if break_end < shift_end:
-                periods.append((break_end, shift_end))
-            
-            # Create time slots for each valid period
-            for period_start, period_end in periods:
-                for minute in range(int(period_start.timestamp() // 60), 
-                                int(period_end.timestamp() // 60)):
-                    time_slots[minute] = 0
-
-            assignments = []
-
-            for task_row in task_rows:
-                task_start = pd.to_datetime(task_row["StartTime"], format="%H:%M:%S")
-                task_end = pd.to_datetime(task_row["EndTime"], format="%H:%M:%S")
-
-                try:
-                    duration_minutes = int(task_row["Duration"])
-                except ValueError:
-                    duration_td = pd.to_timedelta(task_row["Duration"])
-                    duration_minutes = int(duration_td.total_seconds() / 60)
-
-                best_start = None
-                best_cost = float("inf")
-                valid_start_times = []
-
-                # Find valid start times in each available period
-                for period_start, period_end in periods:
-                    # Adjust for task constraints
-                    start_time = max(task_start, period_start)
-                    end_time = min(task_end, period_end)
-                    
-                    if start_time >= end_time:
-                        continue  # No valid time in this period
-
-                    # Generate possible start times within this period
-                    period_starts = pd.date_range(
-                        start=start_time,
-                        end=end_time - pd.Timedelta(minutes=duration_minutes),
-                        freq=f"{interval_minutes}min"
-                    )
-                    valid_start_times.extend(period_starts)
-
-                if not valid_start_times:
-                    continue  # No valid placement for this task
-
-                # Evaluate each valid start time
-                for start in valid_start_times:
-                    end = start + pd.Timedelta(minutes=duration_minutes)
-                    
-                    # Verify the task doesn't overlap with break
-                    if (start < break_end) and (end > break_start):
-                        continue  # Skip times overlapping with break
-
-                    temp_slots = time_slots.copy()
-                    valid = True
-                    
-                    # Check all minutes in the task duration
-                    for t in range(int(start.timestamp() // 60), 
-                                int(end.timestamp() // 60)):
-                        if t not in temp_slots:
-                            valid = False
-                            break
-                        temp_slots[t] += task_row["NursesRequired"]
-
-                    if not valid:
-                        continue  # Invalid placement
-
-                    current_max = max(temp_slots.values(), default=0)
-                    cost = current_max * weight
-
-                    if cost < best_cost or (cost == best_cost and not best_start):
-                        best_cost = cost
-                        best_start = start
-
-                if best_start:
-                    assignments.append({
-                                            "Task ID": task_row["id"],
-                                            "Task Name": task_row["TaskName"],
-                                            "Day": task_row["Day"],
-                                            "Task Start": task_row["StartTime"],
-                                            "Task End": task_row["EndTime"],
-                                            "Begin Task": best_start,
-                                            "End Task": best_start + pd.Timedelta(minutes=duration_minutes),
-                                            "Workers Assigned": task_row["NursesRequired"]
-                                        })
-
-                    # Update actual time slots
-                    for t in range(int(best_start.timestamp() // 60), 
-                                int((best_start + pd.Timedelta(minutes=duration_minutes)).timestamp() // 60)):
-                        time_slots[t] += task_row["NursesRequired"]
-
-            max_nurses = max(time_slots.values(), default=0)
-            total_cost = max_nurses * weight
-            return assignments, total_cost, max_nurses
-        
-
-        # Compute results
-        processed_shifts = set()
-        results = []
-        daily_costs = {day: 0.0 for day in day_names}
-        daily_workers = {day: 0 for day in day_names}
-        daily_tasks = {day: 0 for day in day_names}
-        for entry in temp_results:
-            shift_id = entry["shift_id"]
-            day = entry["day"]
-            key = (shift_id, day)
-
-            # if shift_id in processed_shifts:
-            #     continue  # Skip already processed shifts
-
-            if key in processed_shifts:
-                continue
-            processed_shifts.add(key)
-
-            shift_row = shifts_df.loc[shift_id]
-            weight = shift_row["Weight"]
-            #key = (shift_id, entry["day"])
-
-            # Filter tasks for the current shift
-            relevant_tasks = [
-                tasks_df.loc[task["task_id"]]
-                for task in temp_results
-                if task["shift_id"] == shift_id and task["day"] == day
-            ]
-
-            # Compute optimal intervals and costs
-            assignments, total_cost, max_nurses  = calculate_cost_for_intervals(relevant_tasks, shift_row, weight)
-            daily_costs[day] += total_cost
-            daily_workers[day] += max_nurses
-            daily_tasks[day] += len(assignments)  # Count assigned tasks
-
-            # Collect results for each task
-            for assignment in assignments:
                 results.append({
-                    "Task ID": assignment["Task ID"],
-                    "Task Name": assignment["Task Name"],
-                    "Day": assignment["Day"],
-                    "Task Start": assignment["Task Start"].strftime("%H:%M"),
-                    "Task End": assignment["Task End"].strftime("%H:%M"),
-                    "Begin Task": assignment["Begin Task"].strftime("%H:%M"),
-                    "End Task": assignment["End Task"].strftime("%H:%M"),
-                    "Shift ID": shift_row["id"],
-                    "Shift Start": shift_row["StartTime"].strftime("%H:%M"),
-                    "Shift End": shift_row["EndTime"].strftime("%H:%M"),
-                    "Workers Assigned": assignment["Workers Assigned"],
-                    "Hourly Rate (€)": weight,
-                    "Task Cost (€)":  round(assignment["Workers Assigned"] * weight, 2) ,
-                    "Number of Nurses": max_nurses,
-                    "Cost %": round((total_cost / shift_day_cost[key]) * 100, 1) if shift_day_cost[key] > 0 else 0
+                    "Task ID": task_id,
+                    "Task Name": task_row["TaskName"],
+                    "Day": day_str,
+                    "Task Start": t_start.strftime("%H:%M"),
+                    "Task End": t_end.strftime("%H:%M"),
+                    "Shift ID": shift_id,
+                    "Shift Start": shifts_df.loc[shift_id, "StartTime"].strftime("%H:%M"),
+                    "Shift End": shifts_df.loc[shift_id, "EndTime"].strftime("%H:%M"),
+                    "Workers Assigned": worker_var.x,
+                    "Hourly Rate (€)": shift_weight,
+                    "Task Cost (€)": round(task_cost, 2)
                 })
-
-            #processed_shifts.add(shift_id)  # Mark this shift as processed
 
         # Convert results to DataFrame
         results_df = pd.DataFrame(results)
