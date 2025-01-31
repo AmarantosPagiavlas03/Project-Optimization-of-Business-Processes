@@ -1800,32 +1800,27 @@ def optimize_tasks_with_gurobi():
 ################################################################################
 ###bz###
         import plotly.express as px
+        import numpy as np  # Not used in the snippet, ensure it's necessary
 
-        # Define day order and time range
-        day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-        time_range = [pd.to_datetime("2023-01-01 00:00:00"), pd.to_datetime("2023-01-01 23:59:59")]
+        day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", 
+                    "Friday", "Saturday", "Sunday"]
+        time_range = ["2023-01-01 00:00:00", "2023-01-01 23:59:59"]
 
-        # Ensure results_df exists and is not empty
         if not results_df.empty:
             st.subheader("Gantt chart", divider="blue")
-
-            # Convert necessary columns
             results_df1 = results_df.assign(
-                Task_Name=lambda df: df['Task Name'],  # Keep as string if categorical
-                Shift_ID=lambda df: pd.to_numeric(df['Shift ID']),
                 Start=lambda df: pd.to_datetime("2023-01-01 " + df['Begin Task']),
                 End=lambda df: pd.to_datetime("2023-01-01 " + df['End Task']),
                 Day=lambda df: pd.Categorical(df['Day'], categories=day_order, ordered=True),
-                DurationHours=lambda df: (df['End'] - df['Start']).dt.total_seconds() / 3600
-            ).sort_values(by=['Day', 'Start'])
+                DurationHours=lambda df: (df['End'] - df['Start']).dt.total_seconds() / 3600  # Fixed duration calculation
+            ).sort_values(by=['Day', 'Begin Task'])
 
-            # Plotly Gantt chart
             fig_results = px.timeline(
                 results_df1,
                 x_start="Start",
                 x_end="End",
                 y="Day",
-                color="Task_Name",
+                color="Task Name",  # Ensure "Task Name" is a string for discrete colors
                 color_discrete_sequence=px.colors.qualitative.Pastel,
                 hover_data={
                     "Task Name": True,
@@ -1837,8 +1832,6 @@ def optimize_tasks_with_gurobi():
                 title="<b>Task Distribution by Day</b>",
                 template="plotly_white"
             )
-
-            # Formatting layout
             fig_results.update_layout(
                 height=600,
                 hovermode="y unified",
@@ -1848,18 +1841,13 @@ def optimize_tasks_with_gurobi():
                 font=dict(family="Arial", size=12),
                 margin=dict(l=100, r=20, t=60, b=20)
             )
-
-            # Formatting X-axis
             fig_results.update_xaxes(
                 tickformat="%H:%M",
-                dtick=3600000,
+                dtick=3600000,  # 1 hour in milliseconds
                 range=time_range,
                 showgrid=True
             )
-
-            # Display the chart in Streamlit
             st.plotly_chart(fig_results, use_container_width=True)
-       
 ####bzz###############################################
 #         if not results_df.empty:
 #             st.subheader("Task Schedule Gantt Chart")
