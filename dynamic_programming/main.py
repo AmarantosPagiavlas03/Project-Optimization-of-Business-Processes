@@ -1531,18 +1531,18 @@ def optimize_tasks_with_gurobi():
                 
                 # Parse the time columns into actual datetimes (on a "dummy" date).
                 # e.g. 2000-01-01 HH:MM
-                day_data["Begin_DT"] = pd.to_datetime(day_data["Begin Task"], format="%H:%M").apply(
+                day_data["Begin"] = pd.to_datetime(day_data["Begin Task"], format="%H:%M").apply(
                     lambda t: t.replace(year=2000, month=1, day=1)
                 )
-                day_data["End_DT"] = pd.to_datetime(day_data["End Task"], format="%H:%M").apply(
+                day_data["End"] = pd.to_datetime(day_data["End Task"], format="%H:%M").apply(
                     lambda t: t.replace(year=2000, month=1, day=1)
                 )
                 
                 # Plotly Express timeline
                 fig = px.timeline(
                     day_data,
-                    x_start="Begin_DT",
-                    x_end="End_DT",
+                    x_start="Begin",
+                    x_end="End",
                     y="Task Name",
                     color="Shift ID",  # Same color for the same shift
                     hover_data=["Task Name", "Shift ID"]
