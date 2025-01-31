@@ -1799,84 +1799,74 @@ def optimize_tasks_with_gurobi():
         # Add Gantt chart final
 ################################################################################
 ###bz###
-        import pandas as pd
         import plotly.express as px
-        import streamlit as st
 
         def show_parallel_gantt_chart(results_df):
             """
-            Renders a Gantt chart where:
-            - Parallel tasks appear on separate rows.
-            - Tasks from the same shift are colored the same.
-
-            Assumes `results_df` has columns:
-            - 'Begin Task' (string in 'HH:MM' format)
-            - 'End Task'   (string in 'HH:MM' format)
-            - 'Task Name'  (unique name/title for the task)
-            - 'Shift ID'   (any identifier for the shift)
-            - 'Day'        (optional, if you want to include day info)
+            Renders a Gantt chart that shows parallel tasks on separate rows.
+            Assumes results_df has columns:
+            - 'Begin Task' (string, HH:MM format)
+            - 'End Task'   (string, HH:MM format)
+            - 'Day'        (string, e.g. "Monday", "Tuesday", ...)
+            - 'Task Name'  (unique name or ID for the task)
+            - 'Shift ID'   (optional, for hover data)
             """
 
             # Check if DataFrame is valid
             if results_df is None or results_df.empty:
-                st.warning("No results available to display a Gantt chart.")
+                st.warning("No results available to display a parallel Gantt chart.")
                 return
 
-            # Optional: define an order for days if you want them sorted (otherwise omit)
+            # Define an order for days (optional)
             day_order = ["Monday", "Tuesday", "Wednesday", "Thursday",
                         "Friday", "Saturday", "Sunday"]
-            if "Day" in results_df.columns:
-                results_df["Day"] = pd.Categorical(results_df["Day"], categories=day_order, ordered=True)
-                # Sort by day, then by start time so tasks appear in a nice order
-                sort_cols = ["Day"]
-            else:
-                # If there's no Day column, just sort by time
-                sort_cols = []
 
-            # Create 'Start' and 'End' columns with a dummy date so Plotly can place them on a timeline.
-            # If you're dealing with multiple days across the same week, you can assign real dates.
+            # Convert 'Day' to a categorical so we can sort by it easily
+            if "Day" in results_df.columns:
+                results_df["Day"] = pd.Categorical(
+                    results_df["Day"], categories=day_order, ordered=True
+                )
+
+            # Create 'Start' and 'End' columns with a dummy date
+            # so Plotly can interpret them as full timestamps
             results_df = results_df.assign(
                 Start=lambda df: pd.to_datetime("2023-01-01 " + df["Begin Task"]),
                 End=lambda df: pd.to_datetime("2023-01-01 " + df["End Task"]),
-            )
-
-            # Sort the DataFrame so tasks appear top-to-bottom in a logical way
-            results_df = results_df.sort_values(by=sort_cols + ["Start"])
+            ).sort_values(by=["Day", "Start"])
 
             st.subheader("Parallel Gantt Chart")
 
-            # We set y="Task Name" so each task will have its own row.
-            # color="Shift ID" ensures tasks from the same shift are the same color.
+            # Create a timeline chart:
+            #   y="Task Name" ensures each task is on its own row
+            #   color="Day"   gives distinct colors by day
             fig = px.timeline(
                 results_df,
                 x_start="Start",
                 x_end="End",
-                y="Task Name",      # each row is a different Task Name
-                color="Shift ID",   # tasks sharing the same Shift ID get the same color
+                y="Task Name",      # one row per task
+                color="Day",        # color tasks by day
                 hover_data={
+                    "Shift ID": True,
                     "Begin Task": True,
                     "End Task": True,
-                    "Shift ID": True,
-                    "Day": True  # only if you have a 'Day' column
+                    "Day": True
                 },
                 title="<b>Parallel Task Distribution</b>",
                 template="plotly_white"
             )
 
-            # Adjust layout and formatting
+            # Adjust axis labels, layout, and hover mode
             fig.update_layout(
                 height=600,
                 hovermode="y unified",
                 xaxis_title="Time of Day",
-                yaxis_title="Task",
-                legend_title="Shift ID",
+                yaxis_title="Task Name",
+                legend_title="Day",
                 font=dict(family="Arial", size=12),
                 margin=dict(l=100, r=20, t=60, b=20)
             )
 
-            # Show hours on x-axis; set the range for the single day (00:00 - 23:59).
-            # If you need to handle multiple days, you'd update the Start/End to real dates
-            # and adjust the range accordingly.
+            # Show hours on x-axis
             fig.update_xaxes(
                 tickformat="%H:%M",
                 dtick=3600000,  # 1 hour in milliseconds
@@ -1884,13 +1874,12 @@ def optimize_tasks_with_gurobi():
                 showgrid=True
             )
 
-            # Display the chart in Streamlit
+            # Render the chart in Streamlit
             st.plotly_chart(fig, use_container_width=True)
 
 
-        # Example usage (assuming you have a valid results_df):
+# Example usage (assuming you have a valid results_df):
         show_parallel_gantt_chart(results_df)
-
 
 ####bzz###############################################
 #         if not results_df.empty:
