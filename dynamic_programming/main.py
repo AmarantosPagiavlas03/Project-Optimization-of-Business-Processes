@@ -1785,12 +1785,10 @@ def optimize_tasks_with_gurobi():
 
         with st.expander("👩‍⚕️ View Nurse Requirements per Shift", expanded=True):
             if not nurse_requirements_df.empty:
-                # Create a user-friendly Shift label
                 nurse_requirements_df["Shift"] = (
                     nurse_requirements_df["Shift Start"] + " - " + nurse_requirements_df["Shift End"]
                 )
                 
-                # Decide which columns to show and in what order
                 display_df = nurse_requirements_df[[
                     "Day", "Shift", "Shift ID", "Number of Nurses"
                 ]]
@@ -1801,7 +1799,6 @@ def optimize_tasks_with_gurobi():
                     hide_index=True
                 )
 
-                # Download button
                 st.download_button(
                     label="Download Nurse Requirements as CSV",
                     data=display_df.to_csv(index=False).encode("utf-8"),
