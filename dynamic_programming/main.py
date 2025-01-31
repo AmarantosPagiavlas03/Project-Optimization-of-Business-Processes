@@ -2585,150 +2585,125 @@ def main():
         show_contact()
 
     with manual_tab:
+        # --- Title ---
         st.header("User Manual")
 
-        # 1. Introduction
-        st.subheader("1. Introduction")
-        st.write(
-            "This application is a Streamlit-based scheduling tool designed "
-            "to handle hospital or clinic tasks and shifts, with the capability "
-            "to optimize staff allocation using Gurobi. It stores data in a "
-            "local SQLite database and provides both manual and bulk import "
-            "options for tasks and shifts. You can visualize schedules, "
-            "run optimization routines, and export results."
-        )
+        # --- Story Intro ---
+        st.write("""
+        In a bustling hospital environment, coordinating nurse schedules can be a huge challenge.
+        You need to cover all patient-related tasks while ensuring fairness for staff and minimizing
+        staffing costs. That's where this app steps in: it helps plan and optimize nurse shifts so
+        that every task is covered at the right time by the right number of nurses.
+        """)
 
-        # 2. Installation & Setup
-        st.subheader("2. Installation & Setup")
-        st.markdown(
-            """
-            **Requirements**  
-            - Python 3.7+  
-            - [Gurobi license](https://www.gurobi.com/downloads/end-user-license-agreement-academic/) (academic or commercial)  
+        # --- Section 1: Overview ---
+        st.subheader("1. Overview")
+        st.write("""
+        This system allows you to manage tasks (like “Administer Medication” or “Physical Therapy”)
+        and shifts (e.g., morning, evening, or night shifts). Once you enter your data, you can run 
+        an **Optimization** routine that decides how many nurses are needed for each shift to cover 
+        every task. Additionally, you can download the final assignment or view it in multiple charts.
+        """)
 
-            **Steps**  
-            1. Install packages in a virtual environment:  
-            ```bash
-            pip install streamlit pandas numpy plotly xlsxwriter openpyxl gurobipy
-            ```
-            2. Run the app:  
-            ```bash
-            streamlit run your_script_name.py
-            ```
-            3. A local URL (usually `http://localhost:8501`) will open in your browser.
-            """
-        )
+        # --- Section 2: Step-by-Step Guide ---
+        st.subheader("2. Step-by-Step Guide")
 
-        # 3. Application Overview
-        st.subheader("3. Application Overview")
-        st.write(
-            "The app is divided into three primary tabs: **Home**, **Manual**, "
-            "and **Contact**. Most data operations and visualizations happen in "
-            "the **Home** tab."
-        )
+        # 2.1 Add Tasks Manually
+        st.markdown("**2.1 Add Tasks Manually**")
+        st.write("""
+        - Go to the **Home** tab.
+        - In the sidebar section **“Add Tasks/Shifts Manually”**, find the **Task** form.
+        - Enter a *Task Name* (e.g., “Wound Care”), select the *Day of the Week*, specify
+        *Start Time* and *End Time*, pick the *Duration*, and indicate how many nurses are required.
+        - Click **“Add Task”** to save.
+        """)
 
-        st.markdown(
-            """
-            - **Home Tab**  
-            1. **Data Input**: Manually add or bulk upload tasks/shifts.  
-            2. **Data Management**: Clear tables or load example data.  
-            3. **Visualization**: See tasks and shifts in Gantt-style plots and dataframes.  
-            4. **Optimization**: Run the Gurobi-based model to schedule tasks.  
-            
-            - **Manual Tab**  
-            Houses this user guide or any additional documentation.  
-            
-            - **Contact Tab**  
-            A simple contact form to reach out to the development/support team.
-            """
-        )
+        # 2.2 Add Shifts Manually
+        st.markdown("**2.2 Add Shifts Manually**")
+        st.write("""
+        - Still under **“Add Tasks/Shifts Manually”**, switch to the **Shift** form.
+        - Choose the *Shift Start Time* and *Shift End Time* from the dropdowns.
+        - Set a *Break Time* and *Break Duration*, if relevant.
+        - Adjust the *Shift Weight* (think of this as the cost or difficulty level to cover that shift).
+        - Select the days of the week on which this shift is active by toggling them on or off.
+        - Click **“Add Shift”** to save.
+        """)
 
-        # 4. Data Management
-        st.subheader("4. Data Management")
-        st.write(
-            "All data is stored in a local SQLite file (`tasksv2.db`). Two tables "
-            "are created if they do not exist: `TasksTable3` for tasks, and "
-            "`ShiftsTable6` for shifts."
-        )
+        # 2.3 Bulk Upload (Excel/CSV)
+        st.markdown("**2.3 Bulk Upload (Excel/CSV)**")
+        st.write("""
+        - Still in the **Home** tab, under **“Bulk Upload Data”**, you can choose to upload tasks
+        or shifts in bulk from a spreadsheet or CSV.
+        - Use the provided download templates to see the required columns.
+        - Once your data file is ready, upload it via **“Upload Task Excel”** or 
+        **“Upload Shifts File”**. The app automatically inserts each row into the system.
+        """)
 
-        st.markdown(
-            """
-            **Manual Entry**  
-            - *Tasks*: Provide task name, day of week, start/end times, duration, and the number of nurses required.  
-            - *Shifts*: Specify shift times, break period, weight (cost), and active days.
+        # 2.4 Generating Example Data
+        st.markdown("**2.4 Generating Example Data**")
+        st.write("""
+        - If you just want to explore or test, you can generate random or example tasks/shifts 
+        by clicking **“Load Example Data”** or **“Generate Random Data.”**
+        - These options quickly fill the system with sample entries so you can see how it all works.
+        """)
 
-            **Bulk Upload**  
-            - Upload CSV/Excel templates to insert multiple tasks or shifts in one go.  
-            - The app validates required columns before inserting to the database.  
+        # 2.5 Clearing Data
+        st.markdown("**2.5 Clearing Data**")
+        st.write("""
+        - If you need to start fresh, simply click **“Clear All Tasks”** or **“Clear All Shifts.”**
+        - This removes all existing records, allowing you to upload or enter new data from scratch.
+        """)
 
-            **Clearing Data**  
-            - Use the “Clear All Tasks” or “Clear All Shifts” buttons to wipe all records in each respective table.
-            """
-        )
+        # --- Section 3: Running the Optimization ---
+        st.subheader("3. Running the Optimization")
+        st.write("""
+        After you have your tasks and shifts set up, you can let the app do the heavy lifting:
+        - In the **Home** tab, find the **“Optimization”** section on the right.
+        - Click **“Run Task Optimization”** and watch the progress bar.
+        - When it’s done, you’ll see a summary of:
+        1. **Detailed Assignments** – Which tasks go into which shift/day, how many nurses are 
+            assigned, and the cost of each task.
+        2. **Nurse Requirements** – An overview of how many nurses are needed for each shift
+            on each day.
+        3. **Daily Summary** – Total cost per day, the number of tasks covered, and how many 
+            nurses in total are allocated.
+        4. **Visual Charts** – A pie chart for cost by day and a bar chart for cost by shift.
+        """)
 
-        # 5. Generating & Managing Example Data
-        st.subheader("5. Generating & Managing Example Data")
-        st.write(
-            "You can generate random data for quick testing or load small/large "
-            "prebuilt example datasets. This is especially handy for demos or "
-            "debugging. Each example button seeds the database with realistic, "
-            "but randomly generated or predefined tasks/shifts."
-        )
+        # --- Section 4: Visualization ---
+        st.subheader("4. Viewing Schedules & Data")
+        st.write("""
+        In the **Visualization** panel (still under **Home**):
+        - See a **Gantt-style** timeline for tasks and shifts.
+        - Hover over any bar to reveal more details (start/end times, day of the week, etc.).
+        - Switch to the **Raw Data** tab to directly browse tables for tasks and shifts, 
+        and download them as needed.
+        """)
 
-        # 6. Visualization Dashboard
-        st.subheader("6. Visualization Dashboard")
-        st.write(
-            "Under the **Home → Visualization** tab, you'll find interactive "
-            "charts (via Plotly) that display tasks and shifts in a timeline. "
-            "You can hover over items for details and filter data as needed."
-        )
+        # --- Section 5: Tips & Troubleshooting ---
+        st.subheader("5. Tips & Troubleshooting")
+        st.write("""
+        - **Always confirm your times** – Tasks or shifts that start after they end 
+        won’t work as expected.
+        - **Check the days** – Make sure the shift you create is active on the same day
+        as the task you want to cover.
+        - **Invalid Upload** – If the CSV/Excel file is missing columns or uses the 
+        wrong format, an error will appear.
+        - **No Results?** – Verify you actually have tasks and shifts before running 
+        the optimization.
+        """)
 
-        # 7. Optimization
-        st.subheader("7. Optimization")
-        st.markdown(
-            """
-            **Goal**: Assign tasks to valid shift/day pairs while minimizing the total cost:
-            \[
-            \text{Minimize } \sum (\text{#Workers} \times \text{ShiftWeight})
-            \]
+        # --- Section 6: Questions or Feedback ---
+        st.subheader("6. Questions or Feedback")
+        st.write("""
+        If you have any questions, need guidance, or would like to report an issue,
+        head over to the **Contact** tab in the main navigation. Fill in your name,
+        email address, and message, then click **Submit**. We’ll be in touch shortly.
+        """)
 
-            **Key Steps**:
-            1. **Click “Run Task Optimization”** to start the solver.  
-            2. The model ensures each task is assigned at least once and that the total nurses needed for tasks in a shift/day doesn't exceed the workers allocated.  
-            3. If successful, results display in a table and chart format, with assigned tasks, daily summaries, and cost breakdowns.
-
-            **Common Issues**:
-            - Missing or invalid data (e.g., shift time not covering the task time).  
-            - Gurobi license not properly configured.  
-            - Infeasibility if constraints can't be satisfied.
-            """
-        )
-
-        # 8. Additional Tabs
-        st.subheader("8. Additional Tabs")
-        st.write(
-            "Beyond the **Home** and **Manual** tabs, a **Contact** tab offers a "
-            "form to reach out for support or more information."
-        )
-
-        # 9. Troubleshooting & Tips
-        st.subheader("9. Troubleshooting & Tips")
-        st.markdown(
-            """
-            - **No Data Display**: Verify you have inserted tasks or shifts.  
-            - **Optimizer Errors**: Check if tasks overlap incorrectly or if break times fall outside shifts.  
-            - **Performance**: Large datasets or numerous constraints will increase solve time.  
-            - **Licensing**: Ensure Gurobi is installed and licensed (e.g., academic license).  
-            """
-        )
-
-        # 10. Final Notes & Contact
-        st.subheader("10. Final Notes & Contact")
-        st.write(
-            "We hope this manual clarifies how to use the scheduling system. "
-            "For a deeper dive or to report issues, visit the **Contact** tab "
-            "or email us at `support@vuamsterdamscheduling.com`."
-        )
+        # Final note
+        st.markdown("---")
+        st.write("**We hope this system helps you efficiently schedule nurses and deliver the best care possible!**")
 
 if __name__ == "__main__":
     main()
