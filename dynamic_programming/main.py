@@ -1710,12 +1710,19 @@ def optimize_tasks_with_gurobi():
 
         results_df["Shift"] = results_df["Shift Start"] + " - " + results_df["Shift End"]
 
-        # 2. Group by "Day" and this new "Shift" string
+        # 2. Group by "Day" and "Shift", summing both nurses and cost.
         nurse_requirements_df = (
             results_df
-            .groupby(["Day", "Shift"], as_index=False)["Workers Assigned"]
-            .sum()  # Summation of all workers assigned if multiple tasks overlap
-            .rename(columns={"Workers Assigned": "Number of Nurses"})
+            .groupby(["Day", "Shift"], as_index=False)
+            .agg({
+                "Workers Assigned": "sum",        # total number of nurses per shift
+                "Task Cost (€)": "sum"           # total cost per shift
+            })
+            # 3. Rename for clarity.
+            .rename(columns={
+                "Workers Assigned": "Number of Nurses",
+                "Task Cost (€)": "Shift Cost (€)"
+            })
         )
 
         # Replace existing visualization and validation code with this
@@ -1774,16 +1781,14 @@ def optimize_tasks_with_gurobi():
             else:
                 st.warning("No tasks were assigned.")
 
+
         with st.expander("👩‍⚕️ View Nurse Requirements per Shift", expanded=True):
             if not nurse_requirements_df.empty:
-                # Display the dataframe with only the relevant columns
                 st.dataframe(
-                    nurse_requirements_df[["Day", "Shift", "Number of Nurses"]],
-                    column_order=("Day", "Shift", "Number of Nurses"),
+                    nurse_requirements_df[["Day", "Shift", "Number of Nurses", "Shift Cost (€)"]],
+                    column_order=("Day", "Shift", "Number of Nurses", "Shift Cost (€)"),
                     hide_index=True
                 )
-                
-                # Add a download button for CSV
                 st.download_button(
                     label="Download Nurse Requirements as CSV",
                     data=nurse_requirements_df.to_csv(index=False).encode("utf-8"),
