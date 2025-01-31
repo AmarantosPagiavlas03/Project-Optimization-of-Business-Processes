@@ -416,65 +416,6 @@ def shift_input_form():
                 add_shift_to_db(shift_data)
                 st.success("Shift added successfully!")
 
-def generate_and_fill_data_form():
-    """Sidebar form to generate and fill random data."""
-    with st.sidebar.expander("Generate Random Data", expanded=False):
-        st.write("Generate random tasks and shifts to populate the database.")
-
-        num_tasks = st.number_input("Number of Tasks", min_value=1, value=10, step=1)
-        num_shifts = st.number_input("Number of Shifts", min_value=1, value=5, step=1)
-        num_workers = st.number_input("Number of Workers", min_value=1, value=5, step=1)
-
-        if st.button("Generate Data"):
-            generate_and_fill_data(
-                num_tasks=int(num_tasks),
-                num_shifts=int(num_shifts),
-                num_workers=int(num_workers)
-            )
-            st.success(f"Generated {num_tasks} tasks, {num_shifts} shifts, and {num_workers} workers successfully!")
-
-def generate_and_fill_data(num_tasks=10, num_shifts=5, num_workers=5):
-    """Generate random tasks, shifts, and workers and populate the database."""
-    init_db()
-
-    # Random tasks
-    days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-    for _ in range(num_tasks):
-        task_name = f"Task_{random.randint(1, 100)}"
-        day = random.choice(days_of_week)
-        start_time = datetime.now() + timedelta(hours=random.randint(0, 23), minutes=random.randint(0, 59))
-        duration = timedelta(hours=random.randint(0, 2), minutes=random.randint(0, 59))
-        end_time = start_time + duration
-        NursesRequired = random.randint(1, 5)
-        add_task_to_db(
-            task_name,
-            day,
-            start_time.strftime("%H:%M:%S"),
-            end_time.strftime("%H:%M:%S"),
-            str(duration),
-            NursesRequired
-        )
-
-    # Random shifts
-    for _ in range(num_shifts):
-        start_time = datetime.now() + timedelta(hours=random.randint(0, 23), minutes=random.randint(0, 59))
-        duration = timedelta(hours=random.randint(1, 8))
-        end_time = start_time + duration
-        break_time = start_time + timedelta(hours=random.randint(1, int(duration.total_seconds() // 3600)))
-        break_duration = timedelta(minutes=random.randint(15, 60))
-        weight = random.uniform(0.5, 2.0)
-        days = {day: random.choice([0, 1]) for day in days_of_week}
-
-        shift_data = (
-            start_time.strftime("%H:%M:%S"),
-            end_time.strftime("%H:%M:%S"),
-            break_time.strftime("%H:%M:%S"),
-            str(break_duration),
-            weight,
-            *days.values()
-        )
-        add_shift_to_db(shift_data)
-
 
 def task_template_download():
     """
@@ -2192,11 +2133,10 @@ def main():
         **“Upload Shifts File”**. The app automatically inserts each row into the system.
         """)
 
-        # 2.4 Generating Example Data
-        st.markdown("**2.4 Generating Example Data**")
+        st.markdown("**2.4 Example Data**")
         st.write("""
-        - If you just want to explore or test, you can generate random or example tasks/shifts 
-        by clicking **“Load Example Data”** or **“Generate Random Data.”**
+        - If you just want to explore or test, you can use the already made example datasets for tasks and shifts 
+        by clicking **“Load Example Data”**.
         - These options quickly fill the system with sample entries so you can see how it all works.
         """)
 
