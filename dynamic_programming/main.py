@@ -1356,7 +1356,7 @@ def optimize_tasks_with_gurobi():
                 st.warning("Required columns for Gantt chart not found in results_df.")
             else:
                 
-                unique_days = results_df["Day"].unique()
+                unique_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
                 for day in unique_days:
                     day_data = results_df[results_df["Day"] == day].copy()
                     
