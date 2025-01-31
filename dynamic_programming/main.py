@@ -1799,65 +1799,88 @@ def optimize_tasks_with_gurobi():
         # Add Gantt chart final
 ################################################################################
 ###bz###
-        if results_df is None or results_df.empty:
-            st.warning("No results available to display a Gantt chart.")
-            return
+        import plotly.express as px
 
-        # Define the order of days for proper display
-        day_order = ["Monday", "Tuesday", "Wednesday", "Thursday",
-                    "Friday", "Saturday", "Sunday"]
+        def show_parallel_gantt_chart(results_df):
+            """
+            Renders a Gantt chart that shows parallel tasks on separate rows.
+            Assumes results_df has columns:
+            - 'Begin Task' (string, HH:MM format)
+            - 'End Task'   (string, HH:MM format)
+            - 'Day'        (string, e.g. "Monday", "Tuesday", ...)
+            - 'Task Name'  (unique name or ID for the task)
+            - 'Shift ID'   (optional, for hover data)
+            """
 
-        # Define the time range for the chart
-        time_range = ["2023-01-01 00:00:00", "2023-01-01 23:59:59"]
+            # Check if DataFrame is valid
+            if results_df is None or results_df.empty:
+                st.warning("No results available to display a parallel Gantt chart.")
+                return
 
-        # Prepare the data for plotting
-        # Make sure 'Begin Task' and 'End Task' columns exist and are in HH:MM format
-        # Here we assume a dummy date of 2023-01-01 for all tasks.
-        results_df = results_df.assign(
-            Start=lambda df: pd.to_datetime("2023-01-01 " + df["Begin Task"]),
-            End=lambda df: pd.to_datetime("2023-01-01 " + df["End Task"]),
-            Day=lambda df: pd.Categorical(df["Day"], categories=day_order, ordered=True)
-        ).sort_values(by=["Day", "Start"])
+            # Define an order for days (optional)
+            day_order = ["Monday", "Tuesday", "Wednesday", "Thursday",
+                        "Friday", "Saturday", "Sunday"]
 
-        st.subheader("Gantt Chart", divider="blue")
+            # Convert 'Day' to a categorical so we can sort by it easily
+            if "Day" in results_df.columns:
+                results_df["Day"] = pd.Categorical(
+                    results_df["Day"], categories=day_order, ordered=True
+                )
 
-        fig_results = px.timeline(
-            results_df,
-            x_start="Start",
-            x_end="End",
-            y="Day",
-            color="Task Name",
-            hover_data={
-                "Task Name": True,
-                "Shift ID": True,
-                "Start": "|%H:%M",
-                "End": "|%H:%M"
-            },
-            title="<b>Task Distribution by Day</b>",
-            template="plotly_white"
-        )
+            # Create 'Start' and 'End' columns with a dummy date
+            # so Plotly can interpret them as full timestamps
+            results_df = results_df.assign(
+                Start=lambda df: pd.to_datetime("2023-01-01 " + df["Begin Task"]),
+                End=lambda df: pd.to_datetime("2023-01-01 " + df["End Task"]),
+            ).sort_values(by=["Day", "Start"])
 
-        # Adjust layout and formatting
-        fig_results.update_layout(
-            height=600,
-            hovermode="y unified",
-            xaxis_title="Time of Day",
-            yaxis_title="",
-            legend_title="Tasks",
-            font=dict(family="Arial", size=12),
-            margin=dict(l=100, r=20, t=60, b=20)
-        )
+            st.subheader("Parallel Gantt Chart")
 
-        # Set the time axis format and range
-        fig_results.update_xaxes(
-            tickformat="%H:%M",
-            dtick=3600000,  # 1 hour in milliseconds
-            range=time_range,
-            showgrid=True
-        )
+            # Create a timeline chart:
+            #   y="Task Name" ensures each task is on its own row
+            #   color="Day"   gives distinct colors by day
+            fig = px.timeline(
+                results_df,
+                x_start="Start",
+                x_end="End",
+                y="Task Name",      # one row per task
+                color="Day",        # color tasks by day
+                hover_data={
+                    "Shift ID": True,
+                    "Begin Task": True,
+                    "End Task": True,
+                    "Day": True
+                },
+                title="<b>Parallel Task Distribution</b>",
+                template="plotly_white"
+            )
 
-        # Display the chart in Streamlit
-        st.plotly_chart(fig_results, use_container_width=True)
+            # Adjust axis labels, layout, and hover mode
+            fig.update_layout(
+                height=600,
+                hovermode="y unified",
+                xaxis_title="Time of Day",
+                yaxis_title="Task Name",
+                legend_title="Day",
+                font=dict(family="Arial", size=12),
+                margin=dict(l=100, r=20, t=60, b=20)
+            )
+
+            # Show hours on x-axis
+            fig.update_xaxes(
+                tickformat="%H:%M",
+                dtick=3600000,  # 1 hour in milliseconds
+                range=["2023-01-01 00:00:00", "2023-01-01 23:59:59"],
+                showgrid=True
+            )
+
+            # Render the chart in Streamlit
+            st.plotly_chart(fig, use_container_width=True)
+
+
+# Example usage (assuming you have a valid results_df):
+        show_parallel_gantt_chart(results_df)
+
 ####bzz###############################################
 #         if not results_df.empty:
 #             st.subheader("Task Schedule Gantt Chart")
