@@ -1811,7 +1811,7 @@ def optimize_tasks_with_gurobi():
             - 'End Task'   (string, HH:MM format)
             - 'Day'        (string with day name, e.g., 'Monday', 'Tuesday', etc.)
             - 'Task Name'  (string)
-            - 'Shift ID'   (for hover info; used for color grouping here)
+            - 'Shift ID'   (for hover info; optional)
             """
 
             # If results_df isn't defined or is empty, show a warning
@@ -1827,6 +1827,8 @@ def optimize_tasks_with_gurobi():
             time_range = ["2023-01-01 00:00:00", "2023-01-01 23:59:59"]
 
             # Prepare the data for plotting
+            # Make sure 'Begin Task' and 'End Task' columns exist and are in HH:MM format
+            # Here we assume a dummy date of 2023-01-01 for all tasks.
             results_df = results_df.assign(
                 Start=lambda df: pd.to_datetime("2023-01-01 " + df["Begin Task"]),
                 End=lambda df: pd.to_datetime("2023-01-01 " + df["End Task"]),
@@ -1835,13 +1837,12 @@ def optimize_tasks_with_gurobi():
 
             st.subheader("Gantt Chart", divider="blue")
 
-            # Use "Shift ID" for color, so tasks with the same Shift ID share the same color
             fig_results = px.timeline(
                 results_df,
                 x_start="Start",
                 x_end="End",
                 y="Day",
-                color="Shift ID",  # <-- updated here
+                color="Task Name",
                 hover_data={
                     "Task Name": True,
                     "Shift ID": True,
@@ -1858,7 +1859,7 @@ def optimize_tasks_with_gurobi():
                 hovermode="y unified",
                 xaxis_title="Time of Day",
                 yaxis_title="",
-                legend_title="Shift ID",
+                legend_title="Tasks",
                 font=dict(family="Arial", size=12),
                 margin=dict(l=100, r=20, t=60, b=20)
             )
@@ -1874,6 +1875,10 @@ def optimize_tasks_with_gurobi():
             # Display the chart in Streamlit
             st.plotly_chart(fig_results, use_container_width=True)
 
+
+        # Usage example:
+        # if you already have results_df defined:
+        #
         show_gantt_chart(results_df)
 
 
