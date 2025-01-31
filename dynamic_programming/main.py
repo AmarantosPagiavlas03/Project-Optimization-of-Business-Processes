@@ -1814,19 +1814,19 @@ def optimize_tasks_with_gurobi():
 
 
         # Daily Summary
-        st.subheader("📅 Daily Summary")
-        st.dataframe(
-            day_summary_df,
-            column_order=("Day", "Total Cost (€)", "Tasks Assigned", "Workers Assigned"),
-            hide_index=True
-        )
-        st.download_button(
-            label="Download Daily Summary as CSV",
-            data=day_summary_df.to_csv(index=False).encode("utf-8"),
-            file_name="daily_summary.csv",
-            mime="text/csv"
-        )
- 
+        with st.expander("📅 Daily Summary", expanded=True):
+            st.dataframe(
+                day_summary_df,
+                column_order=("Day", "Total Cost (€)", "Tasks Assigned", "Workers Assigned"),
+                hide_index=True
+            )
+            st.download_button(
+                label="Download Daily Summary as CSV",
+                data=day_summary_df.to_csv(index=False).encode("utf-8"),
+                file_name="daily_summary.csv",
+                mime="text/csv"
+            )
+    
         # 2. New Visualizations
         if not results_df.empty:
             col1, col2 = st.columns(2)
