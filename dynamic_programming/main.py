@@ -211,9 +211,26 @@ def shift_input_form():
                                        format_func=lambda x: f"{x} minutes")
 
         # --- Shift Weight with Synced Display ---
+        # st.markdown("### Shift Preferences")
+        
+        # Weight = st.slider("Shift Weight ", 0.1, 1000.0, 1.0, 0.1,
+        #                  help="Higher weight means more expensive to schedule")
+
         st.markdown("### Shift Preferences")
-        Weight = st.slider("Shift Weight ", 0.1, 1000.0, 1.0, 0.1,
-                         help="Higher weight means more expensive to schedule")
+        Weight = st.number_input(
+            "Shift Weight",
+            min_value=0.1,
+            max_value=100000000000000.0,
+            value=1.0,
+            step=0.1,
+            help="Higher weight means more expensive to schedule"
+        )
+        
+
+
+
+
+
         
         # --- Days of Week Selection ---
         st.markdown("### Active Days ")
