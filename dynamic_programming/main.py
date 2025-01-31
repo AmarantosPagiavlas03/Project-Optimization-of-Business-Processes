@@ -1708,6 +1708,16 @@ def optimize_tasks_with_gurobi():
 
         day_summary_df = pd.DataFrame(day_summary)
 
+        results_df["Shift"] = results_df["Shift Start"] + " - " + results_df["Shift End"]
+
+        # 2. Group by "Day" and this new "Shift" string
+        nurse_requirements_df = (
+            results_df
+            .groupby(["Day", "Shift"], as_index=False)["Workers Assigned"]
+            .sum()  # Summation of all workers assigned if multiple tasks overlap
+            .rename(columns={"Workers Assigned": "Number of Nurses"})
+        )
+
         # Replace existing visualization and validation code with this
         # if not day_summary_df.empty:
         #     st.write("### Daily Summaries")
@@ -1763,6 +1773,25 @@ def optimize_tasks_with_gurobi():
                 )
             else:
                 st.warning("No tasks were assigned.")
+
+        with st.expander("👩‍⚕️ View Nurse Requirements per Shift", expanded=True):
+            if not nurse_requirements_df.empty:
+                # Display the dataframe with only the relevant columns
+                st.dataframe(
+                    nurse_requirements_df[["Day", "Shift", "Number of Nurses"]],
+                    column_order=("Day", "Shift", "Number of Nurses"),
+                    hide_index=True
+                )
+                
+                # Add a download button for CSV
+                st.download_button(
+                    label="Download Nurse Requirements as CSV",
+                    data=nurse_requirements_df.to_csv(index=False).encode("utf-8"),
+                    file_name="nurse_requirements.csv",
+                    mime="text/csv"
+                )
+            else:
+                st.warning("No nurse requirements found.")
 
         # Daily Summary
         st.subheader("📅 Daily Summary")
