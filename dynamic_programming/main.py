@@ -1799,7 +1799,6 @@ def optimize_tasks_with_gurobi():
         # Add Gantt chart final
 ################################################################################
 ###bz###
-        import pandas as pd
         import plotly.express as px
         import streamlit as st
 
@@ -1880,6 +1879,7 @@ def optimize_tasks_with_gurobi():
         # if you already have results_df defined:
         #
         show_gantt_chart(results_df)
+
 
 
 ####bzz###############################################
@@ -2563,7 +2563,7 @@ def main():
  
 
                 #     original_optimize_tasks_with_gurobi()
-                if st.button("🚀 Run Task Optimization )", use_container_width=True):
+                if st.button("🚀 Run Task Optimization ", use_container_width=True):
                     optimize_tasks_with_gurobi()
  
                
