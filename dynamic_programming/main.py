@@ -143,7 +143,6 @@ def task_input_form():
                                      min_value=15, max_value=480, 
                                      value=60, step=15,help="Duration in minutes.")
 
-        # Full-width submit button
         submitted = st.form_submit_button("➕ Add Task", use_container_width=True,type="primary")
             
         if submitted:
