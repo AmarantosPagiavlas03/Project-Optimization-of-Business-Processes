@@ -1329,7 +1329,7 @@ def optimize_tasks_with_gurobi():
                 with col1:
                     # Ensure we have data to plot
                     if not results_df.empty:
-                        fig = px.pie(results_df, names='Day', values='Task Cost (€)', title='<b>Cost Distribution by Day</b>')
+                        fig = px.pie(day_summary_df, names='Day', values='Total Cost (€)', title='<b>Cost Distribution by Day</b>')
                         fig.update_layout(showlegend=False)
                         st.plotly_chart(fig, use_container_width=True)
                     else:
