@@ -1716,19 +1716,6 @@ def optimize_tasks_with_gurobi():
 
         results_df["Shift"] = results_df["Shift Start"] + " - " + results_df["Shift End"]
 
-        nurse_requirements_df = (
-            results_df
-            .groupby(["Day", "Shift"], as_index=False)
-            .agg({
-                "Workers Assigned": "sum",        # total number of nurses per shift
-                "Task Cost (€)": "sum"           # total cost per shift
-            })
-            # 3. Rename for clarity.
-            .rename(columns={
-                "Workers Assigned": "Number of Nurses",
-                "Task Cost (€)": "Shift Cost (€)"
-            })
-        )
 
         # Replace existing visualization and validation code with this
         # if not day_summary_df.empty:
@@ -1786,7 +1773,20 @@ def optimize_tasks_with_gurobi():
             else:
                 st.warning("No tasks were assigned.")
 
-
+        nurse_requirements_df = (
+            results_df
+            .groupby(["Day", "Shift ID"], as_index=False)
+            .agg({
+                "Workers Assigned": "sum",        # total number of nurses per shift
+                "Task Cost (€)": "sum"           # total cost per shift
+            })
+            # 3. Rename for clarity.
+            .rename(columns={
+                "Workers Assigned": "Number of Nurses",
+                "Task Cost (€)": "Shift Cost (€)"
+            })
+        )
+        
         with st.expander("👩‍⚕️ View Nurse Requirements per Shift (15-min overlap)", expanded=True):
             if not nurse_requirements_df.empty:
                 # Create a user-friendly "Shift" column for quick reference
