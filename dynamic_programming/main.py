@@ -1350,11 +1350,27 @@ def optimize_tasks_with_gurobi():
 
                 with col2:
                     # Ensure we have data to plot
-                    if not results_df.empty:
-                        shift_cost = results_df.groupby("Shift ID")["Task Cost (€)"].sum().reset_index()
-                        fig = px.bar(shift_cost, x='Shift ID', y='Task Cost (€)', 
-                                    title='<b>Total Cost by Shift</b>')
+                    if not nurse_requirements_df.empty:
+                        # 1. Group by Shift ID to sum the total number of nurses across all days
+                        #    and grab the first (or any consistent) shift Weight for that ID
+                        shift_sum_df = nurse_requirements_df.groupby("Shift ID", as_index=False).agg({
+                            "Number of Nurses": "sum",    # sum across all days
+                            "Weight": "first"            # or "max"/"min" if you expect it to be consistent
+                        })
+                        
+                        # 2. Calculate total cost for each shift
+                        shift_sum_df["TotalShiftCost"] = shift_sum_df["Number of Nurses"] * shift_sum_df["Weight"]
+
+                        # 3. Create a bar plot for these aggregated costs
+                        fig = px.bar(
+                            shift_sum_df,
+                            x="Shift ID",
+                            y="TotalShiftCost",
+                            title="<b>Total Cost by Shift</b>",
+                            text="TotalShiftCost"  # optional: show the value on top of each bar
+                        )
                         fig.update_layout(showlegend=False)
+                        fig.update_traces(texttemplate="%{text:.2f}", textposition="outside")  # format the cost nicely
                         st.plotly_chart(fig, use_container_width=True)
                     else:
                         st.warning("No data available for bar chart")
