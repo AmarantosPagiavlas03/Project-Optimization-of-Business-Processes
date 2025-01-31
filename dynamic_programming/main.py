@@ -1282,6 +1282,8 @@ def optimize_tasks_with_gurobi():
             })
         )
 
+        # 2. Merge the nurse_requirements_df with shifts_df to pull in the 'Weight' column
+        #    Rename 'id' to 'Shift ID' in the shifts_df slice for cleaner merge:
         shifts_weight_df = shifts_df[['id', 'Weight']].rename(columns={'id': 'Shift ID'})
         nurse_requirements_df = nurse_requirements_df.merge(shifts_weight_df, on="Shift ID", how="left")
 
@@ -1304,7 +1306,7 @@ def optimize_tasks_with_gurobi():
                 # Show data
                 st.dataframe(
                     display_df,
-                    column_order=["Day", "Shift", "Shift ID", "Number of Nurses", "Shift Weight"],
+                    column_order=["Day", "Shift", "Shift ID", "Number of Nurses", "Weight"],
                     hide_index=True
                 )
 
@@ -1317,6 +1319,7 @@ def optimize_tasks_with_gurobi():
                 )
             else:
                 st.warning("No nurse requirements found.")
+
 
 
         # Daily Summary
