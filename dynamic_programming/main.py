@@ -1790,7 +1790,6 @@ def optimize_tasks_with_gurobi():
                         "Day", 
                         "Shift", 
                         "Number of Nurses", 
-                        "Shift Cost (€)"
                     ]],
                     hide_index=True
                 )
