@@ -1800,56 +1800,56 @@ def optimize_tasks_with_gurobi():
 ################################################################################
 ###bz####
 
-    import plotly.express as px
+        import plotly.express as px
 
-    day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", 
-                "Friday", "Saturday", "Sunday"]
-    time_range = ["2023-01-01 00:00:00", "2023-01-01 23:59:59"]
+        day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", 
+                    "Friday", "Saturday", "Sunday"]
+        time_range = ["2023-01-01 00:00:00", "2023-01-01 23:59:59"]
 
-    if not results_df.empty:
-        st.subheader("Task Schedule Gantt Chart")
+        if not results_df.empty:
+            st.subheader("Task Schedule Gantt Chart")
 
-        results_df = results_df.assign(
-            Start=lambda df: pd.to_datetime("2023-01-01 " + df['Begin Task']),
-            End=lambda df: pd.to_datetime("2023-01-01 " + df['End Task']),
-            Day=lambda df: pd.Categorical(df['Day'], categories=day_order, ordered=True),
-            DurationHours=lambda df: (df['End Task'] - df['Begin Task']).dt.total_seconds()/3600
-        ).sort_values(by=['Day', 'Begin Task'])
+            results_df = results_df.assign(
+                Start=lambda df: pd.to_datetime("2023-01-01 " + df['Begin Task']),
+                End=lambda df: pd.to_datetime("2023-01-01 " + df['End Task']),
+                Day=lambda df: pd.Categorical(df['Day'], categories=day_order, ordered=True),
+                DurationHours=lambda df: (df['End Task'] - df['Begin Task']).dt.total_seconds()/3600
+            ).sort_values(by=['Day', 'Begin Task'])
 
-        fig_tasks = px.timeline(
-            results_df,
-            x_start="Begin Task",
-            x_end="End Task",
-            y="Day",
-            color="TaskName",
-            color_discrete_sequence=px.colors.qualitative.Pastel,
-            hover_data={
-                "TaskName": True,
-                "NursesRequired": True,
-                "Shift ID": True, 
-                "Workers Assigned": True,
-                "Begin Task": "|%H:%M",
-                "End Task": "|%H:%M"
-            },
-            title="<b>Task Distribution by Day</b>",
-            template="plotly_white"
-        )
-        fig_tasks.update_layout(
-            height=600,
-            hovermode="y unified",
-            xaxis_title="Time of Day",
-            yaxis_title="",
-            legend_title="Tasks",
-            font=dict(family="Arial", size=12),
-            margin=dict(l=100, r=20, t=60, b=20)
-        )
-        fig_tasks.update_xaxes(
-            tickformat="%H:%M",
-            dtick=3600000,
-            range=time_range,
-            showgrid=True
-        )
-        st.plotly_chart(fig_tasks, use_container_width=True)
+            fig_tasks = px.timeline(
+                results_df,
+                x_start="Begin Task",
+                x_end="End Task",
+                y="Day",
+                color="TaskName",
+                color_discrete_sequence=px.colors.qualitative.Pastel,
+                hover_data={
+                    "TaskName": True,
+                    "NursesRequired": True,
+                    "Shift ID": True, 
+                    "Workers Assigned": True,
+                    "Begin Task": "|%H:%M",
+                    "End Task": "|%H:%M"
+                },
+                title="<b>Task Distribution by Day</b>",
+                template="plotly_white"
+            )
+            fig_tasks.update_layout(
+                height=600,
+                hovermode="y unified",
+                xaxis_title="Time of Day",
+                yaxis_title="",
+                legend_title="Tasks",
+                font=dict(family="Arial", size=12),
+                margin=dict(l=100, r=20, t=60, b=20)
+            )
+            fig_tasks.update_xaxes(
+                tickformat="%H:%M",
+                dtick=3600000,
+                range=time_range,
+                showgrid=True
+            )
+            st.plotly_chart(fig_tasks, use_container_width=True)
 ####bzz###############################################
 #         if not results_df.empty:
 #             st.subheader("Task Schedule Gantt Chart")
