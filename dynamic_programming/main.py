@@ -1848,6 +1848,12 @@ def optimize_tasks_with_gurobi():
                 showgrid=True
             )
             st.plotly_chart(fig_results, use_container_width=True)
+
+            col1, col2 = st.columns(2) 
+            with col1:
+                fig = px.pie(results_df, names='Day', values='Task Cost (€)', 
+                            title='<b>Cost Distribution by Day</b>')
+                st.plotly_chart(fig, use_container_width=True)
 ####bzz###############################################
 #         if not results_df.empty:
 #             st.subheader("Task Schedule Gantt Chart")
