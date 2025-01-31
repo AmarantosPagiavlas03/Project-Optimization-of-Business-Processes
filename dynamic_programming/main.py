@@ -1298,13 +1298,13 @@ def optimize_tasks_with_gurobi():
                     "Shift", 
                     "Shift ID", 
                     "Number of Nurses",
-                    "Shift Weight"  # <-- newly included column
+                    "Weight"  # <-- newly included column
                 ]]
                 
                 # Show data
                 st.dataframe(
                     display_df,
-                    column_order=["Day", "Shift", "Shift ID", "Number of Nurses", "Weight"],
+                    column_order=["Day", "Shift", "Shift ID", "Number of Nurses", "Shift Weight"],
                     hide_index=True
                 )
 
