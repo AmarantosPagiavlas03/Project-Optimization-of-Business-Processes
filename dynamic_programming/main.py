@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 from datetime import datetime, timedelta
-import random
 import plotly.express as px
 from gurobipy import Model, GRB, quicksum
 from datetime import time
@@ -72,7 +71,6 @@ def init_db():
     conn.commit()
     conn.close()
 
-
 # -------------------------- DB Helpers ---------------------------
 def add_task_to_db(TaskName, Day, StartTime, EndTime, Duration, NursesRequired):
     conn = sqlite3.connect(DB_FILE)
@@ -83,7 +81,6 @@ def add_task_to_db(TaskName, Day, StartTime, EndTime, Duration, NursesRequired):
     ''', (TaskName, Day, StartTime, EndTime, Duration, NursesRequired))
     conn.commit()
     conn.close()
-
 
 def add_shift_to_db(data):
     conn = sqlite3.connect(DB_FILE)
@@ -97,15 +94,11 @@ def add_shift_to_db(data):
     conn.commit()
     conn.close()
 
-
-
-
 def get_all(table):
     conn = sqlite3.connect(DB_FILE)
     df = pd.read_sql_query(f"SELECT * FROM {table}", conn)
     conn.close()
     return df
-
 
 def clear_all(table):
     conn = sqlite3.connect(DB_FILE)
@@ -113,79 +106,6 @@ def clear_all(table):
     c.execute(f"DELETE FROM {table}")
     conn.commit()
     conn.close()
-
-def update_needed_workers_for_each_day(results_df):
-    """
-    Use the first-optimization assignments (results_df) to populate
-    MondayNeeded, TuesdayNeeded, ... columns for each ShiftID in ShiftsTable6.
-    """
-    if results_df.empty:
-        st.error("No results to update needed workers. `results_df` is empty.")
-        return
-    print("Columns in results_df:", results_df.columns)
-
-    required_columns = ["ShiftID", "TaskDay", "WorkersNeededForShift"]
-    missing_columns = [col for col in required_columns if col not in results_df.columns]
-    if missing_columns:
-        st.error(f"Missing required columns in results_df: {missing_columns}")
-        return
-    
-    # 1. Aggregate how many workers are needed for each (ShiftID, Day).
-    #    If a single shift has multiple tasks on the same day, you might 
-    #    want sum() or max(). That depends on your logic. Let's use max() here.
-    shift_day_needs = (
-        results_df
-        .groupby(["ShiftID", "TaskDay"])["WorkersNeededForShift"]
-        .max()  # or .sum()
-        .reset_index()
-    )
-
-    day_list = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-    shift_day_dict = {}
-
-    for _, row in shift_day_needs.iterrows():
-        sid = row["ShiftID"]
-        day = row["TaskDay"]         # e.g. "Monday"
-        needed = int(row["WorkersNeededForShift"])
-
-        if sid not in shift_day_dict:
-            shift_day_dict[sid] = {d: 0 for d in day_list}  # default 0 for each day
-
-        # Assign the needed count for that day
-        shift_day_dict[sid][day] = needed
- 
-    # 3. Update ShiftsTable6 for each shift ID
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-
-    for sid, day_map in shift_day_dict.items():
-        c.execute('''
-            UPDATE ShiftsTable6
-            SET
-              MondayNeeded    = :mon,
-              TuesdayNeeded   = :tue,
-              WednesdayNeeded = :wed,
-              ThursdayNeeded  = :thu,
-              FridayNeeded    = :fri,
-              SaturdayNeeded  = :sat,
-              SundayNeeded    = :sun
-            WHERE id = :shift_id
-        ''', {
-            "mon": day_map["Monday"],
-            "tue": day_map["Tuesday"],
-            "wed": day_map["Wednesday"],
-            "thu": day_map["Thursday"],
-            "fri": day_map["Friday"],
-            "sat": day_map["Saturday"],
-            "sun": day_map["Sunday"],
-            "shift_id": sid
-        })
-
-    conn.commit()
-    conn.close()
-
-    st.success("Day-specific NeededWorkers columns have been updated in ShiftsTable6!")
-
 
 
 # ------------------------------------------------------------------
@@ -196,41 +116,6 @@ def generate_time_intervals():
     intervals = [time(hour=h, minute=m) for h in range(24) for m in range(0, 60, 15)]
     intervals.append(time(0, 0))  # Add 24:00 as 00:00
     return intervals
-
-def get_default_indices_for_intervals(intervals):
-    """
-    Given a list of 15-minute interval times (e.g., [datetime.time(0,0), datetime.time(0,15), ...]),
-    this function returns two indexes:
-      - One for (current time + 1 hour), rounded to the nearest 15 minutes
-      - One for (current time + 2 hours), rounded to the nearest 15 minutes
-    If either rounded time does not appear in the intervals list, default index = 0.
-    
-    Returns:
-        (default_idx_1h, default_idx_2h) : (int, int)
-    """
-    # 1) Compute times
-    now_plus_1h = (dt.datetime.now() + dt.timedelta(hours=1)).time()
-    now_plus_2h = (dt.datetime.now() + dt.timedelta(hours=2)).time()
-
-    # 2) Round each to the nearest 15 minutes
-    nearest_15_1h = (now_plus_1h.minute // 15) * 15
-    default_time_1h = now_plus_1h.replace(minute=nearest_15_1h, second=0, microsecond=0)
-
-    nearest_15_2h = (now_plus_2h.minute // 15) * 15
-    default_time_2h = now_plus_2h.replace(minute=nearest_15_2h, second=0, microsecond=0)
-
-    # 3) Find indexes in the intervals list (or use 0 if not found)
-    if default_time_1h in intervals:
-        default_idx_1h = intervals.index(default_time_1h)
-    else:
-        default_idx_1h = 0
-
-    if default_time_2h in intervals:
-        default_idx_2h = intervals.index(default_time_2h)
-    else:
-        default_idx_2h = 0
-
-    return default_idx_1h, default_idx_2h
 
 def task_input_form():
     """Sidebar form to add a new task."""
@@ -415,7 +300,6 @@ def shift_input_form():
                 )
                 add_shift_to_db(shift_data)
                 st.success("Shift added successfully!")
-
 
 def task_template_download():
     """
@@ -1505,7 +1389,6 @@ def optimize_tasks_with_gurobi():
                 st.write(f"⚠️ Infeasible constraint: {constr.constrName}")
 
 
-
 # ------------------------------------------------------------------
 #                          Visualization
 # ------------------------------------------------------------------
@@ -1981,7 +1864,6 @@ def show_contact():
 # ------------------------------------------------------------------
 #                            Main App
 # ------------------------------------------------------------------
-
 
 def main():
     parent_dir = os.path.dirname(os.path.abspath(__file__))
