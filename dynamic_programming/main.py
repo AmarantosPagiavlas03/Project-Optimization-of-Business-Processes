@@ -1716,6 +1716,15 @@ def optimize_tasks_with_gurobi():
 
         results_df["Shift"] = results_df["Shift Start"] + " - " + results_df["Shift End"]
 
+        # 2. Group by "Day" and "Shift", summing both nurses and cost.
+        nurse_requirements_df = (
+            results_df
+            .groupby(["Day", "Shift"], as_index=False)
+            .agg({
+                "Workers Assigned": "sum",        # total number of nurses per shift
+                "Task Cost (€)": "sum"           # total cost per shift
+            })
+        )
 
         # Replace existing visualization and validation code with this
         # if not day_summary_df.empty:
@@ -1775,9 +1784,9 @@ def optimize_tasks_with_gurobi():
 
 
         with st.expander("👩‍⚕️ Nurse Requirements per Shift (Concurrency)", expanded=True):
-            if not results_df.empty:
+            if not nurse_requirements_df.empty:
                 st.dataframe(
-                    results_df[[
+                    nurse_requirements_df[[
                         "Day", 
                         "Shift", 
                         "Number of Nurses", 
@@ -1787,7 +1796,7 @@ def optimize_tasks_with_gurobi():
                 )
                 st.download_button(
                     label="Download Nurse Requirements as CSV",
-                    data=results_df.to_csv(index=False).encode("utf-8"),
+                    data=nurse_requirements_df.to_csv(index=False).encode("utf-8"),
                     file_name="nurse_requirements.csv",
                     mime="text/csv"
                 )
