@@ -1799,148 +1799,67 @@ def optimize_tasks_with_gurobi():
         # Add Gantt chart final
 ################################################################################
 ###bz###
+        import plotly.express as px
+
+        # Define day order and time range
+        day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        time_range = [pd.to_datetime("2023-01-01 00:00:00"), pd.to_datetime("2023-01-01 23:59:59")]
+
+        # Ensure results_df exists and is not empty
         if not results_df.empty:
-            st.subheader("Task Schedule Gantt Chart")
+            st.subheader("Gantt chart", divider="blue")
 
-            # Define correct day order
-            day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-            
-            # Create date mapping with proper midnight handling
-            base_date = pd.to_datetime("2023-10-02")  # Monday
-            date_mapping = {day: base_date + pd.DateOffset(days=i) for i, day in enumerate(day_order)}
-            
-            # Convert times and handle midnight crossings
-            results_df['Begin_Datetime'] = results_df.apply(
-                lambda row: pd.Timestamp.combine(date_mapping[row['Day']], 
-                                                pd.to_datetime(row['Begin Task'], format="%H:%M").time()),
-                axis=1
-            )
-            results_df['End_Datetime'] = results_df.apply(
-                lambda row: pd.Timestamp.combine(date_mapping[row['Day']], 
-                                                pd.to_datetime(row['End Task'], format="%H:%M").time()),
-                axis=1
-            )
-            mask = results_df['End_Datetime'] < results_df['Begin_Datetime']
-            results_df.loc[mask, 'End_Datetime'] += pd.Timedelta(days=1)
+            # Convert necessary columns
+            results_df1 = results_df.assign(
+                Task_Name=lambda df: df['Task Name'],  # Keep as string if categorical
+                Shift_ID=lambda df: pd.to_numeric(df['Shift ID']),
+                Start=lambda df: pd.to_datetime("2023-01-01 " + df['Begin Task']),
+                End=lambda df: pd.to_datetime("2023-01-01 " + df['End Task']),
+                Day=lambda df: pd.Categorical(df['Day'], categories=day_order, ordered=True),
+                DurationHours=lambda df: (df['End'] - df['Start']).dt.total_seconds() / 3600
+            ).sort_values(by=['Day', 'Start'])
 
-            # Create complete 15-minute grid for each day
-            all_slots = []
-            for day in results_df['Day'].unique():
-                day_date = date_mapping[day]
-                start_time = day_date.replace(hour=0, minute=0)
-                end_time = day_date.replace(hour=23, minute=59)
-                
-                # Create 15-minute intervals
-                current_time = start_time
-                while current_time <= end_time:
-                    all_slots.append({
-                        'Day': day,
-                        'Begin_Datetime': current_time,
-                        'End_Datetime': current_time + pd.Timedelta(minutes=15),
-                        'Empty': True
-                    })
-                    current_time += pd.Timedelta(minutes=15)
-
-            # Create grid dataframe
-            grid_df = pd.DataFrame(all_slots)
-            
-            # Merge with original data
-            results_df['Empty'] = False
-            combined_df = pd.concat([results_df, grid_df], ignore_index=True)
-            
-            # Sort and create vertical positions
-            combined_df['Day'] = pd.Categorical(combined_df['Day'], categories=day_order, ordered=True)
-            combined_df = combined_df.sort_values(['Day', 'Begin_Datetime'])
-            
-            # Create vertical positions for both real and empty tasks
-            combined_df['Vertical_Position'] = combined_df.groupby(
-                ['Day', pd.Grouper(key='Begin_Datetime', freq='15T')]
-            ).cumcount()
-
-            # Filter to maintain original days
-            filtered_df = combined_df[combined_df["Day"].isin(day_order)]
-            filtered_day_names = [day for day in day_order if day in filtered_df['Day'].unique()]
-            
-            # Create the plot
-            fig = px.timeline(
-                filtered_df,
-                x_start="Begin_Datetime",
-                x_end="End_Datetime",
-                y="Vertical_Position",
-                color="Shift ID",
-                color_discrete_sequence=px.colors.qualitative.D3,
-                facet_row="Day",
-                title="<b>Complete Task Schedule</b>",
-                hover_name="Task Name",
+            # Plotly Gantt chart
+            fig_results = px.timeline(
+                results_df1,
+                x_start="Start",
+                x_end="End",
+                y="Day",
+                color="Task_Name",
+                color_discrete_sequence=px.colors.qualitative.Pastel,
                 hover_data={
+                    "Task Name": True,
                     "Shift ID": True,
-                    "Begin_Datetime": "|%H:%M",
-                    "End_Datetime": "|%H:%M",
-                    "Vertical_Position": False,
-                    "Day": False,
-                    "Empty": False
+                    "DurationHours": ":.1f hours",
+                    "Start": "|%H:%M",
+                    "End": "|%H:%M"
                 },
-                labels={"Begin_Datetime": "Start Time", "End_Datetime": "End Time"},
-                category_orders={"Day": filtered_day_names},
-                height=600 + 150*len(filtered_day_names)
+                title="<b>Task Distribution by Day</b>",
+                template="plotly_white"
             )
 
-            # Format empty boxes
-            fig.update_traces(
-                marker=dict(line=dict(width=0)),
-                selector=({'name': 'Shift ID'})  # Hide empty boxes
+            # Formatting layout
+            fig_results.update_layout(
+                height=600,
+                hovermode="y unified",
+                xaxis_title="Time of Day",
+                yaxis_title="",
+                legend_title="Tasks",
+                font=dict(family="Arial", size=12),
+                margin=dict(l=100, r=20, t=60, b=20)
             )
-            
-            # Force x-axis range to full day
-            min_time = pd.Timestamp("2023-10-02 00:00:00")
-            max_time = pd.Timestamp("2023-10-02 23:59:59")
-            
-            # Format axes and layout
-            fig.update_xaxes(
+
+            # Formatting X-axis
+            fig_results.update_xaxes(
                 tickformat="%H:%M",
-                rangeslider_visible=False,
-                title_text="Time",
-                tickmode='array',
-                tickvals=pd.date_range(start=min_time, end=max_time, freq='4H'),
-                range=[min_time, max_time]
+                dtick=3600000,
+                range=time_range,
+                showgrid=True
             )
 
-            fig.update_yaxes(visible=False, title_text="")
-
-            # Maintain original layout
-            fig.update_layout(
-                margin=dict(l=100, r=50, b=80, t=100),
-                legend_title_text="Shift ID",
-                legend=dict(
-                    orientation="h",
-                    yanchor="bottom",
-                    y=-0.3,
-                    xanchor="right",
-                    x=1
-                ),
-                plot_bgcolor='rgba(240,240,240,0.8)',
-                xaxis=dict(showgrid=True, gridcolor='white'),
-                hoverlabel=dict(
-                    bgcolor="white",
-                    font_size=12,
-                    font_family="Arial"
-                ),
-                dragmode=False,
-                showlegend=True
-            )
-
-            # Adjust day labels
-            for annotation in fig.layout.annotations:
-                if annotation.text in filtered_day_names:
-                    annotation.x = -0.07
-                    annotation.xanchor = 'right'
-                    annotation.font = dict(size=14, color='black')
-                    annotation.bgcolor = 'rgba(255,255,255,0.8)'
-
-            if not filtered_df.empty:
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.warning("No tasks available for Gantt chart visualization")
+            # Display the chart in Streamlit
+            st.plotly_chart(fig_results, use_container_width=True)
+       
 ####bzz###############################################
 #         if not results_df.empty:
 #             st.subheader("Task Schedule Gantt Chart")
