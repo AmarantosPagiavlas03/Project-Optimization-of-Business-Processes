@@ -983,9 +983,6 @@ def optimize_tasks_with_gurobi():
                 name=f"Shift_{shift_id}_{day_str}_PeakCap"
             )
  
-        shift_worker_vars[(shift_id, day_str)] = model.addVar(
-            vtype=GRB.INTEGER, lb=0, name=var_name  # Changed to INTEGER
-        )
     # --- 7. Solve the model ---
     with st.spinner("Optimizing tasks and shifts. Please wait..."):
         try:
