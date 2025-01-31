@@ -1800,38 +1800,40 @@ def optimize_tasks_with_gurobi():
 ################################################################################
 ###bz###
         import plotly.express as px
-        import numpy as np  # Not used in the snippet, ensure it's necessary
 
+        # Define the order of days for proper display
         day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", 
                     "Friday", "Saturday", "Sunday"]
+
+        # Define the time range for the chart
         time_range = ["2023-01-01 00:00:00", "2023-01-01 23:59:59"]
 
+        # Prepare the data for plotting
         if not results_df.empty:
-            st.subheader("Gantt chart", divider="blue")
-            results_df1 = results_df.assign(
+            results_df = results_df.assign(
                 Start=lambda df: pd.to_datetime("2023-01-01 " + df['Begin Task']),
                 End=lambda df: pd.to_datetime("2023-01-01 " + df['End Task']),
-                Day=lambda df: pd.Categorical(df['Day'], categories=day_order, ordered=True),
-                DurationHours=lambda df: (df['End'] - df['Start']).dt.total_seconds() / 3600  # Fixed duration calculation
-            ).sort_values(by=['Day', 'Begin Task'])
+                Day=lambda df: pd.Categorical(df['Day'], categories=day_order, ordered=True)
+            ).sort_values(by=['Day', 'Start'])
 
+            # Create a Gantt chart using Plotly Express
             fig_results = px.timeline(
-                results_df1,
+                results_df,
                 x_start="Start",
                 x_end="End",
                 y="Day",
-                color="Task Name",  # Ensure "Task Name" is a string for discrete colors
-                color_discrete_sequence=px.colors.qualitative.Pastel,
+                color="Task Name",
                 hover_data={
                     "Task Name": True,
                     "Shift ID": True,
-                    "DurationHours": ":.1f hours",
                     "Start": "|%H:%M",
                     "End": "|%H:%M"
                 },
                 title="<b>Task Distribution by Day</b>",
                 template="plotly_white"
             )
+
+            # Adjust the layout and formatting
             fig_results.update_layout(
                 height=600,
                 hovermode="y unified",
@@ -1841,19 +1843,19 @@ def optimize_tasks_with_gurobi():
                 font=dict(family="Arial", size=12),
                 margin=dict(l=100, r=20, t=60, b=20)
             )
+
+            # Set the time axis format and range
             fig_results.update_xaxes(
                 tickformat="%H:%M",
                 dtick=3600000,  # 1 hour in milliseconds
                 range=time_range,
                 showgrid=True
             )
-            st.plotly_chart(fig_results, use_container_width=True)
 
-            col1, col2 = st.columns(2) 
-            with col1:
-                fig = px.pie(results_df, names='Day', values='Task Cost (€)', 
-                            title='<b>Cost Distribution by Day</b>')
-                st.plotly_chart(fig, use_container_width=True)
+            # Display the chart
+            st.plotly_chart(fig_results, use_container_width=True)
+        else:
+            st.warning("No results available to display a Gantt chart.")
 ####bzz###############################################
 #         if not results_df.empty:
 #             st.subheader("Task Schedule Gantt Chart")
