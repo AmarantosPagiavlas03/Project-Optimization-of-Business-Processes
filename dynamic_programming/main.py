@@ -11,9 +11,6 @@ import os
 import datetime as dt
 from gurobipy import GurobiError
 
-from streamlit import session_state as ss
-import numpy as np
-
 DB_FILE = "tasksv2.db"
 
 
@@ -1429,9 +1426,6 @@ def display_tasks_and_shifts():
 
     with tab1:
         try:
-            import plotly.express as px
-            import numpy as np
-
             day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", 
                         "Friday", "Saturday", "Sunday"]
             time_range = ["2023-01-01 00:00:00", "2023-01-01 23:59:59"]
