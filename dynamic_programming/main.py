@@ -959,19 +959,33 @@ def optimize_tasks_with_gurobi():
             # No feasible shift-day found: either data problem or the model is infeasible
             pass
 
-    # 6.2. Worker capacity: for each (shift, day), total nurses required
-    #     by tasks assigned cannot exceed the # of workers assigned
-    for (shift_id, day_str) in shift_worker_vars:
-        model.addConstr(
-            quicksum(
-                tasks_df.loc[t_id, "NursesRequired"] * task_shift_vars[(t_id, shift_id, day_str)]
+        for (shift_id, day_str) in shift_worker_vars:
+            # Get all tasks assigned to this shift-day
+            assigned_tasks = [
+                (tasks_df.loc[t_id, "StartTime"], tasks_df.loc[t_id, "EndTime"], tasks_df.loc[t_id, "NursesRequired"])
                 for (t_id, s_id, d) in task_shift_vars
-                if s_id == shift_id and d == day_str
-            ) <= shift_worker_vars[(shift_id, day_str)],
-            name=f"Shift_{shift_id}_{day_str}_WorkerCap"
-        )
+                if s_id == shift_id and d == day_str and task_shift_vars[(t_id, s_id, d)].x > 0.5
+            ]
+            
+            # Calculate peak nurses required
+            time_nurses = defaultdict(int)
+            for start, end, nurses in assigned_tasks:
+                current = start
+                while current < end:
+                    time_nurses[current] += nurses
+                    current = (datetime.combine(date.min, current) + timedelta(minutes=15)).time()
+            
+            peak_nurses = max(time_nurses.values(), default=0)
+            
+            # Add constraint that shift workers >= peak nurses
+            model.addConstr(
+                shift_worker_vars[(shift_id, day_str)] >= peak_nurses,
+                name=f"Shift_{shift_id}_{day_str}_PeakCap"
+            )
  
-   
+        shift_worker_vars[(shift_id, day_str)] = model.addVar(
+            vtype=GRB.INTEGER, lb=0, name=var_name  # Changed to INTEGER
+        )
     # --- 7. Solve the model ---
     with st.spinner("Optimizing tasks and shifts. Please wait..."):
         try:
