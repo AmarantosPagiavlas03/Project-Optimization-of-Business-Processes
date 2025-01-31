@@ -1028,306 +1028,6 @@ def insert3():
 #                     First Optimizer: Tasks-Shifts
 # ------------------------------------------------------------------
 
-# def original_optimize_tasks_with_gurobi():
-#     """
-#     Assign tasks to (shift, day) pairs so that a single shift can have 
-#     different worker counts on different days.
-
-#     This version ensures that a Monday task won't force workers on Tuesday/Wednesday 
-#     if the shift is active multiple days.
-#     """
-
-#     # --- 1. Load Data ---
-#     tasks_df = get_all("TasksTable3")
-#     shifts_df = get_all("ShiftsTable6")
-#     st.dataframe(tasks_df)
-#     st.dataframe(shifts_df)
-#     # Basic check for empty data
-#     if tasks_df.empty or shifts_df.empty:
-#         st.error("Tasks or shifts data is missing. Add data and try again.")
-#         return
-
-#     # --- 2. Format Time Columns ---
-#     # Adjust your time format if it's not "%H:%M:%S"
-#     tasks_df["StartTime"] = pd.to_datetime(tasks_df["StartTime"], format="%H:%M:%S").dt.time
-#     tasks_df["EndTime"]   = pd.to_datetime(tasks_df["EndTime"],   format="%H:%M:%S").dt.time
-
-#     shifts_df["StartTime"] = pd.to_datetime(shifts_df["StartTime"], format="%H:%M:%S").dt.time
-#     shifts_df["EndTime"]   = pd.to_datetime(shifts_df["EndTime"],   format="%H:%M:%S").dt.time
-
-#     # Column names in ShiftsTable6 for the days of the week
-#     day_names = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
-
-#     # --- 3. Create Gurobi Model ---
-#     model = Model("Task_Assignment")
-
-#     # --- 4. Decision Variables ---
-#     # 4.1. Worker variables: (shift, day) -> integer # of workers
-#     shift_worker_vars = {}
-#     for shift_id, shift_row in shifts_df.iterrows():
-#         for day_str in day_names:
-#             if shift_row[day_str] == 1:  # shift is active on this day
-#                 var_name = f"Workers_Shift_{shift_id}_{day_str}"
-#                 shift_worker_vars[(shift_id, day_str)] = model.addVar(
-#                     vtype=GRB.INTEGER, lb=0, name=var_name
-#                 )
-
-#     # 4.2. Task assignment variables: (task, shift, day) -> binary
-#     #      Only if the task's day == shift's active day AND times align
-#     task_shift_vars = {}
-#     for task_id, task_row in tasks_df.iterrows():
-#         t_day = task_row["Day"]   # e.g. "Monday"
-#         t_s   = task_row["StartTime"]
-#         t_e   = task_row["EndTime"]
-
-#         # Iterate over all shifts
-#         for shift_id, shift_row in shifts_df.iterrows():
-#             # Only consider if the shift is active on the task's day
-#             if shift_row[t_day] == 1:
-#                 shift_s = shift_row["StartTime"]
-#                 shift_e = shift_row["EndTime"]
-#                 # Check if shift covers the task time
-#                 if shift_s <= t_s and shift_e >= t_e:
-#                     var_name = f"Task_{task_id}_Shift_{shift_id}_{t_day}"
-#                     task_shift_vars[(task_id, shift_id, t_day)] = model.addVar(
-#                         vtype=GRB.BINARY, name=var_name
-#                     )
-
-#     # --- 5. Objective: Minimize total cost = sum(workers * weight) across (shift, day) ---
-#     model.setObjective(
-#         quicksum(
-#             shift_worker_vars[(s_id, d)] * shifts_df.loc[s_id, "Weight"]
-#             for (s_id, d) in shift_worker_vars
-#         ),
-#         GRB.MINIMIZE
-#     )
-
-#     # --- 6. Constraints ---
-
-#     # 6.1. Coverage: each task is assigned to at least one feasible (shift, day)
-#     for task_id, task_row in tasks_df.iterrows():
-#         # Gather all feasible assignment variables for this task
-#         feasible_assignments = [
-#             task_shift_vars[key]
-#             for key in task_shift_vars
-#             if key[0] == task_id  # same task
-#         ]
-#         # If there's at least one feasible shift-day, require that sum >= 1
-#         if feasible_assignments:
-#             model.addConstr(
-#                 quicksum(feasible_assignments) >= 1,
-#                 name=f"Task_{task_id}_Coverage"
-#             )
-#         else:
-#             # No feasible shift-day found: either data problem or the model is infeasible
-#             pass
-
-#     # 6.2. Worker capacity: for each (shift, day), total nurses required
-#     #     by tasks assigned cannot exceed the # of workers assigned
-#     for (shift_id, day_str) in shift_worker_vars:
-#         model.addConstr(
-#             quicksum(
-#                 tasks_df.loc[t_id, "NursesRequired"] * task_shift_vars[(t_id, shift_id, day_str)]
-#                 for (t_id, s_id, d) in task_shift_vars
-#                 if s_id == shift_id and d == day_str
-#             ) <= shift_worker_vars[(shift_id, day_str)],
-#             name=f"Shift_{shift_id}_{day_str}_WorkerCap"
-#         )
-
-   
-#     # --- 7. Solve the model ---
-#     with st.spinner("Optimizing tasks and shifts. Please wait..."):
-#         try:
-#             model.optimize()
-#         except GurobiError as e:
-#             st.error(f"Gurobi error occurred: {e}")
-#             return
-
-#     if model.status == GRB.OPTIMAL:
-#         # Phase 1: Collect raw assignment data and calculate contributions
-#         from collections import defaultdict
-#         from datetime import datetime, date
-#         temp_results = []
-#         shift_day_cost = defaultdict(float)        # Total cost per (shift, day)
-#         shift_day_contributions = defaultdict(float)  # Sum of contributions
-        
-#         for (task_id, shift_id, d), assign_var in task_shift_vars.items():
-#             if assign_var.x > 0.5:
-#                 # Get basic assignment info
-#                 workers = shift_worker_vars[(shift_id, d)].x
-#                 shift_weight = shifts_df.loc[shift_id, "Weight"]
-#                 task_row = tasks_df.loc[task_id]
-                
-#                 # Calculate task duration in hours
-#                 t_start = task_row["StartTime"]
-#                 t_end = task_row["EndTime"]
-#                 start_dt = datetime.combine(date.min, t_start)
-#                 end_dt = datetime.combine(date.min, t_end)
-#                 duration = (end_dt - start_dt).total_seconds() / 3600
-                
-#                 # Calculate contribution metric (nurses × hours)
-#                 contribution = task_row["NursesRequired"] * duration
-                
-#                 # Store temporary data
-#                 temp_results.append({
-#                     "task_id": task_id,
-#                     "shift_id": shift_id,
-#                     "day": d,
-#                     "workers": workers,
-#                     "shift_weight": shift_weight,
-#                     "contribution": contribution
-#                 })
-                
-#                 # Update aggregates
-#                 shift_day_cost[(shift_id, d)] = workers * shift_weight
-#                 shift_day_contributions[(shift_id, d)] += contribution
-
-#         # Phase 2: Calculate proportional costs
-#         results = []
-#         for entry in temp_results:
-#             key = (entry["shift_id"], entry["day"])
-#             total_contribution = shift_day_contributions[key]
-#             task_cost = (entry["contribution"] / total_contribution) * shift_day_cost[key] if total_contribution > 0 else 0
-            
-#             # Format results
-#             task_row = tasks_df.loc[entry["task_id"]]
-#             shift_row = shifts_df.loc[entry["shift_id"]]
-#             results.append({
-#                 "Task ID": task_row["id"],
-#                 "Task Name": task_row["TaskName"],
-#                 "Day": entry["day"],
-#                 "Task Start": task_row["StartTime"].strftime("%H:%M"),
-#                 "Task End": task_row["EndTime"].strftime("%H:%M"),
-#                 "Shift ID": shift_row["id"],
-#                 "Shift Start": shift_row["StartTime"].strftime("%H:%M"),
-#                 "Shift End": shift_row["EndTime"].strftime("%H:%M"),
-#                 "Workers Assigned": entry["workers"],
-#                 "Hourly Rate (€)": entry["shift_weight"],
-#                 "Task Cost (€)": round(task_cost, 2),
-#                 "Cost %": round((task_cost / shift_day_cost[key]) * 100, 1) if shift_day_cost[key] > 0 else 0
-#             })
-
-#         # --- Enhanced Display ---
-#         results_df = pd.DataFrame(results)
-#         st.dataframe(results_df)
-#         # 1. Cost Validation Check
-#         validation = results_df.groupby(["Shift ID", "Day"]).agg(
-#             Total_Cost=("Task Cost (€)", "sum"),
-#             Expected_Cost=("Hourly Rate (€)", lambda x: x.iloc[0] * results_df["Workers Assigned"].iloc[0])
-#         ).reset_index()
-#         validation["Valid"] = validation["Total_Cost"].round(2) == validation["Expected_Cost"].round(2)
-
- 
- 
-#         # Calculate daily summaries
-#         daily_costs = {day: 0 for day in day_names}
-#         daily_workers = {day: 0 for day in day_names}
-#         daily_tasks = {day: 0 for day in day_names}
-
-#         for (shift_id, day_str), var in shift_worker_vars.items():
-#             workers = var.x
-#             daily_workers[day_str] += workers
-#             daily_costs[day_str] += workers * shifts_df.loc[shift_id, "Weight"]
-
-#         for (task_id, shift_id, d), var in task_shift_vars.items():
-#             if var.x > 0.5:
-#                 daily_tasks[d] += 1
-
-#         day_summary = []
-#         for day in day_names:
-#             day_summary.append({
-#                 "Day": day,
-#                 "Total Cost (€)": daily_costs[day],
-#                 "Tasks Assigned": daily_tasks[day],
-#                 "Workers Assigned": daily_workers[day]
-#             })
-
-#         results_df = pd.DataFrame(results)
-#         day_summary_df = pd.DataFrame(day_summary)
-
-#         # --- Display Results ---
-#         st.success("✅ Task-shift optimization successful!")
-#         st.balloons()
-
-#         # Overall Metrics
-#         total_cost = model.ObjVal
-#         total_workers = sum(daily_workers.values())
-#         total_tasks = len(results_df)
-
-#         col1, col2, col3 = st.columns(3)
-#         col1.metric("Total Cost", f"€{total_cost:,.2f}")
-#         col2.metric("Total Workers Assigned", total_workers)
-#         col3.metric("Total Tasks Assigned", total_tasks)
-
-
-#         # Detailed Assignments
-#         with st.expander("📋 View Detailed Task Assignments", expanded=True):
-#             if not results_df.empty:
-#                 st.dataframe(
-#                     results_df,
-#                     column_order=("Task ID", "Task Name", "Day", "Task Start", "Task End",
-#                                   "Shift ID", "Shift Start", "Shift End", "Workers Assigned"),
-#                     hide_index=True
-#                 )
-#                 st.download_button(
-#                     label="Download Assignments as CSV",
-#                     data=results_df.to_csv(index=False).encode("utf-8"),
-#                     file_name="task_assignments.csv",
-#                     mime="text/csv"
-#                 )
-#             else:
-#                 st.warning("No tasks were assigned.")
-
-#         # Daily Summary
-#         st.subheader("📅 Daily Summary")
-#         st.dataframe(
-#             day_summary_df,
-#             column_order=("Day", "Total Cost (€)", "Tasks Assigned", "Workers Assigned"),
-#             hide_index=True
-#         )
-#         st.download_button(
-#             label="Download Daily Summary as CSV",
-#             data=day_summary_df.to_csv(index=False).encode("utf-8"),
-#             file_name="daily_summary.csv",
-#             mime="text/csv"
-#         )
-
-#        # 2. New Visualizations
-#         if not results_df.empty:
-#             col1, col2 = st.columns(2)
-#             with col1:
-#                 # Ensure we have data to plot
-#                 if not results_df.empty:
-#                     fig = px.pie(results_df, names='Day', values='Task Cost (€)', title='<b>Cost Distribution by Day</b>')
-#                     fig.update_layout(showlegend=False)
-#                     st.plotly_chart(fig, use_container_width=True)
-#                 else:
-#                     st.warning("No data available for pie chart")
-
-#             with col2:
-#                 # Ensure we have data to plot
-#                 if not results_df.empty:
-#                     shift_cost = results_df.groupby("Shift ID")["Task Cost (€)"].sum().reset_index()
-#                     fig = px.bar(shift_cost, x='Shift ID', y='Task Cost (€)', 
-#                                 title='<b>Total Cost by Shift</b>')
-#                     fig.update_layout(showlegend=False)
-#                     st.plotly_chart(fig, use_container_width=True)
-#                 else:
-#                     st.warning("No data available for bar chart")
-#         else:
-#             st.warning("No results to visualize") 
-
- 
-#     else:
-#         st.error(f"Optimization failed with status: {model.status}")
-#         # Optional: Add infeasibility diagnostics
-#         model.computeIIS()
-#         for constr in model.getConstrs():
-#             if constr.IISConstr:
-#                 st.write(f"⚠️ Infeasible constraint: {constr.constrName}")
-
-
-
 def optimize_tasks_with_gurobi():
     """
     Assign tasks to (shift, day) pairs so that a single shift can have 
@@ -1813,87 +1513,54 @@ def optimize_tasks_with_gurobi():
         # Add Gantt chart final
 ################################################################################
 ###bz###
-        # import plotly.express as px
-        # import streamlit as st
+# --- Create Gantt Charts by Day ---
+        st.subheader("Gantt Charts by Day")
 
-        # def show_gantt_chart(results_df):
-        #     """
-        #     Renders a Gantt chart using the given results_df DataFrame.
-        #     Assumes results_df has columns:
-        #     - 'Begin Task' (string, HH:MM format)
-        #     - 'End Task'   (string, HH:MM format)
-        #     - 'Day'        (string with day name, e.g., 'Monday', 'Tuesday', etc.)
-        #     - 'Task Name'  (string)
-        #     - 'Shift ID'   (for hover info; optional)
-        #     """
+        # Ensure the columns we need actually exist
+        if not {"Day", "Task Name", "Shift ID", "Begin Task", "End Task"}.issubset(results_df.columns):
+            st.warning("Required columns for Gantt chart not found in results_df.")
+        else:
+            # Convert the "Begin Task" and "End Task" columns from HH:MM strings 
+            # into datetimes on an arbitrary date (e.g., 2000-01-01) so Plotly can interpret them properly.
+            # We’ll do this inside the loop for each day’s subset.
+            
+            unique_days = results_df["Day"].unique()
+            for day in unique_days:
+                day_data = results_df[results_df["Day"] == day].copy()
+                
+                if day_data.empty:
+                    continue  # Skip if no tasks on that day
+                
+                # Parse the time columns into actual datetimes (on a "dummy" date).
+                # e.g. 2000-01-01 HH:MM
+                day_data["Begin_DT"] = pd.to_datetime(day_data["Begin Task"], format="%H:%M").apply(
+                    lambda t: t.replace(year=2000, month=1, day=1)
+                )
+                day_data["End_DT"] = pd.to_datetime(day_data["End Task"], format="%H:%M").apply(
+                    lambda t: t.replace(year=2000, month=1, day=1)
+                )
+                
+                # Plotly Express timeline
+                fig = px.timeline(
+                    day_data,
+                    x_start="Begin_DT",
+                    x_end="End_DT",
+                    y="Task Name",
+                    color="Shift ID",  # Same color for the same shift
+                    hover_data=["Task Name", "Begin Task", "End Task", "Shift ID"]
+                )
+                
+                # Reverse the Y-axis so tasks list top-to-bottom
+                fig.update_yaxes(autorange="reversed")
+                
+                # Format the X-axis ticks to show just HH:MM
+                fig.update_layout(
+                    title=f"Gantt Chart for {day}",
+                    xaxis=dict(tickformat='%H:%M'),
+                    height=600  # You can adjust this as you like
+                )
 
-        #     # If results_df isn't defined or is empty, show a warning
-        #     if results_df is None or results_df.empty:
-        #         st.warning("No results available to display a Gantt chart.")
-        #         return
-
-        #     # Define the order of days for proper display
-        #     day_order = ["Monday", "Tuesday", "Wednesday", "Thursday",
-        #                 "Friday", "Saturday", "Sunday"]
-
-        #     # Define the time range for the chart
-        #     time_range = ["2023-01-01 00:00:00", "2023-01-01 23:59:59"]
-
-        #     # Prepare the data for plotting
-        #     # Make sure 'Begin Task' and 'End Task' columns exist and are in HH:MM format
-        #     # Here we assume a dummy date of 2023-01-01 for all tasks.
-        #     results_df = results_df.assign(
-        #         Start=lambda df: pd.to_datetime("2023-01-01 " + df["Begin Task"]),
-        #         End=lambda df: pd.to_datetime("2023-01-01 " + df["End Task"]),
-        #         Day=lambda df: pd.Categorical(df["Day"], categories=day_order, ordered=True)
-        #     ).sort_values(by=["Day", "Start"])
-
-        #     st.subheader("Gantt Chart", divider="blue")
-
-        #     fig_results = px.timeline(
-        #         results_df,
-        #         x_start="Start",
-        #         x_end="End",
-        #         y="Day",
-        #         color="Task Name",
-        #         hover_data={
-        #             "Task Name": True,
-        #             "Shift ID": True,
-        #             "Start": "|%H:%M",
-        #             "End": "|%H:%M"
-        #         },
-        #         title="<b>Task Distribution by Day</b>",
-        #         template="plotly_white"
-        #     )
-
-        #     # Adjust layout and formatting
-        #     fig_results.update_layout(
-        #         height=600,
-        #         hovermode="y unified",
-        #         xaxis_title="Time of Day",
-        #         yaxis_title="",
-        #         legend_title="Tasks",
-        #         font=dict(family="Arial", size=12),
-        #         margin=dict(l=100, r=20, t=60, b=20)
-        #     )
-
-        #     # Set the time axis format and range
-        #     fig_results.update_xaxes(
-        #         tickformat="%H:%M",
-        #         dtick=3600000,  # 1 hour in milliseconds
-        #         range=time_range,
-        #         showgrid=True
-        #     )
-
-        #     # Display the chart in Streamlit
-        #     st.plotly_chart(fig_results, use_container_width=True)
-
-
-        # # Usage example:
-        # # if you already have results_df defined:
-        # #
-        # show_gantt_chart(results_df)
-
+                st.plotly_chart(fig, use_container_width=True)
 
 
 ####bzz###############################################
@@ -2006,8 +1673,6 @@ def optimize_tasks_with_gurobi():
 
 
 
- 
- 
 # ------------------------------------------------------------------
 #                          Visualization
 # ------------------------------------------------------------------
@@ -2573,10 +2238,6 @@ def main():
             with opt_tab:
                 st.markdown("### Task-Shift Assignment Optimization")
                 st.info("Assign tasks to shifts considering time windows and nurse requirements")
-                # if st.button("🚀 Run Task Optimization (Original)", use_container_width=True):
- 
-
-                #     original_optimize_tasks_with_gurobi()
                 if st.button("🚀 Run Task Optimization ", use_container_width=True):
                     optimize_tasks_with_gurobi()
  
