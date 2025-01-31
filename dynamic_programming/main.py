@@ -2586,29 +2586,149 @@ def main():
 
     with manual_tab:
         st.header("User Manual")
-        
-        st.subheader("Overview")
-        st.write("This application helps users with [describe the purpose of the app]. Follow the steps below to get started.")
 
-        st.subheader("How to Use This App")
-        st.write("""
-        1. **Navigate through the tabs** – Each tab provides a different functionality.
-        2. **Input your data** – Provide the necessary input fields with valid values.
-        3. **Process the data** – Click on the appropriate buttons to perform actions.
-        4. **View the results** – The output will be displayed dynamically.
-        5. **Export if needed** – You can download your results for future use.
-        """)
+        # 1. Introduction
+        st.subheader("1. Introduction")
+        st.write(
+            "This application is a Streamlit-based scheduling tool designed "
+            "to handle hospital or clinic tasks and shifts, with the capability "
+            "to optimize staff allocation using Gurobi. It stores data in a "
+            "local SQLite database and provides both manual and bulk import "
+            "options for tasks and shifts. You can visualize schedules, "
+            "run optimization routines, and export results."
+        )
 
-        st.subheader("Troubleshooting")
-        st.write("""
-        - If the app is not responding, try refreshing the page.
-        - Ensure that you have provided all the required inputs.
-        - Check for any error messages displayed in the app.
-        """)
+        # 2. Installation & Setup
+        st.subheader("2. Installation & Setup")
+        st.markdown(
+            """
+            **Requirements**  
+            - Python 3.7+  
+            - [Gurobi license](https://www.gurobi.com/downloads/end-user-license-agreement-academic/) (academic or commercial)  
 
-        st.info("For more detailed information, refer to the official documentation or contact support.")
+            **Steps**  
+            1. Install packages in a virtual environment:  
+            ```bash
+            pip install streamlit pandas numpy plotly xlsxwriter openpyxl gurobipy
+            ```
+            2. Run the app:  
+            ```bash
+            streamlit run your_script_name.py
+            ```
+            3. A local URL (usually `http://localhost:8501`) will open in your browser.
+            """
+        )
 
+        # 3. Application Overview
+        st.subheader("3. Application Overview")
+        st.write(
+            "The app is divided into three primary tabs: **Home**, **Manual**, "
+            "and **Contact**. Most data operations and visualizations happen in "
+            "the **Home** tab."
+        )
 
+        st.markdown(
+            """
+            - **Home Tab**  
+            1. **Data Input**: Manually add or bulk upload tasks/shifts.  
+            2. **Data Management**: Clear tables or load example data.  
+            3. **Visualization**: See tasks and shifts in Gantt-style plots and dataframes.  
+            4. **Optimization**: Run the Gurobi-based model to schedule tasks.  
+            
+            - **Manual Tab**  
+            Houses this user guide or any additional documentation.  
+            
+            - **Contact Tab**  
+            A simple contact form to reach out to the development/support team.
+            """
+        )
+
+        # 4. Data Management
+        st.subheader("4. Data Management")
+        st.write(
+            "All data is stored in a local SQLite file (`tasksv2.db`). Two tables "
+            "are created if they do not exist: `TasksTable3` for tasks, and "
+            "`ShiftsTable6` for shifts."
+        )
+
+        st.markdown(
+            """
+            **Manual Entry**  
+            - *Tasks*: Provide task name, day of week, start/end times, duration, and the number of nurses required.  
+            - *Shifts*: Specify shift times, break period, weight (cost), and active days.
+
+            **Bulk Upload**  
+            - Upload CSV/Excel templates to insert multiple tasks or shifts in one go.  
+            - The app validates required columns before inserting to the database.  
+
+            **Clearing Data**  
+            - Use the “Clear All Tasks” or “Clear All Shifts” buttons to wipe all records in each respective table.
+            """
+        )
+
+        # 5. Generating & Managing Example Data
+        st.subheader("5. Generating & Managing Example Data")
+        st.write(
+            "You can generate random data for quick testing or load small/large "
+            "prebuilt example datasets. This is especially handy for demos or "
+            "debugging. Each example button seeds the database with realistic, "
+            "but randomly generated or predefined tasks/shifts."
+        )
+
+        # 6. Visualization Dashboard
+        st.subheader("6. Visualization Dashboard")
+        st.write(
+            "Under the **Home → Visualization** tab, you'll find interactive "
+            "charts (via Plotly) that display tasks and shifts in a timeline. "
+            "You can hover over items for details and filter data as needed."
+        )
+
+        # 7. Optimization
+        st.subheader("7. Optimization")
+        st.markdown(
+            """
+            **Goal**: Assign tasks to valid shift/day pairs while minimizing the total cost:
+            \[
+            \text{Minimize } \sum (\text{#Workers} \times \text{ShiftWeight})
+            \]
+
+            **Key Steps**:
+            1. **Click “Run Task Optimization”** to start the solver.  
+            2. The model ensures each task is assigned at least once and that the total nurses needed for tasks in a shift/day doesn't exceed the workers allocated.  
+            3. If successful, results display in a table and chart format, with assigned tasks, daily summaries, and cost breakdowns.
+
+            **Common Issues**:
+            - Missing or invalid data (e.g., shift time not covering the task time).  
+            - Gurobi license not properly configured.  
+            - Infeasibility if constraints can't be satisfied.
+            """
+        )
+
+        # 8. Additional Tabs
+        st.subheader("8. Additional Tabs")
+        st.write(
+            "Beyond the **Home** and **Manual** tabs, a **Contact** tab offers a "
+            "form to reach out for support or more information."
+        )
+
+        # 9. Troubleshooting & Tips
+        st.subheader("9. Troubleshooting & Tips")
+        st.markdown(
+            """
+            - **No Data Display**: Verify you have inserted tasks or shifts.  
+            - **Optimizer Errors**: Check if tasks overlap incorrectly or if break times fall outside shifts.  
+            - **Performance**: Large datasets or numerous constraints will increase solve time.  
+            - **Licensing**: Ensure Gurobi is installed and licensed (e.g., academic license).  
+            """
+        )
+
+        # 10. Final Notes & Contact
+        st.subheader("10. Final Notes & Contact")
+        st.write(
+            "We hope this manual clarifies how to use the scheduling system. "
+            "For a deeper dive or to report issues, visit the **Contact** tab "
+            "or email us at `support@vuamsterdamscheduling.com`."
+        )
 
 if __name__ == "__main__":
     main()
