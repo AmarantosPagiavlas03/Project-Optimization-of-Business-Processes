@@ -1799,57 +1799,114 @@ def optimize_tasks_with_gurobi():
         # Add Gantt chart final
 ################################################################################
 ###bz####
-
-        import plotly.express as px
-
-        day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", 
-                    "Friday", "Saturday", "Sunday"]
-        time_range = ["2023-01-01 00:00:00", "2023-01-01 23:59:59"]
-
         if not results_df.empty:
             st.subheader("Task Schedule Gantt Chart")
+            
+            # Convert Shift ID to categorical type
+            results_df['Shift ID'] = results_df['Shift ID'].astype(str)
+            
+            # Create date mapping with proper midnight handling
+            base_date = pd.to_datetime("2023-10-02")
+            date_mapping = {day: base_date + pd.DateOffset(days=i) for i, day in enumerate(day_names)}
+            
+            # Convert times and handle midnight crossings
+            results_df['Begin_Datetime'] = results_df.apply(
+                lambda row: pd.Timestamp.combine(date_mapping[row['Day']], 
+                                                pd.to_datetime(row['Begin Task'], format="%H:%M").time()),
+                axis=1
+            )
+            results_df['End_Datetime'] = results_df.apply(
+                lambda row: pd.Timestamp.combine(date_mapping[row['Day']], 
+                                                pd.to_datetime(row['End Task'], format="%H:%M").time()),
+                axis=1
+            )
+            mask = results_df['End_Datetime'] < results_df['Begin_Datetime']
+            results_df.loc[mask, 'End_Datetime'] += pd.Timedelta(days=1)
 
-            results_df1 = results_df.assign(
-                Start=lambda df: pd.to_datetime("2023-01-01 " + df['Begin Task']),
-                End=lambda df: pd.to_datetime("2023-01-01 " + df['End Task']),
-                Day=lambda df: pd.Categorical(df['Day'], categories=day_order, ordered=True),
-                DurationHours=lambda df: (df['End Task'] - df['Begin Task']).dt.total_seconds()/3600
-            ).sort_values(by=['Day', 'Begin Task'])
+            # Create vertical positions with spacing
+            results_df = results_df.sort_values(['Day', 'Begin_Datetime'])
+            results_df['Vertical_Position'] = results_df.groupby(['Day', pd.Grouper(key='Begin_Datetime', freq='15T')]).cumcount() * 0.3  # Added spacing
 
-            fig_tasks = px.timeline(
-                results_df1,
-                x_start="Begin Task",
-                x_end="End Task",
-                y="Day",
-                color="TaskName",
-                color_discrete_sequence=px.colors.qualitative.Pastel,
+            filtered_df = results_df[results_df["Day"].isin(results_df["Day"].value_counts().index)]
+            filtered_day_names = sorted(filtered_df['Day'].unique())
+            
+            # Create unified color mapping across all days
+            unique_shifts = sorted(results_df['Shift ID'].unique())
+            color_map = {shift: px.colors.qualitative.D3[i % len(px.colors.qualitative.D3)] 
+                        for i, shift in enumerate(unique_shifts)}
+            
+            fig = px.timeline(
+                filtered_df,
+                x_start="Begin_Datetime",
+                x_end="End_Datetime",
+                y="Vertical_Position",
+                color="Shift ID",
+                color_discrete_map=color_map,
+                facet_row="Day",
+                title="<b>Enhanced Task Schedule Visualization</b>",
+                hover_name="Task Name",
                 hover_data={
-                    "TaskName": True,
-                    "NursesRequired": True,
-                    "Shift ID": True, 
-                    "Workers Assigned": True,
-                    "Begin Task": "|%H:%M",
-                    "End Task": "|%H:%M"
+                    "Shift ID": True,
+                    "Begin_Datetime": "|%a, %Y-%m-%d %H:%M",
+                    "End_Datetime": "|%a, %Y-%m-%d %H:%M",
+                    "Vertical_Position": False,
+                    "Day": False,
+                    "Task Name": False
                 },
-                title="<b>Task Distribution by Day</b>",
-                template="plotly_white"
+                labels={"Begin_Datetime": "Start", "End_Datetime": "End"},
+                category_orders={"Day": filtered_day_names, "Shift ID": unique_shifts},
+                height=600 + 150*len(filtered_day_names)
             )
-            fig_tasks.update_layout(
-                height=600,
-                hovermode="y unified",
-                xaxis_title="Time of Day",
-                yaxis_title="",
-                legend_title="Tasks",
-                font=dict(family="Arial", size=12),
-                margin=dict(l=100, r=20, t=60, b=20)
+
+            # Format axes and layout
+            fig.update_xaxes(
+                tickformat="%H:%M\n%a\n%m-%d",  # Added date display
+                rangeslider_visible=False,
+                title_text="Timeline"
             )
-            fig_tasks.update_xaxes(
-                tickformat="%H:%M",
-                dtick=3600000,
-                range=time_range,
-                showgrid=True
+
+            fig.update_yaxes(visible=False, title_text="")
+
+            # Improve layout and spacing
+            fig.update_layout(
+                margin=dict(l=120, r=50, b=80, t=100),
+                legend_title_text="Shift ID",
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom",
+                    y=-0.35,  # Adjusted for better mobile view
+                    xanchor="center",
+                    x=0.5
+                ),
+                plot_bgcolor='rgba(248,248,248,1)',
+                xaxis=dict(showgrid=True, gridcolor='white', dtick=3600000*4),  # 4-hour ticks
+                hoverlabel=dict(
+                    bgcolor="white",
+                    font_size=14,
+                    font_family="Roboto"
+                ),
+                dragmode=False,
+                bargap=0.2  # Space between bars
             )
-            st.plotly_chart(fig_tasks, use_container_width=True)
+
+            # Enhance day labels
+            for annotation in fig.layout.annotations:
+                if annotation.text in filtered_day_names:
+                    annotation.update(
+                        x=-0.1,
+                        xanchor='right',
+                        font=dict(size=16, color='darkblue', family='Arial'),
+                        bgcolor='rgba(255,255,255,0.9)',
+                        bordercolor='lightgray'
+                    )
+
+            # Add vertical grid lines
+            fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='rgba(200,200,200,0.2)')
+
+            if not filtered_df.empty:
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.warning("No tasks available for Gantt chart visualization")
 ####bzz###############################################
 #         if not results_df.empty:
 #             st.subheader("Task Schedule Gantt Chart")
@@ -2527,11 +2584,11 @@ def main():
             with opt_tab:
                 st.markdown("### Task-Shift Assignment Optimization")
                 st.info("Assign tasks to shifts considering time windows and nurse requirements")
-                if st.button("🚀 Run Task Optimization (Original)", use_container_width=True):
+                # if st.button("🚀 Run Task Optimization (Original)", use_container_width=True):
  
 
-                    original_optimize_tasks_with_gurobi()
-                if st.button("🚀 Run Task Optimization (15 min. interval)", use_container_width=True):
+                #     original_optimize_tasks_with_gurobi()
+                if st.button("🚀 Run Task Optimization )", use_container_width=True):
                     optimize_tasks_with_gurobi()
  
                
