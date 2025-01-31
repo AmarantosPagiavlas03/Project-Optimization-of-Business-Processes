@@ -1777,15 +1777,13 @@ def optimize_tasks_with_gurobi():
             results_df
             .groupby(["Day", "Shift ID", "Shift Start", "Shift End"], as_index=False)
             .agg({
-                "Workers Assigned": "sum",    # total nurses assigned in this shift
-                "Task Cost (€)": "sum"        # total cost for this shift
+                "Number of Nurses": "max",  # Peak nurses from shift optimization
+                "Task Cost (€)": "sum"      # Total shift cost
             })
             .rename(columns={
-                "Workers Assigned": "Number of Nurses",
                 "Task Cost (€)": "Shift Cost (€)"
             })
         )
-
         # 2) Display in Streamlit
         with st.expander("👩‍⚕️ View Nurse Requirements per Shift", expanded=True):
             if not nurse_requirements_df.empty:
