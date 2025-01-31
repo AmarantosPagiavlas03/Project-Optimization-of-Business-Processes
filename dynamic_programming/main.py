@@ -1779,11 +1779,7 @@ def optimize_tasks_with_gurobi():
             .agg({
                 "Number of Nurses": "max",  # Peak nurses from shift optimization
                 "Task Cost (€)": "sum"      # Total shift cost
-            })
-            # Merge in "Weight" from shift_df based on Shift ID
-            .merge(shifts_df[["Shift ID", "Weight"]], on="Shift ID", how="left")
-            # Rename the "Weight" column to "Shift Cost"
-            .rename(columns={"Weight": "Shift Cost"})
+            })     
         )
 
 
@@ -1796,7 +1792,7 @@ def optimize_tasks_with_gurobi():
                 
                 # Decide which columns to show and in what order
                 display_df = nurse_requirements_df[[
-                    "Day", "Shift", "Number of Nurses","Shift Cost"
+                    "Day", "Shift", "Number of Nurses"
                 ]]
                 
                 st.dataframe(
