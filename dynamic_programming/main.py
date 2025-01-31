@@ -1800,6 +1800,8 @@ def optimize_tasks_with_gurobi():
 ################################################################################
 ###bz####
 
+            import plotly.express as px
+
             day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", 
                         "Friday", "Saturday", "Sunday"]
             time_range = ["2023-01-01 00:00:00", "2023-01-01 23:59:59"]
